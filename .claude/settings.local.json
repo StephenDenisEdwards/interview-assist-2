@@ -6,7 +6,8 @@
       "Bash(dotnet test:*)",
       "Bash(git add:*)",
       "Bash(dotnet new:*)",
-      "Bash(dotnet sln:*)"
+      "Bash(dotnet sln:*)",
+      "Bash(find:*)"
     ]
   }
 }
