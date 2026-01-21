@@ -1,6 +1,7 @@
 using System.IO.Compression;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.Extensions.Logging;
 using UglyToad.PdfPig;
 
 namespace InterviewAssist.Library.Context;
@@ -14,20 +15,42 @@ public static class DocumentTextLoader
     /// Loads all text from a document file.
     /// </summary>
     /// <param name="path">Path to the document file.</param>
-    /// <returns>Extracted text content, or empty string if file doesn't exist or format is unsupported.</returns>
-    public static string LoadAllText(string? path)
+    /// <param name="logger">Optional logger for warnings and errors.</param>
+    /// <returns>Extracted text content, error message on failure, or empty string if file doesn't exist or format is unsupported.</returns>
+    public static string LoadAllText(string? path, ILogger? logger = null)
     {
         if (string.IsNullOrWhiteSpace(path)) return string.Empty;
-        if (!File.Exists(path)) return string.Empty;
+
+        if (!File.Exists(path))
+        {
+            logger?.LogWarning("Document file not found: {Path}", path);
+            return string.Empty;
+        }
 
         var ext = Path.GetExtension(path).ToLowerInvariant();
-        return ext switch
+        var filename = Path.GetFileName(path);
+
+        try
         {
-            ".txt" => File.ReadAllText(path),
-            ".docx" => ReadDocx(path),
-            ".pdf" => ReadPdf(path),
-            _ => string.Empty
-        };
+            return ext switch
+            {
+                ".txt" => File.ReadAllText(path),
+                ".docx" => ReadDocx(path),
+                ".pdf" => ReadPdf(path),
+                _ => HandleUnsupportedFormat(filename, ext, logger)
+            };
+        }
+        catch (Exception ex)
+        {
+            logger?.LogWarning(ex, "Error loading document {Filename}", filename);
+            return $"[Error loading {filename}: {ex.Message}]";
+        }
+    }
+
+    private static string HandleUnsupportedFormat(string filename, string ext, ILogger? logger)
+    {
+        logger?.LogWarning("Unsupported document format '{Extension}' for file: {Filename}", ext, filename);
+        return string.Empty;
     }
 
     private static string ReadDocx(string path)

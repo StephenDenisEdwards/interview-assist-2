@@ -1,3 +1,4 @@
+using InterviewAssist.Library.Constants;
 using System.Text;
 
 namespace InterviewAssist.Library.Context;
@@ -19,9 +20,9 @@ public static class ContextLoader
     public static (string ExtraInstructions, IReadOnlyList<ContextChunk> Chunks) BuildContext(
         string? cvPath,
         string? jobSpecPath,
-        int maxContextChars = 40000,
-        int chunkSize = 1200,
-        int chunkOverlap = 150)
+        int maxContextChars = DocumentConstants.DefaultMaxContextChars,
+        int chunkSize = DocumentConstants.DefaultChunkSize,
+        int chunkOverlap = DocumentConstants.DefaultChunkOverlap)
     {
         var chunks = new List<ContextChunk>();
         var previewSb = new StringBuilder();
@@ -32,14 +33,14 @@ public static class ContextLoader
         if (!string.IsNullOrWhiteSpace(cvText))
         {
             previewSb.AppendLine("CV Preview:");
-            previewSb.AppendLine(TakeFirstChars(cvText, 2000));
+            previewSb.AppendLine(TakeFirstChars(cvText, DocumentConstants.PreviewMaxChars));
             previewSb.AppendLine();
         }
 
         if (!string.IsNullOrWhiteSpace(jsText))
         {
             previewSb.AppendLine("Job Spec Preview:");
-            previewSb.AppendLine(TakeFirstChars(jsText, 2000));
+            previewSb.AppendLine(TakeFirstChars(jsText, DocumentConstants.PreviewMaxChars));
         }
 
         AddChunks(chunks, "CV", cvText, chunkSize, chunkOverlap, maxContextChars);

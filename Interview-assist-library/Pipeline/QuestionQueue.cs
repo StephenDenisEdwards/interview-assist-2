@@ -1,3 +1,4 @@
+using InterviewAssist.Library.Constants;
 using System.Threading.Channels;
 
 namespace InterviewAssist.Library.Pipeline;
@@ -18,7 +19,7 @@ public sealed class QuestionQueue : IDisposable
     /// Creates a new question queue with the specified maximum size.
     /// </summary>
     /// <param name="maxSize">Maximum number of queued questions. Oldest dropped when full.</param>
-    public QuestionQueue(int maxSize = 5)
+    public QuestionQueue(int maxSize = QueueConstants.DefaultQuestionQueueSize)
     {
         _maxSize = maxSize;
         _channel = Channel.CreateBounded<QueuedQuestion>(new BoundedChannelOptions(maxSize)
@@ -48,7 +49,7 @@ public sealed class QuestionQueue : IDisposable
             _processedQuestionHashes.Add(hash);
 
             // Limit hash set size to prevent unbounded growth
-            if (_processedQuestionHashes.Count > _maxSize * 10)
+            if (_processedQuestionHashes.Count > _maxSize * QueueConstants.DeduplicationMultiplier)
             {
                 _processedQuestionHashes.Clear();
             }

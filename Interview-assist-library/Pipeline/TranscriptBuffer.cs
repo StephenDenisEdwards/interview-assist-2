@@ -1,3 +1,5 @@
+using InterviewAssist.Library.Constants;
+
 namespace InterviewAssist.Library.Pipeline;
 
 /// <summary>
@@ -14,7 +16,7 @@ public sealed class TranscriptBuffer
     /// Creates a new transcript buffer with the specified maximum age.
     /// </summary>
     /// <param name="maxAgeSeconds">Maximum age of entries before they are pruned.</param>
-    public TranscriptBuffer(int maxAgeSeconds = 30)
+    public TranscriptBuffer(int maxAgeSeconds = QueueConstants.DefaultTranscriptMaxAgeSeconds)
     {
         _maxAgeSeconds = maxAgeSeconds;
     }

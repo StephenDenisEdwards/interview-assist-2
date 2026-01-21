@@ -28,6 +28,18 @@ public record RealtimeApiOptions
     public string? SystemInstructions { get; init; }
 
     /// <summary>
+    /// Factory function to dynamically generate system instructions.
+    /// Takes priority over SystemInstructionsFilePath and SystemInstructions.
+    /// </summary>
+    public Func<string>? SystemInstructionsFactory { get; init; }
+
+    /// <summary>
+    /// File path to load system instructions from.
+    /// Takes priority over SystemInstructions property but not over SystemInstructionsFactory.
+    /// </summary>
+    public string? SystemInstructionsFilePath { get; init; }
+
+    /// <summary>
     /// Voice to use for audio output. Default: "alloy".
     /// </summary>
     public string Voice { get; init; } = "alloy";
@@ -76,4 +88,10 @@ public record RealtimeApiOptions
     /// Delay before resuming after rate limit in milliseconds. Default: 60000 (1 minute).
     /// </summary>
     public int RateLimitRecoveryDelayMs { get; init; } = 60000;
+
+    /// <summary>
+    /// Maximum delay for reconnection/recovery in milliseconds. Default: 30000 (30 seconds).
+    /// Used to cap exponential backoff.
+    /// </summary>
+    public int MaxReconnectDelayMs { get; init; } = 30000;
 }

@@ -1,8 +1,12 @@
 using InterviewAssist.Library.Audio;
+using InterviewAssist.Library.Constants;
 using InterviewAssist.Library.Context;
+using InterviewAssist.Library.Diagnostics;
+using InterviewAssist.Library.Resilience;
 using InterviewAssist.Library.Utilities;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using System.Diagnostics;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
@@ -17,20 +21,6 @@ public class OpenAiRealtimeApi : IRealtimeApi
     private readonly ILogger<OpenAiRealtimeApi> _logger;
     private const string WS_URL = "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17";
 
-    private const string DefaultSystemInstructions = """
-        You are a C# programming expert assistant.
-
-        MANDATORY BEHAVIOR:
-        When calling report_technical_response, you MUST ALWAYS provide both parameters:
-        1. answer - your explanation
-        2. console_code - complete C# code
-
-        NEVER call the function with only 'answer'. ALWAYS include 'console_code'.
-        If no code is needed, set console_code to: "// No code example needed"
-
-        The console_code must be a complete, runnable C# program with Main method.
-        """;
-
     private ClientWebSocket? _ws;
     private CancellationTokenSource? _cts;
     private CancellationTokenSource? _externalCts;
@@ -40,11 +30,7 @@ public class OpenAiRealtimeApi : IRealtimeApi
     private readonly SemaphoreSlim _sendLock = new(1, 1);
 
     // --- Turn finalization / buffer sizing ---
-    private const int AUDIO_SAMPLE_RATE_HZ = 16000;
-    private const int AUDIO_BYTES_PER_SAMPLE = 2;
-    private const int AUDIO_CHANNELS = 1;
-    private const int MIN_COMMIT_MS = 100;
-    private static readonly int MIN_COMMIT_BYTES = (AUDIO_SAMPLE_RATE_HZ * AUDIO_BYTES_PER_SAMPLE * AUDIO_CHANNELS * MIN_COMMIT_MS) / 1000;
+    private static int MinCommitBytes => AudioConstants.MinCommitBytes;
     private long _pendingAudioBytes;
     private volatile int _hasUncommittedAudio;
 
@@ -75,8 +61,11 @@ public class OpenAiRealtimeApi : IRealtimeApi
     // Rate limiting and reconnection
     private volatile bool _quotaExhausted;
     private volatile bool _rateLimited;
-    private Timer? _rateLimitRecoveryTimer;
+    private RateLimitCircuitBreaker? _rateLimitCircuitBreaker;
     private int _reconnectAttempts;
+
+    // Response timing for metrics
+    private long _responseStartTimestamp;
 
     // Serialization
     private static readonly JsonSerializerOptions s_jsonOptions = new() { WriteIndented = false };
@@ -170,8 +159,8 @@ public class OpenAiRealtimeApi : IRealtimeApi
 
         await CleanupConnectionAsync().ConfigureAwait(false);
 
-        _rateLimitRecoveryTimer?.Dispose();
-        _rateLimitRecoveryTimer = null;
+        _rateLimitCircuitBreaker?.Dispose();
+        _rateLimitCircuitBreaker = null;
 
         _quotaExhausted = false;
         _rateLimited = false;
@@ -270,6 +259,7 @@ public class OpenAiRealtimeApi : IRealtimeApi
         await _ws.ConnectAsync(new Uri(WS_URL), _cts!.Token).ConfigureAwait(false);
         _logger.LogInformation("Connected successfully");
 
+        InterviewAssistMetrics.RecordConnection();
         SafeRaise(() => OnConnected?.Invoke());
         _reconnectAttempts = 0;
     }
@@ -278,7 +268,7 @@ public class OpenAiRealtimeApi : IRealtimeApi
     {
         StartEventDispatcher(_cts!.Token);
 
-        _audioChannel = Channel.CreateBounded<byte[]>(new BoundedChannelOptions(8)
+        _audioChannel = Channel.CreateBounded<byte[]>(new BoundedChannelOptions(AudioConstants.AudioChannelCapacity)
         {
             SingleReader = true,
             SingleWriter = false,
@@ -304,8 +294,9 @@ public class OpenAiRealtimeApi : IRealtimeApi
     private async Task AttemptReconnectAsync()
     {
         _reconnectAttempts++;
+        InterviewAssistMetrics.RecordReconnection();
         var delay = _options.ReconnectBaseDelayMs * (int)Math.Pow(2, _reconnectAttempts - 1);
-        delay = Math.Min(delay, 30000); // Cap at 30 seconds
+        delay = Math.Min(delay, QueueConstants.MaxReconnectDelayMs);
 
         _logger.LogWarning("Reconnection attempt {Attempt}/{Max} in {Delay}ms",
             _reconnectAttempts, _options.MaxReconnectAttempts, delay);
@@ -317,6 +308,7 @@ public class OpenAiRealtimeApi : IRealtimeApi
 
     private async Task CleanupConnectionAsync()
     {
+        InterviewAssistMetrics.RecordDisconnection();
         try { _audio?.Stop(); } catch { }
 
         if (_audioHandler != null)
@@ -380,7 +372,10 @@ public class OpenAiRealtimeApi : IRealtimeApi
     #region Session Configuration
     private async Task SendSessionConfig()
     {
-        var baseInstructions = _options.SystemInstructions ?? DefaultSystemInstructions;
+        var baseInstructions = SystemInstructionsLoader.Load(
+            _options.SystemInstructionsFactory,
+            _options.SystemInstructionsFilePath,
+            _options.SystemInstructions);
         var instr = baseInstructions.Replace("\r\n", "\\n").Replace("\n", "\\n");
 
         if (!string.IsNullOrWhiteSpace(_options.ExtraInstructions))
@@ -474,6 +469,7 @@ public class OpenAiRealtimeApi : IRealtimeApi
 
             if (!_audioChannel.Writer.TryWrite(bytes))
             {
+                InterviewAssistMetrics.RecordAudioChunkDropped();
                 _logger.LogWarning("Audio queue full; dropping chunk");
                 SafeRaise(() => OnWarning?.Invoke("Audio queue full; dropping audio chunk."));
             }
@@ -501,6 +497,7 @@ public class OpenAiRealtimeApi : IRealtimeApi
                 var base64Audio = Convert.ToBase64String(audioData);
                 var msg = new { type = "input_audio_buffer.append", audio = base64Audio };
                 await SendMessage(msg).ConfigureAwait(false);
+                InterviewAssistMetrics.RecordAudioChunkProcessed();
             }
         }
         catch (OperationCanceledException) { }
@@ -707,6 +704,7 @@ public class OpenAiRealtimeApi : IRealtimeApi
             // Set active BEFORE sending to prevent race where another speech_stopped
             // triggers a second response.create before this one completes
             Volatile.Write(ref _responseActive, 1);
+            Interlocked.Exchange(ref _responseStartTimestamp, Stopwatch.GetTimestamp());
             await SendMessage(new { type = "response.create" }).ConfigureAwait(false);
         }
         finally
@@ -733,9 +731,9 @@ public class OpenAiRealtimeApi : IRealtimeApi
             var pending = Interlocked.Read(ref _pendingAudioBytes);
             if (pending <= 0) return;
 
-            if (pending < MIN_COMMIT_BYTES)
+            if (pending < MinCommitBytes)
             {
-                int pad = (int)(MIN_COMMIT_BYTES - pending);
+                int pad = (int)(MinCommitBytes - pending);
                 if (pad > 0)
                 {
                     var silence = new byte[pad];
@@ -902,6 +900,14 @@ public class OpenAiRealtimeApi : IRealtimeApi
 
     private void HandleResponseDone(JsonElement root)
     {
+        // Record response latency
+        var startTimestamp = Interlocked.Read(ref _responseStartTimestamp);
+        if (startTimestamp > 0)
+        {
+            var elapsed = Stopwatch.GetElapsedTime(startTimestamp);
+            InterviewAssistMetrics.RecordResponseLatency(elapsed.TotalMilliseconds);
+        }
+
         // Process any pending function parses
         FlushPendingFunctionParses();
 
@@ -1072,6 +1078,7 @@ public class OpenAiRealtimeApi : IRealtimeApi
         if (_quotaExhausted) return;
         _quotaExhausted = true;
 
+        InterviewAssistMetrics.RecordQuotaExhausted();
         _logger.LogError("Quota exhausted - stopping session");
         SafeRaise(() => OnWarning?.Invoke("Quota exhausted – stopping audio capture and cancelling session."));
 
@@ -1084,6 +1091,7 @@ public class OpenAiRealtimeApi : IRealtimeApi
     {
         if (_quotaExhausted || _rateLimited) return;
 
+        InterviewAssistMetrics.RecordRateLimitHit();
         _logger.LogWarning("Rate limit hit: {Context}", context);
         SafeRaise(() => OnWarning?.Invoke($"Rate limit detected – pausing audio. ({context})"));
 
@@ -1092,21 +1100,25 @@ public class OpenAiRealtimeApi : IRealtimeApi
 
         if (_options.EnableRateLimitRecovery)
         {
-            ScheduleRateLimitRecovery();
+            InitializeCircuitBreakerIfNeeded();
+            _rateLimitCircuitBreaker!.RecordRateLimit();
         }
     }
 
-    private void ScheduleRateLimitRecovery()
+    private void InitializeCircuitBreakerIfNeeded()
     {
-        _rateLimitRecoveryTimer?.Dispose();
-        _rateLimitRecoveryTimer = new Timer(
-            _ => ResumeAfterRateLimit(),
-            null,
-            _options.RateLimitRecoveryDelayMs,
-            Timeout.Infinite);
+        if (_rateLimitCircuitBreaker != null) return;
 
-        _logger.LogInformation("Rate limit recovery scheduled in {Delay}ms", _options.RateLimitRecoveryDelayMs);
-        SafeRaise(() => OnInfo?.Invoke($"Audio will resume in {_options.RateLimitRecoveryDelayMs / 1000} seconds..."));
+        _rateLimitCircuitBreaker = new RateLimitCircuitBreaker(
+            _options.RateLimitRecoveryDelayMs,
+            _options.MaxReconnectDelayMs,
+            _logger);
+
+        _rateLimitCircuitBreaker.OnHalfOpen += () => ResumeAfterRateLimit();
+        _rateLimitCircuitBreaker.OnRecoveryScheduled += delay =>
+            SafeRaise(() => OnInfo?.Invoke($"Audio will resume in {delay / 1000} seconds..."));
+        _rateLimitCircuitBreaker.OnClosed += () =>
+            _logger.LogInformation("Rate limit circuit breaker closed - normal operation resumed");
     }
 
     private void ResumeAfterRateLimit()
@@ -1120,6 +1132,7 @@ public class OpenAiRealtimeApi : IRealtimeApi
         try
         {
             _audio?.Start();
+            _rateLimitCircuitBreaker?.RecordSuccess();
         }
         catch (Exception ex)
         {

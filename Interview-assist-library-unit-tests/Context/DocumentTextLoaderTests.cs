@@ -1,9 +1,12 @@
 using InterviewAssist.Library.Context;
+using Microsoft.Extensions.Logging;
+using Moq;
 
 namespace InterviewAssist.Library.UnitTests.Context;
 
 public class DocumentTextLoaderTests
 {
+    private readonly Mock<ILogger> _mockLogger = new();
     private static string CreateTempTxtFile(string content)
     {
         var path = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.txt");
@@ -210,6 +213,97 @@ public class DocumentTextLoaderTests
         finally
         {
             File.Delete(tempFile);
+        }
+    }
+
+    [Fact]
+    public void LoadAllText_CorruptedDocxFile_ReturnsErrorMessage()
+    {
+        // Arrange - create a file with .docx extension but invalid content
+        var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.docx");
+        try
+        {
+            File.WriteAllText(tempFile, "This is not a valid docx file");
+
+            // Act
+            var result = DocumentTextLoader.LoadAllText(tempFile, _mockLogger.Object);
+
+            // Assert - should return error message instead of crashing
+            Assert.StartsWith("[Error loading", result);
+            Assert.Contains(Path.GetFileName(tempFile), result);
+        }
+        finally
+        {
+            if (File.Exists(tempFile)) File.Delete(tempFile);
+        }
+    }
+
+    [Fact]
+    public void LoadAllText_CorruptedPdfFile_ReturnsErrorMessage()
+    {
+        // Arrange - create a file with .pdf extension but invalid content
+        var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.pdf");
+        try
+        {
+            File.WriteAllText(tempFile, "This is not a valid PDF file");
+
+            // Act
+            var result = DocumentTextLoader.LoadAllText(tempFile, _mockLogger.Object);
+
+            // Assert - should return error message instead of crashing
+            Assert.StartsWith("[Error loading", result);
+            Assert.Contains(Path.GetFileName(tempFile), result);
+        }
+        finally
+        {
+            if (File.Exists(tempFile)) File.Delete(tempFile);
+        }
+    }
+
+    [Fact]
+    public void LoadAllText_NonExistentFile_WithLogger_LogsWarning()
+    {
+        // Act
+        var result = DocumentTextLoader.LoadAllText("/nonexistent/file.txt", _mockLogger.Object);
+
+        // Assert
+        Assert.Equal(string.Empty, result);
+        _mockLogger.Verify(
+            x => x.Log(
+                LogLevel.Warning,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("not found")),
+                It.IsAny<Exception?>(),
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public void LoadAllText_UnsupportedExtension_WithLogger_LogsWarning()
+    {
+        // Arrange
+        var tempFile = Path.Combine(Path.GetTempPath(), $"{Guid.NewGuid()}.xyz");
+        try
+        {
+            File.WriteAllText(tempFile, "Some content");
+
+            // Act
+            var result = DocumentTextLoader.LoadAllText(tempFile, _mockLogger.Object);
+
+            // Assert
+            Assert.Equal(string.Empty, result);
+            _mockLogger.Verify(
+                x => x.Log(
+                    LogLevel.Warning,
+                    It.IsAny<EventId>(),
+                    It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains("Unsupported")),
+                    It.IsAny<Exception?>(),
+                    It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+                Times.Once);
+        }
+        finally
+        {
+            if (File.Exists(tempFile)) File.Delete(tempFile);
         }
     }
 }
