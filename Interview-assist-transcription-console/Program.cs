@@ -32,8 +32,7 @@ var source = audioSourceStr.Equals("mic", StringComparison.OrdinalIgnoreCase)
     : AudioInputSource.Loopback;
 
 var sampleRate = transcriptionConfig.GetValue("SampleRate", 16000);
-var batchMs = transcriptionConfig.GetValue("BatchMs", 5000);
-var includeWords = transcriptionConfig.GetValue("IncludeWordTimestamps", false);
+var batchMs = transcriptionConfig.GetValue("BatchMs", 1500);
 var language = transcriptionConfig["Language"];
 
 // Parse command line arguments (override config)
@@ -54,10 +53,6 @@ for (int i = 0; i < args.Length; i++)
             if (i + 1 < args.Length && int.TryParse(args[++i], out var b))
                 batchMs = b;
             break;
-        case "--words":
-        case "-w":
-            includeWords = true;
-            break;
         case "--language":
         case "--lang":
             if (i + 1 < args.Length)
@@ -70,15 +65,10 @@ for (int i = 0; i < args.Length; i++)
     }
 }
 
-Console.WriteLine("=== Timestamped Transcription Demo ===");
-Console.WriteLine($"Audio source: {source}");
-Console.WriteLine($"Sample rate: {sampleRate} Hz");
-Console.WriteLine($"Batch interval: {batchMs}ms");
-Console.WriteLine($"Word timestamps: {(includeWords ? "enabled" : "disabled")}");
-Console.WriteLine($"Language: {language ?? "auto-detect"}");
-Console.WriteLine();
+Console.WriteLine("=== Real-time Transcription ===");
+Console.WriteLine($"Audio: {source} | Rate: {sampleRate}Hz | Batch: {batchMs}ms | Lang: {language ?? "auto"}");
 Console.WriteLine("Press Ctrl+C to stop");
-Console.WriteLine(new string('-', 50));
+Console.WriteLine(new string('-', 60));
 Console.WriteLine();
 
 // Create audio capture
@@ -89,45 +79,26 @@ var options = new TimestampedTranscriptionOptions
 {
     SampleRate = sampleRate,
     BatchMs = batchMs,
-    IncludeWordTimestamps = includeWords,
     Language = language
 };
 
 // Create transcription service
 await using var transcription = new TimestampedTranscriptionService(audio, apiKey, options);
 
-// Wire up events
+// Wire up events - streaming display
 transcription.OnTranscriptionResult += result =>
 {
-    Console.ForegroundColor = ConsoleColor.Green;
-    Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Transcription (latency: {result.LatencyMs}ms, duration: {result.AudioDurationSeconds:F1}s)");
-    Console.ResetColor();
-
+    // Just output the text continuously
     foreach (var segment in result.Segments)
     {
-        Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.Write($"  [{FormatTime(segment.StreamOffsetSeconds)} - {FormatTime(segment.StreamOffsetSeconds + segment.DurationSeconds)}] ");
-        Console.ResetColor();
-        Console.WriteLine(segment.Text);
-
-        if (includeWords && segment.Words != null)
-        {
-            Console.ForegroundColor = ConsoleColor.DarkGray;
-            foreach (var word in segment.Words)
-            {
-                Console.Write($"    {word.Word} [{FormatTime(word.StartSeconds)}-{FormatTime(word.EndSeconds)}]");
-            }
-            Console.WriteLine();
-            Console.ResetColor();
-        }
+        Console.Write(segment.Text);
+        Console.Write(" ");
     }
-    Console.WriteLine();
 };
 
 transcription.OnSegment += segment =>
 {
-    // Individual segment callback - useful for real-time caption display
-    // Already handled in OnTranscriptionResult for this demo
+    // Individual segment callback - not used in streaming mode
 };
 
 transcription.OnError += error =>
@@ -165,28 +136,20 @@ catch (OperationCanceledException)
 }
 
 await transcription.StopAsync();
+Console.WriteLine();
 Console.WriteLine("Done.");
 return 0;
 
-static string FormatTime(double seconds)
-{
-    var ts = TimeSpan.FromSeconds(seconds);
-    return ts.TotalHours >= 1
-        ? ts.ToString(@"h\:mm\:ss\.f")
-        : ts.ToString(@"m\:ss\.f");
-}
-
 static void PrintUsage()
 {
-    Console.WriteLine("Timestamped Transcription Demo");
+    Console.WriteLine("Real-time Transcription Demo");
     Console.WriteLine();
     Console.WriteLine("Usage: Interview-assist-transcription-console [options]");
     Console.WriteLine();
     Console.WriteLine("Options:");
     Console.WriteLine("  --mic, -m          Use microphone input (default: loopback)");
     Console.WriteLine("  --loopback, -l     Use system audio loopback");
-    Console.WriteLine("  --batch, -b <ms>   Batch interval in milliseconds (default: 5000)");
-    Console.WriteLine("  --words, -w        Include word-level timestamps");
+    Console.WriteLine("  --batch, -b <ms>   Batch interval in ms (default: 1500, lower = faster)");
     Console.WriteLine("  --lang <code>      Language code (e.g., en, es) for transcription");
     Console.WriteLine("  --help, -h         Show this help message");
     Console.WriteLine();
