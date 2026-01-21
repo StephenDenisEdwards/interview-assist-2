@@ -22,12 +22,21 @@ if (string.IsNullOrWhiteSpace(apiKey))
     return 1;
 }
 
-// Parse command line arguments
-var source = AudioInputSource.Loopback;
-var batchMs = 5000;
-var includeWords = false;
-string? language = null;
+// Load settings from config (command line args override)
+var transcriptionConfig = configuration.GetSection("Transcription");
 
+var audioSourceStr = transcriptionConfig["AudioSource"] ?? "Loopback";
+var source = audioSourceStr.Equals("mic", StringComparison.OrdinalIgnoreCase)
+    || audioSourceStr.Equals("Microphone", StringComparison.OrdinalIgnoreCase)
+    ? AudioInputSource.Microphone
+    : AudioInputSource.Loopback;
+
+var sampleRate = transcriptionConfig.GetValue("SampleRate", 16000);
+var batchMs = transcriptionConfig.GetValue("BatchMs", 5000);
+var includeWords = transcriptionConfig.GetValue("IncludeWordTimestamps", false);
+var language = transcriptionConfig["Language"];
+
+// Parse command line arguments (override config)
 for (int i = 0; i < args.Length; i++)
 {
     switch (args[i].ToLowerInvariant())
@@ -63,6 +72,7 @@ for (int i = 0; i < args.Length; i++)
 
 Console.WriteLine("=== Timestamped Transcription Demo ===");
 Console.WriteLine($"Audio source: {source}");
+Console.WriteLine($"Sample rate: {sampleRate} Hz");
 Console.WriteLine($"Batch interval: {batchMs}ms");
 Console.WriteLine($"Word timestamps: {(includeWords ? "enabled" : "disabled")}");
 Console.WriteLine($"Language: {language ?? "auto-detect"}");
@@ -71,8 +81,7 @@ Console.WriteLine("Press Ctrl+C to stop");
 Console.WriteLine(new string('-', 50));
 Console.WriteLine();
 
-// Create audio capture at 16kHz (Whisper's native sample rate)
-const int sampleRate = 16000;
+// Create audio capture
 var audio = new WindowsAudioCaptureService(sampleRate, source);
 
 // Create transcription options
