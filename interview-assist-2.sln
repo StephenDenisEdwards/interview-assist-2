@@ -20,6 +20,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "claude-plans", "claude-plan
 		documentation\claude-plans\Plan - Interview Assist Improvements.md = documentation\claude-plans\Plan - Interview Assist Improvements.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interview-assist-library-integration-tests", "Interview-assist-library-integration-tests\Interview-assist-library-integration-tests.csproj", "{0948D4C2-5B05-E884-1038-E298C8D39DB5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interview-assist-transcription-console", "Interview-assist-transcription-console\Interview-assist-transcription-console.csproj", "{4A8DE410-D494-4040-B585-EAE02ACFF5F3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -90,6 +94,30 @@ Global
 		{F060154D-36D9-4AED-80D2-BD8981A3CD70}.Release|x64.Build.0 = Release|Any CPU
 		{F060154D-36D9-4AED-80D2-BD8981A3CD70}.Release|x86.ActiveCfg = Release|Any CPU
 		{F060154D-36D9-4AED-80D2-BD8981A3CD70}.Release|x86.Build.0 = Release|Any CPU
+		{0948D4C2-5B05-E884-1038-E298C8D39DB5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0948D4C2-5B05-E884-1038-E298C8D39DB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0948D4C2-5B05-E884-1038-E298C8D39DB5}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{0948D4C2-5B05-E884-1038-E298C8D39DB5}.Debug|x64.Build.0 = Debug|Any CPU
+		{0948D4C2-5B05-E884-1038-E298C8D39DB5}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{0948D4C2-5B05-E884-1038-E298C8D39DB5}.Debug|x86.Build.0 = Debug|Any CPU
+		{0948D4C2-5B05-E884-1038-E298C8D39DB5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0948D4C2-5B05-E884-1038-E298C8D39DB5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0948D4C2-5B05-E884-1038-E298C8D39DB5}.Release|x64.ActiveCfg = Release|Any CPU
+		{0948D4C2-5B05-E884-1038-E298C8D39DB5}.Release|x64.Build.0 = Release|Any CPU
+		{0948D4C2-5B05-E884-1038-E298C8D39DB5}.Release|x86.ActiveCfg = Release|Any CPU
+		{0948D4C2-5B05-E884-1038-E298C8D39DB5}.Release|x86.Build.0 = Release|Any CPU
+		{4A8DE410-D494-4040-B585-EAE02ACFF5F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A8DE410-D494-4040-B585-EAE02ACFF5F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A8DE410-D494-4040-B585-EAE02ACFF5F3}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4A8DE410-D494-4040-B585-EAE02ACFF5F3}.Debug|x64.Build.0 = Debug|Any CPU
+		{4A8DE410-D494-4040-B585-EAE02ACFF5F3}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4A8DE410-D494-4040-B585-EAE02ACFF5F3}.Debug|x86.Build.0 = Debug|Any CPU
+		{4A8DE410-D494-4040-B585-EAE02ACFF5F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A8DE410-D494-4040-B585-EAE02ACFF5F3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A8DE410-D494-4040-B585-EAE02ACFF5F3}.Release|x64.ActiveCfg = Release|Any CPU
+		{4A8DE410-D494-4040-B585-EAE02ACFF5F3}.Release|x64.Build.0 = Release|Any CPU
+		{4A8DE410-D494-4040-B585-EAE02ACFF5F3}.Release|x86.ActiveCfg = Release|Any CPU
+		{4A8DE410-D494-4040-B585-EAE02ACFF5F3}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
