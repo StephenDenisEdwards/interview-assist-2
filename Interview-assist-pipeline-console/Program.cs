@@ -1,38 +1,67 @@
 using InterviewAssist.Audio.Windows;
 using InterviewAssist.Library.Audio;
 using InterviewAssist.Pipeline;
+using Microsoft.Extensions.Configuration;
 
-// Get API key from environment
-var apiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
+// Build configuration
+var configuration = new ConfigurationBuilder()
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+    .AddEnvironmentVariables()
+    .AddUserSecrets<Program>(optional: true)
+    .Build();
+
+// Get API key from configuration or environment
+var apiKey = configuration["OpenAI:ApiKey"]
+    ?? Environment.GetEnvironmentVariable("OPENAI_API_KEY");
+
 if (string.IsNullOrWhiteSpace(apiKey))
 {
-    Console.WriteLine("Error: OPENAI_API_KEY environment variable not set");
+    Console.WriteLine("Error: OpenAI API key not configured.");
+    Console.WriteLine("Set OPENAI_API_KEY environment variable or add OpenAI:ApiKey to appsettings.json/user secrets.");
     return 1;
 }
 
-// Parse command line for audio source
-var source = AudioInputSource.Loopback;
-if (args.Length > 0 && args[0].Equals("mic", StringComparison.OrdinalIgnoreCase))
+// Load pipeline settings
+var pipelineConfig = configuration.GetSection("InterviewPipeline");
+
+// Parse audio source (command line overrides config)
+var audioSourceStr = pipelineConfig["AudioSource"] ?? "Loopback";
+if (args.Length > 0)
 {
-    source = AudioInputSource.Microphone;
+    audioSourceStr = args[0];
 }
+
+var source = audioSourceStr.Equals("mic", StringComparison.OrdinalIgnoreCase)
+    || audioSourceStr.Equals("Microphone", StringComparison.OrdinalIgnoreCase)
+    ? AudioInputSource.Microphone
+    : AudioInputSource.Loopback;
+
+// Parse other settings with defaults
+var sampleRate = pipelineConfig.GetValue("SampleRate", 24000);
+var transcriptionBatchMs = pipelineConfig.GetValue("TranscriptionBatchMs", 3000);
+var detectionModel = pipelineConfig["DetectionModel"] ?? "gpt-4o-mini";
+var detectionConfidence = pipelineConfig.GetValue("DetectionConfidence", 0.7);
 
 Console.WriteLine("=== Interview Pipeline Demo ===");
 Console.WriteLine($"Audio source: {source}");
+Console.WriteLine($"Sample rate: {sampleRate} Hz");
+Console.WriteLine($"Detection model: {detectionModel}");
+Console.WriteLine($"Detection confidence: {detectionConfidence:P0}");
 Console.WriteLine("Press Ctrl+C to stop");
 Console.WriteLine();
 
 // Create audio capture
-var audio = new WindowsAudioCaptureService(24000, source);
+var audio = new WindowsAudioCaptureService(sampleRate, source);
 
 // Create pipeline
 await using var pipeline = new InterviewPipeline(
     audio,
     apiKey,
-    sampleRate: 24000,
-    transcriptionBatchMs: 3000,
-    detectionModel: "gpt-4o-mini",
-    detectionConfidence: 0.7);
+    sampleRate: sampleRate,
+    transcriptionBatchMs: transcriptionBatchMs,
+    detectionModel: detectionModel,
+    detectionConfidence: detectionConfidence);
 
 // Wire up events
 pipeline.OnInfo += msg =>
@@ -89,3 +118,6 @@ catch (OperationCanceledException)
 await pipeline.StopAsync();
 Console.WriteLine("Done.");
 return 0;
+
+// Marker class for user secrets
+public partial class Program { }

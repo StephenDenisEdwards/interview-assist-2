@@ -7,7 +7,11 @@
       "Bash(git add:*)",
       "Bash(dotnet new:*)",
       "Bash(dotnet sln:*)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(dotnet add reference:*)",
+      "Bash(dotnet add package:*)",
+      "Bash(dotnet add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

@@ -1,0 +1,178 @@
+{
+  "testCases": [
+    {
+      "id": "direct_question_1",
+      "category": "DirectQuestion",
+      "transcript": "So, what is dependency injection and why would you use it?",
+      "expectedDetections": [
+        {
+          "type": "Question",
+          "textContains": "dependency injection",
+          "minConfidence": 0.8
+        }
+      ]
+    },
+    {
+      "id": "direct_question_2",
+      "category": "DirectQuestion",
+      "transcript": "Can you explain the difference between abstract classes and interfaces in C#?",
+      "expectedDetections": [
+        {
+          "type": "Question",
+          "textContains": "abstract classes",
+          "minConfidence": 0.8
+        }
+      ]
+    },
+    {
+      "id": "imperative_1",
+      "category": "Imperative",
+      "transcript": "Tell me about your experience with microservices architecture.",
+      "expectedDetections": [
+        {
+          "type": "Imperative",
+          "textContains": "microservices",
+          "minConfidence": 0.7
+        }
+      ]
+    },
+    {
+      "id": "imperative_2",
+      "category": "Imperative",
+      "transcript": "Walk me through how you would design a REST API for an e-commerce application.",
+      "expectedDetections": [
+        {
+          "type": "Imperative",
+          "textContains": "REST API",
+          "minConfidence": 0.7
+        }
+      ]
+    },
+    {
+      "id": "imperative_3",
+      "category": "Imperative",
+      "transcript": "Explain how async and await work in C#.",
+      "expectedDetections": [
+        {
+          "type": "Imperative",
+          "textContains": "async",
+          "minConfidence": 0.7
+        }
+      ]
+    },
+    {
+      "id": "clarification_1",
+      "category": "Clarification",
+      "transcript": "Can you elaborate on that last point about caching?",
+      "expectedDetections": [
+        {
+          "type": "Clarification",
+          "textContains": "elaborate",
+          "minConfidence": 0.6
+        }
+      ]
+    },
+    {
+      "id": "follow_up_1",
+      "category": "FollowUp",
+      "transcript": "And how does that relate to the SOLID principles we discussed earlier?",
+      "previousContext": "We were discussing dependency injection and inversion of control.",
+      "expectedDetections": [
+        {
+          "type": "FollowUp",
+          "textContains": "SOLID",
+          "minConfidence": 0.6
+        }
+      ]
+    },
+    {
+      "id": "multiple_questions",
+      "category": "Multiple",
+      "transcript": "What design patterns have you used? And can you give me a specific example of when you applied the factory pattern?",
+      "expectedDetections": [
+        {
+          "type": "Question",
+          "textContains": "design patterns",
+          "minConfidence": 0.7
+        },
+        {
+          "type": "Question",
+          "textContains": "factory pattern",
+          "minConfidence": 0.7
+        }
+      ]
+    },
+    {
+      "id": "no_question_1",
+      "category": "NoQuestion",
+      "transcript": "That's a great answer. I really liked how you explained the trade-offs.",
+      "expectedDetections": []
+    },
+    {
+      "id": "no_question_2",
+      "category": "NoQuestion",
+      "transcript": "Okay, let me just make a note here. Right, so moving on.",
+      "expectedDetections": []
+    },
+    {
+      "id": "noisy_transcript_1",
+      "category": "Noisy",
+      "transcript": "Um, so like, uh, what would you say is your, um, your biggest strength as a developer?",
+      "expectedDetections": [
+        {
+          "type": "Question",
+          "textContains": "strength",
+          "minConfidence": 0.7
+        }
+      ]
+    },
+    {
+      "id": "coding_question_1",
+      "category": "Coding",
+      "transcript": "Write a function that reverses a linked list. You can use any language you're comfortable with.",
+      "expectedDetections": [
+        {
+          "type": "Imperative",
+          "textContains": "reverse",
+          "minConfidence": 0.7
+        }
+      ]
+    },
+    {
+      "id": "behavioral_1",
+      "category": "Behavioral",
+      "transcript": "Tell me about a time when you had to deal with a difficult team member. How did you handle it?",
+      "expectedDetections": [
+        {
+          "type": "Imperative",
+          "textContains": "difficult team member",
+          "minConfidence": 0.7
+        }
+      ]
+    },
+    {
+      "id": "system_design_1",
+      "category": "SystemDesign",
+      "transcript": "How would you design a URL shortener like bit.ly? What are the key components you'd need?",
+      "expectedDetections": [
+        {
+          "type": "Question",
+          "textContains": "URL shortener",
+          "minConfidence": 0.7
+        }
+      ]
+    },
+    {
+      "id": "edge_case_empty",
+      "category": "EdgeCase",
+      "transcript": "",
+      "expectedDetections": []
+    },
+    {
+      "id": "edge_case_whitespace",
+      "category": "EdgeCase",
+      "transcript": "   \n\t  ",
+      "expectedDetections": []
+    }
+  ]
+}

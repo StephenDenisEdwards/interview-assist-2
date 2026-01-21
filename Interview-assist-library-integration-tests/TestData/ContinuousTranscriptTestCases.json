@@ -1,0 +1,258 @@
+{
+  "description": "Continuous interviewer transcript test cases for detection accuracy testing. These simulate real interview audio streams with questions/imperatives embedded in natural speech.",
+  "testCases": [
+    {
+      "id": "intro_with_question",
+      "description": "Interview intro transitioning to first question",
+      "transcript": "Okay great, thanks for joining us today. So, um, let me just pull up your resume here. Right, so I see you've been working with .NET for a few years now. What got you interested in software development in the first place?",
+      "expectedDetections": [
+        {
+          "textContains": "interested in software development",
+          "type": "Question",
+          "minConfidence": 0.7
+        }
+      ],
+      "shouldNotDetect": ["thanks for joining", "pull up your resume"]
+    },
+    {
+      "id": "multi_question_rapid",
+      "description": "Multiple questions in quick succession",
+      "transcript": "Alright, moving on to the technical portion. What's your experience with dependency injection? And how do you typically structure your applications? Do you follow any specific architectural patterns?",
+      "expectedDetections": [
+        {
+          "textContains": "dependency injection",
+          "type": "Question",
+          "minConfidence": 0.7
+        },
+        {
+          "textContains": "structure your applications",
+          "type": "Question",
+          "minConfidence": 0.7
+        },
+        {
+          "textContains": "architectural patterns",
+          "type": "Question",
+          "minConfidence": 0.7
+        }
+      ],
+      "shouldNotDetect": ["moving on to the technical"]
+    },
+    {
+      "id": "imperative_with_filler",
+      "description": "Imperative buried in conversational filler",
+      "transcript": "Okay, that's interesting. Um, so, yeah. Tell me about a time when you had to debug a really tricky production issue. Like, walk me through your process.",
+      "expectedDetections": [
+        {
+          "textContains": "debug",
+          "type": "Imperative",
+          "minConfidence": 0.7
+        },
+        {
+          "textContains": "walk me through",
+          "type": "Imperative",
+          "minConfidence": 0.7
+        }
+      ],
+      "shouldNotDetect": ["that's interesting"]
+    },
+    {
+      "id": "no_questions_transition",
+      "description": "Transitional speech with no actual questions",
+      "transcript": "Right, okay. That makes sense. Let me just make a note here. So, moving on from that topic. I think we've covered the basics pretty well.",
+      "expectedDetections": [],
+      "shouldNotDetect": ["makes sense", "make a note", "covered the basics"]
+    },
+    {
+      "id": "coding_challenge_intro",
+      "description": "Setting up a coding challenge with imperative",
+      "transcript": "Alright, so now we're going to do a quick coding exercise. Nothing too crazy. So, write a function that takes a list of integers and returns the two numbers that sum to a target value. You can use whatever language you're comfortable with.",
+      "expectedDetections": [
+        {
+          "textContains": "write a function",
+          "type": "Imperative",
+          "minConfidence": 0.7
+        }
+      ],
+      "shouldNotDetect": ["nothing too crazy", "whatever language"]
+    },
+    {
+      "id": "system_design_question",
+      "description": "System design question with context",
+      "transcript": "So let's talk about system design. Imagine you're building a real-time chat application like Slack. How would you approach the architecture? What components would you need?",
+      "expectedDetections": [
+        {
+          "textContains": "approach the architecture",
+          "type": "Question",
+          "minConfidence": 0.7
+        },
+        {
+          "textContains": "components would you need",
+          "type": "Question",
+          "minConfidence": 0.7
+        }
+      ],
+      "shouldNotDetect": ["let's talk about"]
+    },
+    {
+      "id": "noisy_transcription",
+      "description": "Simulated noisy/imperfect transcription",
+      "transcript": "Um so like uh what would you say is your uh biggest weakness as a developer and um how are you working to improve on that",
+      "expectedDetections": [
+        {
+          "textContains": "weakness",
+          "type": "Question",
+          "minConfidence": 0.6
+        },
+        {
+          "textContains": "improve",
+          "type": "Question",
+          "minConfidence": 0.6
+        }
+      ],
+      "shouldNotDetect": []
+    },
+    {
+      "id": "long_segment_buried_question",
+      "description": "Question buried in longer monologue",
+      "transcript": "So I've been doing these interviews for about ten years now and I always find it interesting how different people approach problems. You know, some people are very methodical, others are more intuitive. Anyway, I'm curious, when you encounter a bug that you've never seen before, what's the first thing you do? Like, what's your mental model for approaching unknown problems?",
+      "expectedDetections": [
+        {
+          "textContains": "bug",
+          "type": "Question",
+          "minConfidence": 0.7
+        },
+        {
+          "textContains": "mental model",
+          "type": "Question",
+          "minConfidence": 0.7
+        }
+      ],
+      "shouldNotDetect": ["doing these interviews", "find it interesting"]
+    },
+    {
+      "id": "behavioral_compound",
+      "description": "Compound behavioral question",
+      "transcript": "Tell me about your experience working in agile teams. How do you handle disagreements with team members about technical decisions? Can you give me a specific example?",
+      "expectedDetections": [
+        {
+          "textContains": "agile teams",
+          "type": "Imperative",
+          "minConfidence": 0.7
+        },
+        {
+          "textContains": "disagreements",
+          "type": "Question",
+          "minConfidence": 0.7
+        },
+        {
+          "textContains": "specific example",
+          "type": "Question",
+          "minConfidence": 0.7
+        }
+      ],
+      "shouldNotDetect": []
+    },
+    {
+      "id": "clarification_request",
+      "description": "Interviewer asking for clarification",
+      "transcript": "Hmm, okay. I'm not sure I fully understood that part. Can you elaborate on what you meant by eventual consistency? Like, how does that work in practice?",
+      "expectedDetections": [
+        {
+          "textContains": "elaborate",
+          "type": "Clarification",
+          "minConfidence": 0.7
+        },
+        {
+          "textContains": "work in practice",
+          "type": "Question",
+          "minConfidence": 0.7
+        }
+      ],
+      "shouldNotDetect": ["not sure I fully understood"]
+    },
+    {
+      "id": "mixed_statements_questions",
+      "description": "Mix of statements and questions",
+      "transcript": "So we use Kubernetes here, and Docker obviously. Our deployment pipeline is pretty standard, GitHub Actions, that sort of thing. What's your experience with containerization? Have you worked with orchestration tools before?",
+      "expectedDetections": [
+        {
+          "textContains": "containerization",
+          "type": "Question",
+          "minConfidence": 0.7
+        },
+        {
+          "textContains": "orchestration tools",
+          "type": "Question",
+          "minConfidence": 0.7
+        }
+      ],
+      "shouldNotDetect": ["we use Kubernetes", "deployment pipeline"]
+    },
+    {
+      "id": "rapid_fire_short",
+      "description": "Rapid-fire short questions",
+      "transcript": "Quick fire round. Tabs or spaces? Git rebase or merge? SQL or NoSQL? Monolith or microservices?",
+      "expectedDetections": [
+        {
+          "textContains": "Tabs or spaces",
+          "type": "Question",
+          "minConfidence": 0.6
+        },
+        {
+          "textContains": "rebase or merge",
+          "type": "Question",
+          "minConfidence": 0.6
+        },
+        {
+          "textContains": "SQL or NoSQL",
+          "type": "Question",
+          "minConfidence": 0.6
+        },
+        {
+          "textContains": "Monolith or microservices",
+          "type": "Question",
+          "minConfidence": 0.6
+        }
+      ],
+      "shouldNotDetect": ["Quick fire round"]
+    },
+    {
+      "id": "explain_imperative",
+      "description": "Explain-style imperative",
+      "transcript": "So you mentioned CQRS earlier. Explain how you would implement that pattern in a .NET application. What are the trade-offs?",
+      "expectedDetections": [
+        {
+          "textContains": "Explain",
+          "type": "Imperative",
+          "minConfidence": 0.7
+        },
+        {
+          "textContains": "trade-offs",
+          "type": "Question",
+          "minConfidence": 0.7
+        }
+      ],
+      "shouldNotDetect": ["you mentioned CQRS"]
+    },
+    {
+      "id": "hypothetical_scenario",
+      "description": "Hypothetical scenario question",
+      "transcript": "Let's say you join a team and the codebase has zero tests, zero documentation, and the original developers have all left. What would be your approach to getting up to speed and starting to improve things?",
+      "expectedDetections": [
+        {
+          "textContains": "approach",
+          "type": "Question",
+          "minConfidence": 0.7
+        }
+      ],
+      "shouldNotDetect": ["Let's say you join"]
+    },
+    {
+      "id": "wrap_up_no_questions",
+      "description": "Interview wrap-up with no questions",
+      "transcript": "Alright, I think that covers everything on my end. Let me check my notes here. Yeah, I think we're good. My colleague Sarah will be joining us in a moment for the next part.",
+      "expectedDetections": [],
+      "shouldNotDetect": ["covers everything", "check my notes", "we're good"]
+    }
+  ]
+}
