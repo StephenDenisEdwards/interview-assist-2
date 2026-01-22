@@ -24,6 +24,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interview-assist-library-in
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interview-assist-transcription-console", "Interview-assist-transcription-console\Interview-assist-transcription-console.csproj", "{4A8DE410-D494-4040-B585-EAE02ACFF5F3}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{78751797-6A9E-46A0-95BA-6D7B066ADF83}"
+	ProjectSection(SolutionItems) = preProject
+		documentation\docs\Detecting Questions and Imperative Sentences in English.pdf = documentation\docs\Detecting Questions and Imperative Sentences in English.pdf
+		documentation\docs\HEURISTIC_QUESTION_DETECTOR.md = documentation\docs\HEURISTIC_QUESTION_DETECTOR.md
+		documentation\docs\RATE_LIMITING.md = documentation\docs\RATE_LIMITING.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -124,6 +131,7 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{E7ADE783-533C-463A-873C-A9A9877EACFC} = {58BDCE7F-8562-46AD-BB65-52CFDCAC1E7F}
+		{78751797-6A9E-46A0-95BA-6D7B066ADF83} = {58BDCE7F-8562-46AD-BB65-52CFDCAC1E7F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0AE175CC-351C-46DC-9AF6-60FDF2E57587}

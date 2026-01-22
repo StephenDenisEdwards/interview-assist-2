@@ -1,3 +1,4 @@
+using System.Buffers;
 using NAudio.Wave;
 
 namespace InterviewAssist.Audio.Windows;
@@ -31,10 +32,14 @@ public static class AudioResampler
             {
                 return ResamplePcm16ToMonoPcm16(buffer, bytesRecorded, format, targetSampleRate);
             }
+
+            // Unsupported format - log for diagnostics
+            AudioResamplerDiagnostics.LogUnsupportedFormat(format);
         }
-        catch
+        catch (Exception ex)
         {
-            // Silently handle conversion errors
+            // Log conversion error with context for debugging
+            AudioResamplerDiagnostics.LogConversionError(ex, format, bytesRecorded, targetSampleRate);
         }
 
         return Array.Empty<byte>();
@@ -85,39 +90,47 @@ public static class AudioResampler
         int outputFrames = (int)(inputFrames / resampleRatio);
         if (outputFrames <= 0) return Array.Empty<byte>();
 
-        short[] outputPcm = new short[outputFrames];
-
-        for (int i = 0; i < outputFrames; i++)
+        // Use ArrayPool to reduce GC pressure for intermediate buffers
+        short[] outputPcm = ArrayPool<short>.Shared.Rent(outputFrames);
+        try
         {
-            double srcIndex = i * resampleRatio;
-            int srcBase = (int)srcIndex;
-            double frac = srcIndex - srcBase;
-
-            // Clamp to valid range for interpolation
-            if (srcBase >= inputFrames - 1) srcBase = inputFrames - 2;
-            if (srcBase < 0) srcBase = 0;
-
-            // Mix all channels to mono and interpolate
-            double mixed0 = 0;
-            double mixed1 = 0;
-            for (int ch = 0; ch < channels; ch++)
+            for (int i = 0; i < outputFrames; i++)
             {
-                mixed0 += getSample(srcBase, ch);
-                mixed1 += getSample(srcBase + 1, ch);
+                double srcIndex = i * resampleRatio;
+                int srcBase = (int)srcIndex;
+                double frac = srcIndex - srcBase;
+
+                // Clamp to valid range for interpolation
+                if (srcBase >= inputFrames - 1) srcBase = inputFrames - 2;
+                if (srcBase < 0) srcBase = 0;
+
+                // Mix all channels to mono and interpolate
+                double mixed0 = 0;
+                double mixed1 = 0;
+                for (int ch = 0; ch < channels; ch++)
+                {
+                    mixed0 += getSample(srcBase, ch);
+                    mixed1 += getSample(srcBase + 1, ch);
+                }
+                mixed0 /= channels;
+                mixed1 /= channels;
+
+                // Linear interpolation
+                double sample = mixed0 + frac * (mixed1 - mixed0);
+
+                // Clamp and convert to 16-bit PCM
+                sample = Math.Max(-1.0, Math.Min(1.0, sample));
+                outputPcm[i] = (short)(sample * 32767);
             }
-            mixed0 /= channels;
-            mixed1 /= channels;
 
-            // Linear interpolation
-            double sample = mixed0 + frac * (mixed1 - mixed0);
-
-            // Clamp and convert to 16-bit PCM
-            sample = Math.Max(-1.0, Math.Min(1.0, sample));
-            outputPcm[i] = (short)(sample * 32767);
+            // Copy to output array (only the actual data, not the rented buffer size)
+            byte[] outputBytes = new byte[outputFrames * 2];
+            Buffer.BlockCopy(outputPcm, 0, outputBytes, 0, outputBytes.Length);
+            return outputBytes;
         }
-
-        byte[] outputBytes = new byte[outputFrames * 2];
-        Buffer.BlockCopy(outputPcm, 0, outputBytes, 0, outputBytes.Length);
-        return outputBytes;
+        finally
+        {
+            ArrayPool<short>.Shared.Return(outputPcm);
+        }
     }
 }

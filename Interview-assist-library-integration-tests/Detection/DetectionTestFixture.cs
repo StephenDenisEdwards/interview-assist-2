@@ -25,11 +25,14 @@ public class DetectionTestFixture : IDisposable
             .AddUserSecrets<DetectionTestFixture>(optional: true)
             .Build();
 
-        // Try multiple sources for API key
-        ApiKey = config["OpenAI:ApiKey"]
-            ?? config["OPENAI_API_KEY"]
-            ?? Environment.GetEnvironmentVariable("OPENAI_API_KEY")
-            ?? string.Empty;
+        // Try multiple sources for API key (check for null AND empty strings)
+        ApiKey = GetFirstNonEmpty(
+            config["OpenAI:ApiKey"],
+            config["OPENAI_API_KEY"],
+            Environment.GetEnvironmentVariable("OPENAI_API_KEY"),
+            Environment.GetEnvironmentVariable("OPENAI_API_KEY", EnvironmentVariableTarget.User),
+            Environment.GetEnvironmentVariable("OPENAI_API_KEY", EnvironmentVariableTarget.Machine)
+        ) ?? string.Empty;
 
         Model = config["Detection:DefaultModel"] ?? "gpt-4o-mini";
         ConfidenceThreshold = double.TryParse(config["Detection:ConfidenceThreshold"], out var thresh)
@@ -56,6 +59,16 @@ public class DetectionTestFixture : IDisposable
     {
         // HttpClient in the service will be disposed with the service
         GC.SuppressFinalize(this);
+    }
+
+    private static string? GetFirstNonEmpty(params string?[] values)
+    {
+        foreach (var value in values)
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+                return value;
+        }
+        return null;
     }
 }
 

@@ -61,6 +61,13 @@ public static class InterviewAssistMetrics
         name: "interview_assist.audio.chunks_dropped",
         unit: "{chunks}",
         description: "Number of audio chunks dropped due to backpressure");
+
+    private static readonly Counter<long> s_backpressureWarnings = s_meter.CreateCounter<long>(
+        name: "interview_assist.audio.backpressure_warnings",
+        unit: "{warnings}",
+        description: "Number of backpressure warning events");
+
+    private static int s_currentQueueDepth;
     #endregion
 
     #region Public Methods
@@ -104,5 +111,21 @@ public static class InterviewAssistMetrics
     /// Records an audio chunk being dropped.
     /// </summary>
     public static void RecordAudioChunkDropped() => s_audioChunksDropped.Add(1);
+
+    /// <summary>
+    /// Records a backpressure warning event.
+    /// </summary>
+    public static void RecordBackpressureWarning() => s_backpressureWarnings.Add(1);
+
+    /// <summary>
+    /// Updates the current audio queue depth.
+    /// </summary>
+    /// <param name="depth">The current queue depth.</param>
+    public static void SetQueueDepth(int depth) => Interlocked.Exchange(ref s_currentQueueDepth, depth);
+
+    /// <summary>
+    /// Gets the current audio queue depth.
+    /// </summary>
+    public static int CurrentQueueDepth => Volatile.Read(ref s_currentQueueDepth);
     #endregion
 }

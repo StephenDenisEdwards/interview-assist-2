@@ -19,7 +19,7 @@ public class OpenAiRealtimeApi : IRealtimeApi
 {
     private readonly RealtimeApiOptions _options;
     private readonly ILogger<OpenAiRealtimeApi> _logger;
-    private const string WS_URL = "wss://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17";
+    private readonly string _wsUrl;
 
     private ClientWebSocket? _ws;
     private CancellationTokenSource? _cts;
@@ -67,6 +67,15 @@ public class OpenAiRealtimeApi : IRealtimeApi
     // Response timing for metrics
     private long _responseStartTimestamp;
 
+    // Correlation ID for request tracing
+    private string _correlationId = string.Empty;
+
+    // Session state tracking for graceful shutdown
+    private DateTime _sessionStartTime;
+    private readonly List<string> _recentTranscripts = new();
+    private readonly object _transcriptLock = new();
+    private const int MaxRecentTranscripts = 50;
+
     // Serialization
     private static readonly JsonSerializerOptions s_jsonOptions = new() { WriteIndented = false };
     private static readonly Regex s_codeBlockRegex = new(
@@ -74,6 +83,11 @@ public class OpenAiRealtimeApi : IRealtimeApi
         RegexOptions.Singleline | RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
     public bool IsConnected => _ws?.State == WebSocketState.Open;
+
+    /// <summary>
+    /// Gets the correlation ID for the current session.
+    /// </summary>
+    public string CorrelationId => _correlationId;
 
     #region Events
     public event Action? OnConnected;
@@ -92,6 +106,7 @@ public class OpenAiRealtimeApi : IRealtimeApi
     public event Action<string>? OnAssistantAudioTranscriptDelta;
     public event Action? OnAssistantAudioTranscriptDone;
     public event Action<string, string, string>? OnFunctionCallResponse;
+    public event Action<int>? OnBackpressure;
     #endregion
 
     #region Constructors
@@ -105,10 +120,11 @@ public class OpenAiRealtimeApi : IRealtimeApi
         _audio = audioCaptureService ?? throw new ArgumentNullException(nameof(audioCaptureService));
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _logger = logger ?? NullLogger<OpenAiRealtimeApi>.Instance;
+        _wsUrl = ModelConstants.BuildRealtimeUrl(options.RealtimeModel);
 
-        _logger.LogInformation("Initializing OpenAI Live Realtime API");
+        _logger.LogInformation("Initializing OpenAI Live Realtime API with model {Model}", options.RealtimeModel);
 
-	if (string.IsNullOrWhiteSpace(options.ApiKey))
+        if (string.IsNullOrWhiteSpace(options.ApiKey))
             throw new ArgumentException("API key is required", nameof(options));
     }
 
@@ -142,6 +158,12 @@ public class OpenAiRealtimeApi : IRealtimeApi
             throw new InvalidOperationException("Realtime API already started.");
         }
 
+        _correlationId = CorrelationContext.GenerateId();
+        CorrelationContext.Set(_correlationId);
+        _sessionStartTime = DateTime.UtcNow;
+
+        _logger.LogInformation("[{CorrelationId}] Starting Realtime API session", _correlationId);
+
         _externalCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         _reconnectAttempts = 0;
 
@@ -155,7 +177,7 @@ public class OpenAiRealtimeApi : IRealtimeApi
             return;
         }
 
-        _logger.LogInformation("Stopping Realtime API");
+        _logger.LogInformation("[{CorrelationId}] Stopping Realtime API", _correlationId);
 
         await CleanupConnectionAsync().ConfigureAwait(false);
 
@@ -226,7 +248,7 @@ public class OpenAiRealtimeApi : IRealtimeApi
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Connection error");
+                _logger.LogError(ex, "[{CorrelationId}] Connection error", _correlationId);
                 SafeRaise(() => OnError?.Invoke(ex));
 
                 if (!_options.EnableReconnection || _quotaExhausted)
@@ -254,10 +276,26 @@ public class OpenAiRealtimeApi : IRealtimeApi
         _ws = new ClientWebSocket();
         _ws.Options.SetRequestHeader("Authorization", $"Bearer {_options.ApiKey}");
         _ws.Options.SetRequestHeader("OpenAI-Beta", "realtime=v1");
+        _ws.Options.KeepAliveInterval = TimeSpan.FromMilliseconds(_options.WebSocketKeepAliveIntervalMs);
 
-        _logger.LogInformation("Connecting to OpenAI Realtime API");
-        await _ws.ConnectAsync(new Uri(WS_URL), _cts!.Token).ConfigureAwait(false);
-        _logger.LogInformation("Connected successfully");
+        _logger.LogInformation(
+            "[{CorrelationId}] Connecting to OpenAI Realtime API at {Url} (timeout: {TimeoutMs}ms, keepAlive: {KeepAliveMs}ms)",
+            _correlationId, _wsUrl, _options.WebSocketConnectTimeoutMs, _options.WebSocketKeepAliveIntervalMs);
+
+        // Create a timeout-linked cancellation token for the connection attempt
+        using var timeoutCts = new CancellationTokenSource(_options.WebSocketConnectTimeoutMs);
+        using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(_cts!.Token, timeoutCts.Token);
+
+        try
+        {
+            await _ws.ConnectAsync(new Uri(_wsUrl), linkedCts.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (timeoutCts.IsCancellationRequested && !_cts.IsCancellationRequested)
+        {
+            throw new TimeoutException($"WebSocket connection timed out after {_options.WebSocketConnectTimeoutMs}ms");
+        }
+
+        _logger.LogInformation("[{CorrelationId}] Connected successfully", _correlationId);
 
         InterviewAssistMetrics.RecordConnection();
         SafeRaise(() => OnConnected?.Invoke());
@@ -298,8 +336,8 @@ public class OpenAiRealtimeApi : IRealtimeApi
         var delay = _options.ReconnectBaseDelayMs * (int)Math.Pow(2, _reconnectAttempts - 1);
         delay = Math.Min(delay, QueueConstants.MaxReconnectDelayMs);
 
-        _logger.LogWarning("Reconnection attempt {Attempt}/{Max} in {Delay}ms",
-            _reconnectAttempts, _options.MaxReconnectAttempts, delay);
+        _logger.LogWarning("[{CorrelationId}] Reconnection attempt {Attempt}/{Max} in {Delay}ms",
+            _correlationId, _reconnectAttempts, _options.MaxReconnectAttempts, delay);
 
         SafeRaise(() => OnReconnecting?.Invoke());
 
@@ -309,6 +347,10 @@ public class OpenAiRealtimeApi : IRealtimeApi
     private async Task CleanupConnectionAsync()
     {
         InterviewAssistMetrics.RecordDisconnection();
+
+        // Save session state if configured
+        await SaveSessionStateAsync().ConfigureAwait(false);
+
         try { _audio?.Stop(); } catch { }
 
         if (_audioHandler != null)
@@ -398,7 +440,7 @@ public class OpenAiRealtimeApi : IRealtimeApi
                 voice = _options.Voice,
                 input_audio_format = "pcm16",
                 output_audio_format = "pcm16",
-                input_audio_transcription = new { model = "whisper-1" },
+                input_audio_transcription = new { model = _options.TranscriptionModel },
                 turn_detection = new
                 {
                     type = "server_vad",
@@ -467,10 +509,23 @@ public class OpenAiRealtimeApi : IRealtimeApi
         {
             if (_quotaExhausted || _rateLimited) return;
 
+            // Check for backpressure before write
+            var readerCount = _audioChannel.Reader.Count;
+            var backpressureThreshold = AudioConstants.AudioChannelCapacity - 2;
+
+            if (readerCount >= backpressureThreshold)
+            {
+                InterviewAssistMetrics.RecordBackpressureWarning();
+                InterviewAssistMetrics.SetQueueDepth(readerCount);
+                _logger.LogWarning("[{CorrelationId}] Audio backpressure warning: queue depth {Depth}/{Capacity}, chunk size {Size}",
+                    _correlationId, readerCount, AudioConstants.AudioChannelCapacity, bytes.Length);
+                SafeRaise(() => OnBackpressure?.Invoke(readerCount));
+            }
+
             if (!_audioChannel.Writer.TryWrite(bytes))
             {
                 InterviewAssistMetrics.RecordAudioChunkDropped();
-                _logger.LogWarning("Audio queue full; dropping chunk");
+                _logger.LogWarning("[{CorrelationId}] Audio queue full; dropping chunk", _correlationId);
                 SafeRaise(() => OnWarning?.Invoke("Audio queue full; dropping audio chunk."));
             }
         };
@@ -599,6 +654,7 @@ public class OpenAiRealtimeApi : IRealtimeApi
                     {
                         var text = transcript.GetString() ?? string.Empty;
                         _logger.LogDebug("User transcript: {Text}", text);
+                        TrackRecentTranscript(text);
                         SafeRaise(() => OnUserTranscript?.Invoke(text));
                     }
                     break;
@@ -1016,8 +1072,8 @@ public class OpenAiRealtimeApi : IRealtimeApi
         var message = error.TryGetProperty("message", out var m) ? m.GetString() ?? "Unknown error" : "Unknown error";
         var param = error.TryGetProperty("param", out var p) ? p.GetString() ?? "" : "";
 
-        _logger.LogWarning("API error: type={Type}, code={Code}, param={Param}, message={Message}",
-            type, code, param, message);
+        _logger.LogWarning("[{CorrelationId}] API error: type={Type}, code={Code}, param={Param}, message={Message}",
+            _correlationId, type, code, param, message);
         SafeRaise(() => OnWarning?.Invoke($"API error type={type} code={code} param={param} message={message}"));
 
         // Fatal errors
@@ -1079,7 +1135,7 @@ public class OpenAiRealtimeApi : IRealtimeApi
         _quotaExhausted = true;
 
         InterviewAssistMetrics.RecordQuotaExhausted();
-        _logger.LogError("Quota exhausted - stopping session");
+        _logger.LogError("[{CorrelationId}] Quota exhausted - stopping session", _correlationId);
         SafeRaise(() => OnWarning?.Invoke("Quota exhausted – stopping audio capture and cancelling session."));
 
         try { _audio?.Stop(); } catch { }
@@ -1092,7 +1148,7 @@ public class OpenAiRealtimeApi : IRealtimeApi
         if (_quotaExhausted || _rateLimited) return;
 
         InterviewAssistMetrics.RecordRateLimitHit();
-        _logger.LogWarning("Rate limit hit: {Context}", context);
+        _logger.LogWarning("[{CorrelationId}] Rate limit hit: {Context}", _correlationId, context);
         SafeRaise(() => OnWarning?.Invoke($"Rate limit detected – pausing audio. ({context})"));
 
         _rateLimited = true;
@@ -1345,6 +1401,54 @@ public class OpenAiRealtimeApi : IRealtimeApi
         try { _eventChannel?.Writer.TryComplete(); } catch { }
         _eventChannel = null;
         _eventTask = null;
+    }
+    #endregion
+
+    #region Session State Tracking
+    private void TrackRecentTranscript(string transcript)
+    {
+        if (string.IsNullOrWhiteSpace(transcript)) return;
+
+        lock (_transcriptLock)
+        {
+            _recentTranscripts.Add(transcript);
+
+            // Keep only the most recent transcripts
+            while (_recentTranscripts.Count > MaxRecentTranscripts)
+            {
+                _recentTranscripts.RemoveAt(0);
+            }
+        }
+    }
+
+    private async Task SaveSessionStateAsync()
+    {
+        if (_options.OnShutdownSaveState == null) return;
+
+        try
+        {
+            IReadOnlyList<string> transcripts;
+            lock (_transcriptLock)
+            {
+                transcripts = _recentTranscripts.ToList();
+            }
+
+            var sessionState = new SessionState(
+                _correlationId,
+                transcripts,
+                _sessionStartTime,
+                DateTime.UtcNow);
+
+            _logger.LogInformation("[{CorrelationId}] Saving session state: {TranscriptCount} transcripts, duration {Duration}",
+                _correlationId, transcripts.Count, sessionState.Duration);
+
+            await _options.OnShutdownSaveState(sessionState).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            // Don't let state saving failure prevent shutdown
+            _logger.LogError(ex, "[{CorrelationId}] Failed to save session state", _correlationId);
+        }
     }
     #endregion
 }

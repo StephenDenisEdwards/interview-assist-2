@@ -253,6 +253,106 @@
       "transcript": "Alright, I think that covers everything on my end. Let me check my notes here. Yeah, I think we're good. My colleague Sarah will be joining us in a moment for the next part.",
       "expectedDetections": [],
       "shouldNotDetect": ["covers everything", "check my notes", "we're good"]
+    },
+    {
+      "id": "csharp_tutorial_arrays_part1",
+      "description": "C# tutorial video - Arrays part 1 - Can you store different types in an array",
+      "transcript": "This is part one of C-Sharp interview questions video series. In this video, We'll answer this interview question. Can you store different types in an array in C sharp. If you're wondering why this video series, we will discuss all the possible C-Sharp interview questions in this series. So, let's answer this interview question. Can you store different types in an array in C sharp. And the answer is yes, if you create an object array. Let's understand that with an example. Here I have a console application. Now let's create an integer array. Now look at this. I can store an integer within this array, because that is an integer array. If I try to store a string, look at what is going to happen. We will get a compilation error. Look at that. We have an error cannot implicitly convert type string to int. So arrays are strongly typed. You can only store integer type within this array. But then if you want to store different data types, create an array of type object. Then look at this. I am able to store an integer. I am able to store a string. Because object type is the base type for all types in dot net. All types directly or indirectly inherit from object.",
+      "expectedDetections": [
+        {
+          "textContains": "store different types in an array",
+          "type": "Question",
+          "minConfidence": 0.7
+        }
+      ],
+      "shouldNotDetect": ["If you're wondering why", "let's understand that"]
+    },
+    {
+      "id": "csharp_tutorial_jagged_arrays_part2",
+      "description": "C# tutorial video - Jagged Arrays part 2",
+      "transcript": "This is part 2 of C-Sharp interview questions video series. In this video we will answer this interview question, what is a jagged array. Let's understand this with an example. Let's say we have three employees. Mark, Matt, and John. Mark has three qualifications, bachelors, masters, and doctorate, whereas Matt has only one qualification, that is only a bachelors degree. John has bachelors and masters. Now here different employees have different number of qualifications. So, I want a data structure where I can store these varying number of qualifications. Jagged Array is one of the choices. Let's look at an example of using this jagged array. So first, let's create a jagged array. Now what is a jagged array? A jagged array is an array of arrays. Now look at this, qualifications are strings. So I'm going to create a string jagged array, meaning an array of string arrays.",
+      "expectedDetections": [
+        {
+          "textContains": "what is a jagged array",
+          "type": "Question",
+          "minConfidence": 0.7
+        }
+      ],
+      "shouldNotDetect": ["Let's understand this", "Let's say we have"]
+    },
+    {
+      "id": "csharp_tutorial_abstract_class_part3",
+      "description": "C# tutorial video - Abstract Classes part 3",
+      "transcript": "This is part three of C sharp interview questions video series. In this video, we will answer this interview question, why and when should we use an abstract class. This interview question could also be asked in a slightly different way, give an example of where we could use an abstract class. Interfaces and abstract classes are complex subjects. If we are able to answer the questions related to them properly in an interview, the interviewer may get a very good impression of you.",
+      "expectedDetections": [
+        {
+          "textContains": "abstract class",
+          "type": "Question",
+          "minConfidence": 0.7
+        },
+        {
+          "textContains": "give an example",
+          "type": "Imperative",
+          "minConfidence": 0.7
+        }
+      ],
+      "shouldNotDetect": ["This interview question could also be asked"]
+    },
+    {
+      "id": "csharp_tutorial_interfaces_part4",
+      "description": "C# tutorial video - Interfaces part 4",
+      "transcript": "This is part 4 of C-Sharp interview questions video series. In this video we will answer this interview question, what are the advantages of using interfaces. Before proceeding with this, I strongly recommend to watch these videos from the C-sharp tutorial. In part 30, we discussed the basics of interfaces. We discussed implicit and explicit interface implementation in part 31.",
+      "expectedDetections": [
+        {
+          "textContains": "advantages",
+          "type": "Question",
+          "minConfidence": 0.7
+        },
+        {
+          "textContains": "interfaces",
+          "type": "Question",
+          "minConfidence": 0.7
+        }
+      ],
+      "shouldNotDetect": ["I strongly recommend"]
+    },
+    {
+      "id": "csharp_tutorial_full_transcript",
+      "description": "Full C# interview tutorial transcript with multiple questions - simulates real console output",
+      "transcript": "This is part one of C-Sharp interview questions video series. In this video, We'll answer this interview question. Can you store different types in an array in C sharp. So, let's answer this interview question. Can you store different types in an array in C sharp. And the answer is yes, if you create an object array. Let's understand that with an example. This is part 2 of C-Sharp interview questions video series. In this video we will answer this interview question, what is a jagged array. Let's understand this with an example. A jagged array is an array of arrays. This is part three of C sharp interview questions video series. In this video, we will answer this interview question, why and when should we use an abstract class. Give an example of where we could use an abstract class. This is part 4 of C-Sharp interview questions video series. In this video we will answer this interview question, what are the advantages of using interfaces.",
+      "expectedDetections": [
+        {
+          "textContains": "store different types in an array",
+          "type": "Question",
+          "minConfidence": 0.7
+        },
+        {
+          "textContains": "jagged array",
+          "type": "Question",
+          "minConfidence": 0.7
+        },
+        {
+          "textContains": "abstract class",
+          "type": "Question",
+          "minConfidence": 0.7
+        },
+        {
+          "textContains": "give an example",
+          "type": "Imperative",
+          "minConfidence": 0.7
+        },
+        {
+          "textContains": "advantages",
+          "type": "Question",
+          "minConfidence": 0.7
+        },
+        {
+          "textContains": "interfaces",
+          "type": "Question",
+          "minConfidence": 0.7
+        }
+      ],
+      "shouldNotDetect": ["Let's understand", "I strongly recommend"]
     }
   ]
 }

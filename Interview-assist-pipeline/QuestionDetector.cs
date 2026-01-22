@@ -37,6 +37,16 @@ public sealed class QuestionDetector : IDisposable
         - Clarifications: "Can you elaborate?", "What do you mean by...?"
         - Follow-ups: "And how does that...?", "What about...?"
 
+        CRITICAL - Making questions self-contained:
+        - Every question MUST make sense on its own without needing surrounding context
+        - If a question contains pronouns (it, this, that, they, them) that refer to a subject, RESOLVE the pronoun
+        - Examples:
+          * "When should we use it?" where "it" refers to "abstract class" → "When should we use an abstract class?"
+          * "What are the advantages?" where context is about interfaces → "What are the advantages of using interfaces?"
+          * "Can you explain that?" where "that" refers to CQRS → "Can you explain CQRS?"
+        - Keep questions that are already self-contained as-is
+        - If you cannot determine what a pronoun refers to, skip the question
+
         When extracting, clean up the question:
         - Remove prefixes like "The question is" or "I want to ask"
         - Reconstruct partial questions into complete form when possible
@@ -46,7 +56,7 @@ public sealed class QuestionDetector : IDisposable
         {
           "detected": [
             {
-              "text": "the actual question, cleaned up and complete",
+              "text": "the actual question, cleaned up, complete, and SELF-CONTAINED",
               "type": "question|imperative|clarification|follow_up",
               "confidence": 0.0-1.0
             }

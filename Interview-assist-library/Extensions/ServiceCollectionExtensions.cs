@@ -1,4 +1,6 @@
 using InterviewAssist.Library.Audio;
+using InterviewAssist.Library.Constants;
+using InterviewAssist.Library.Health;
 using InterviewAssist.Library.Pipeline;
 using InterviewAssist.Library.Realtime;
 using Microsoft.Extensions.DependencyInjection;
@@ -78,6 +80,18 @@ public static class ServiceCollectionExtensions
 
         return services;
     }
+
+    /// <summary>
+    /// Adds Interview Assist health checks to the service collection.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <returns>The service collection for chaining.</returns>
+    public static IServiceCollection AddInterviewAssistHealthChecks(this IServiceCollection services)
+    {
+        services.AddSingleton<IHealthCheck, RealtimeApiHealthCheck>();
+        services.AddSingleton<HealthCheckService>();
+        return services;
+    }
 }
 
 /// <summary>
@@ -86,6 +100,8 @@ public static class ServiceCollectionExtensions
 public class RealtimeApiOptionsBuilder
 {
     private string _apiKey = string.Empty;
+    private string _realtimeModel = ModelConstants.DefaultRealtimeModel;
+    private string _transcriptionModel = ModelConstants.DefaultTranscriptionModel;
     private string? _extraInstructions;
     private string? _systemInstructions;
     private string? _systemInstructionsFilePath;
@@ -102,10 +118,25 @@ public class RealtimeApiOptionsBuilder
     private bool _enableRateLimitRecovery = true;
     private int _rateLimitRecoveryDelayMs = 60000;
     private int _maxReconnectDelayMs = 30000;
+    private int _webSocketConnectTimeoutMs = 30000;
+    private int _webSocketKeepAliveIntervalMs = 30000;
+    private int _httpRequestTimeoutMs = 60000;
 
     public RealtimeApiOptionsBuilder WithApiKey(string apiKey)
     {
         _apiKey = apiKey;
+        return this;
+    }
+
+    public RealtimeApiOptionsBuilder WithRealtimeModel(string model)
+    {
+        _realtimeModel = model;
+        return this;
+    }
+
+    public RealtimeApiOptionsBuilder WithTranscriptionModel(string model)
+    {
+        _transcriptionModel = model;
         return this;
     }
 
@@ -185,6 +216,32 @@ public class RealtimeApiOptionsBuilder
         return this;
     }
 
+    public RealtimeApiOptionsBuilder WithWebSocketConnectTimeout(int timeoutMs)
+    {
+        _webSocketConnectTimeoutMs = timeoutMs;
+        return this;
+    }
+
+    public RealtimeApiOptionsBuilder WithWebSocketKeepAliveInterval(int intervalMs)
+    {
+        _webSocketKeepAliveIntervalMs = intervalMs;
+        return this;
+    }
+
+    public RealtimeApiOptionsBuilder WithHttpRequestTimeout(int timeoutMs)
+    {
+        _httpRequestTimeoutMs = timeoutMs;
+        return this;
+    }
+
+    public RealtimeApiOptionsBuilder WithTimeouts(int connectTimeoutMs = 30000, int keepAliveIntervalMs = 30000, int httpTimeoutMs = 60000)
+    {
+        _webSocketConnectTimeoutMs = connectTimeoutMs;
+        _webSocketKeepAliveIntervalMs = keepAliveIntervalMs;
+        _httpRequestTimeoutMs = httpTimeoutMs;
+        return this;
+    }
+
     internal RealtimeApiOptions Build()
     {
         if (string.IsNullOrWhiteSpace(_apiKey))
@@ -193,6 +250,8 @@ public class RealtimeApiOptionsBuilder
         return new RealtimeApiOptions
         {
             ApiKey = _apiKey,
+            RealtimeModel = _realtimeModel,
+            TranscriptionModel = _transcriptionModel,
             ExtraInstructions = _extraInstructions,
             SystemInstructions = _systemInstructions,
             SystemInstructionsFilePath = _systemInstructionsFilePath,
@@ -208,7 +267,10 @@ public class RealtimeApiOptionsBuilder
             ReconnectBaseDelayMs = _reconnectBaseDelayMs,
             EnableRateLimitRecovery = _enableRateLimitRecovery,
             RateLimitRecoveryDelayMs = _rateLimitRecoveryDelayMs,
-            MaxReconnectDelayMs = _maxReconnectDelayMs
+            MaxReconnectDelayMs = _maxReconnectDelayMs,
+            WebSocketConnectTimeoutMs = _webSocketConnectTimeoutMs,
+            WebSocketKeepAliveIntervalMs = _webSocketKeepAliveIntervalMs,
+            HttpRequestTimeoutMs = _httpRequestTimeoutMs
         };
     }
 }

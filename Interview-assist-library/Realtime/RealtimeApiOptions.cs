@@ -1,3 +1,4 @@
+using InterviewAssist.Library.Constants;
 using InterviewAssist.Library.Context;
 
 namespace InterviewAssist.Library.Realtime;
@@ -11,6 +12,16 @@ public record RealtimeApiOptions
     /// OpenAI API key for authentication.
     /// </summary>
     public required string ApiKey { get; init; }
+
+    /// <summary>
+    /// The realtime model to use. Default: gpt-4o-realtime-preview-2024-12-17.
+    /// </summary>
+    public string RealtimeModel { get; init; } = ModelConstants.DefaultRealtimeModel;
+
+    /// <summary>
+    /// The transcription model to use for input audio. Default: whisper-1.
+    /// </summary>
+    public string TranscriptionModel { get; init; } = ModelConstants.DefaultTranscriptionModel;
 
     /// <summary>
     /// Additional instructions to include in the session configuration.
@@ -94,4 +105,25 @@ public record RealtimeApiOptions
     /// Used to cap exponential backoff.
     /// </summary>
     public int MaxReconnectDelayMs { get; init; } = 30000;
+
+    /// <summary>
+    /// WebSocket connection timeout in milliseconds. Default: 30000 (30 seconds).
+    /// </summary>
+    public int WebSocketConnectTimeoutMs { get; init; } = 30000;
+
+    /// <summary>
+    /// WebSocket keep-alive interval in milliseconds. Default: 30000 (30 seconds).
+    /// </summary>
+    public int WebSocketKeepAliveIntervalMs { get; init; } = 30000;
+
+    /// <summary>
+    /// HTTP request timeout in milliseconds for non-WebSocket operations. Default: 60000 (1 minute).
+    /// </summary>
+    public int HttpRequestTimeoutMs { get; init; } = 60000;
+
+    /// <summary>
+    /// Optional callback to save session state on shutdown.
+    /// Called during graceful shutdown with the session state.
+    /// </summary>
+    public Func<SessionState, Task>? OnShutdownSaveState { get; init; }
 }
