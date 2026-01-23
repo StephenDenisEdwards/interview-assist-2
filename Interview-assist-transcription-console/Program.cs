@@ -45,6 +45,10 @@ var detectionMethod = detectionMethodStr.Equals("llm", StringComparison.OrdinalI
 var detectionModel = detectionConfig["Model"] ?? "gpt-4o-mini";
 var confidenceThreshold = detectionConfig.GetValue("ConfidenceThreshold", 0.7);
 var detectionIntervalMs = detectionConfig.GetValue("DetectionIntervalMs", 2000);
+var minBufferLength = detectionConfig.GetValue("MinBufferLength", 50);
+var deduplicationWindowMs = detectionConfig.GetValue("DeduplicationWindowMs", 30000);
+var enableTechnicalTermCorrection = detectionConfig.GetValue("EnableTechnicalTermCorrection", true);
+var enableNoiseFilter = detectionConfig.GetValue("EnableNoiseFilter", true);
 
 // Parse command line arguments (override config)
 for (int i = 0; i < args.Length; i++)
@@ -120,7 +124,11 @@ IQuestionDetector questionDetector = detectionMethod switch
         apiKey,
         detectionModel,
         confidenceThreshold,
-        detectionIntervalMs),
+        detectionIntervalMs,
+        minBufferLength,
+        deduplicationWindowMs,
+        enableTechnicalTermCorrection,
+        enableNoiseFilter),
     _ => new HeuristicQuestionDetector()
 };
 
@@ -244,10 +252,14 @@ static void PrintUsage()
     Console.WriteLine("  Settings can also be configured in appsettings.json:");
     Console.WriteLine("  {");
     Console.WriteLine("    \"QuestionDetection\": {");
-    Console.WriteLine("      \"Method\": \"Heuristic\",  // or \"Llm\"");
+    Console.WriteLine("      \"Method\": \"Llm\",        // or \"Heuristic\"");
     Console.WriteLine("      \"Model\": \"gpt-4o-mini\",");
     Console.WriteLine("      \"ConfidenceThreshold\": 0.7,");
-    Console.WriteLine("      \"DetectionIntervalMs\": 1000");
+    Console.WriteLine("      \"DetectionIntervalMs\": 2000,");
+    Console.WriteLine("      \"MinBufferLength\": 50,");
+    Console.WriteLine("      \"DeduplicationWindowMs\": 30000,");
+    Console.WriteLine("      \"EnableTechnicalTermCorrection\": true,");
+    Console.WriteLine("      \"EnableNoiseFilter\": true");
     Console.WriteLine("    }");
     Console.WriteLine("  }");
 }

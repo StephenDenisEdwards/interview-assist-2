@@ -18,7 +18,8 @@
       "Bash(powershell -NoProfile -ExecutionPolicy Bypass -Command \"& { $env:OPENAI_API_KEY = [Environment]::GetEnvironmentVariable\\(''OPENAI_API_KEY'', ''User''\\); Set-Location ''C:\\\\Users\\\\steph\\\\source\\\\repos\\\\AI\\\\micro-x\\\\micro-x-interview-assist-2''; & dotnet test Interview-assist-library-integration-tests/Interview-assist-library-integration-tests.csproj --filter ''DetectQuestions_CSharpTutorialTranscript'' --logger ''console;verbosity=detailed'' }\")",
       "Bash(powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\steph\\\\source\\\\repos\\\\AI\\\\micro-x\\\\micro-x-interview-assist-2\\\\run-test.ps1\")",
       "Bash(dir \"C:\\\\Users\\\\steph\\\\source\\\\repos\\\\AI\\\\micro-x\\\\micro-x-interview-assist-2\\\\docs\")",
-      "Bash(dir /s /b \"C:\\\\Users\\\\steph\\\\source\\\\repos\\\\AI\\\\micro-x\\\\micro-x-interview-assist-2\\\\docs\\\\architecture\")"
+      "Bash(dir /s /b \"C:\\\\Users\\\\steph\\\\source\\\\repos\\\\AI\\\\micro-x\\\\micro-x-interview-assist-2\\\\docs\\\\architecture\")",
+      "Bash(dir:*)"
     ]
   }
 }

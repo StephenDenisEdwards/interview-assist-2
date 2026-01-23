@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using InterviewAssist.TranscriptionConsole;
 
 /// <summary>
@@ -13,13 +14,99 @@ public class LlmQuestionDetector : IQuestionDetector, IDisposable
     private readonly string _model;
     private readonly double _confidenceThreshold;
     private readonly int _detectionIntervalMs;
+    private readonly int _minBufferLength;
+    private readonly int _deduplicationWindowMs;
+    private readonly bool _enableTechnicalTermCorrection;
+    private readonly bool _enableNoiseFilter;
     private readonly StringBuilder _buffer = new();
     private readonly HashSet<string> _detectedQuestions = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, DateTime> _detectionTimes = new(StringComparer.OrdinalIgnoreCase);
     private readonly object _detectedQuestionsLock = new();
     private DateTime _lastDetection = DateTime.MinValue;
     private const int MaxBufferLength = 2500;
     private const int MaxDetectedHistory = 50;
+    private const double JaccardThreshold = 0.7;
     private const string ChatCompletionsUrl = "https://api.openai.com/v1/chat/completions";
+
+    /// <summary>
+    /// Dictionary of common misheard programming terms from speech-to-text.
+    /// Keys are case-insensitive patterns, values are the correct technical terms.
+    /// </summary>
+    private static readonly Dictionary<string, string> TechnicalTermCorrections = new(StringComparer.OrdinalIgnoreCase)
+    {
+        // Generic type patterns
+        { "span t", "Span<T>" },
+        { "spanty", "Span<T>" },
+        { "span tea", "Span<T>" },
+        { "list t", "List<T>" },
+        { "list tea", "List<T>" },
+        { "i enumerable t", "IEnumerable<T>" },
+        { "i enumerable tea", "IEnumerable<T>" },
+        { "quality compare tea", "IEqualityComparer<T>" },
+        { "equality comparer t", "IEqualityComparer<T>" },
+        { "equality comparer tea", "IEqualityComparer<T>" },
+        { "i comparable t", "IComparable<T>" },
+        { "i comparable tea", "IComparable<T>" },
+        { "async local t", "AsyncLocal<T>" },
+        { "async local tea", "AsyncLocal<T>" },
+        { "dictionary t", "Dictionary<TKey, TValue>" },
+        { "func t", "Func<T>" },
+        { "action t", "Action<T>" },
+
+        // Language names
+        { "sea sharp", "C#" },
+        { "sea shard", "C#" },
+        { "c shard", "C#" },
+        { "c-sharp", "C#" },
+        { "see sharp", "C#" },
+        { "f sharp", "F#" },
+        { "f-sharp", "F#" },
+
+        // Methods/Types
+        { "thashcode", "GetHashCode" },
+        { "gethashcode", "GetHashCode" },
+        { "t hash code", "GetHashCode" },
+        { "configure await", "ConfigureAwait" },
+        { "configure a wait", "ConfigureAwait" },
+        { "task when all", "Task.WhenAll" },
+        { "task wait all", "Task.WaitAll" },
+        { "gc collect", "GC.Collect" },
+        { "gc select", "GC.Collect" },
+        { "g c collect", "GC.Collect" },
+        { "i disposable", "IDisposable" },
+        { "eye disposable", "IDisposable" },
+        { "i async disposable", "IAsyncDisposable" },
+
+        // Common misheard words
+        { "a weight", "await" },
+        { "a wake", "await" },
+        { "a wait", "await" },
+        { "new soft", "Newtonsoft" },
+        { "newton soft", "Newtonsoft" },
+        { "jay son", "JSON" },
+        { "jason", "JSON" },
+        { "link", "LINQ" },
+        { "ef core", "EF Core" },
+        { "e f core", "EF Core" },
+        { "entity framework", "Entity Framework" },
+        { "asp net", "ASP.NET" },
+        { "asp.net", "ASP.NET" },
+        { "dot net", ".NET" },
+        { "dotnet", ".NET" },
+
+        // Async patterns
+        { "async await", "async/await" },
+        { "a sink a weight", "async/await" },
+        { "value task", "ValueTask" },
+        { "value task t", "ValueTask<T>" },
+
+        // Memory/performance terms
+        { "stack alec", "stackalloc" },
+        { "stack alloc", "stackalloc" },
+        { "memory t", "Memory<T>" },
+        { "read only span", "ReadOnlySpan<T>" },
+        { "read only memory", "ReadOnlyMemory<T>" },
+    };
 
     private const string SystemPrompt = """
         You are a question detection system analyzing TECHNICAL INTERVIEW transcripts.
@@ -59,12 +146,20 @@ public class LlmQuestionDetector : IQuestionDetector, IDisposable
         string apiKey,
         string model = "gpt-4o-mini",
         double confidenceThreshold = 0.7,
-        int detectionIntervalMs = 1000)
+        int detectionIntervalMs = 2000,
+        int minBufferLength = 50,
+        int deduplicationWindowMs = 30000,
+        bool enableTechnicalTermCorrection = true,
+        bool enableNoiseFilter = true)
     {
         _apiKey = apiKey ?? throw new ArgumentNullException(nameof(apiKey));
         _model = model;
         _confidenceThreshold = confidenceThreshold;
         _detectionIntervalMs = detectionIntervalMs;
+        _minBufferLength = minBufferLength;
+        _deduplicationWindowMs = deduplicationWindowMs;
+        _enableTechnicalTermCorrection = enableTechnicalTermCorrection;
+        _enableNoiseFilter = enableNoiseFilter;
         _http = new HttpClient();
         _http.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
     }
@@ -76,8 +171,24 @@ public class LlmQuestionDetector : IQuestionDetector, IDisposable
         if (string.IsNullOrWhiteSpace(text))
             return;
 
+        var processed = text;
+
+        // Filter transcription noise (if enabled)
+        if (_enableNoiseFilter)
+        {
+            processed = RemoveTranscriptionNoise(processed);
+            if (string.IsNullOrWhiteSpace(processed))
+                return;
+        }
+
+        // Correct technical terms that are commonly misheard (if enabled)
+        if (_enableTechnicalTermCorrection)
+        {
+            processed = CorrectTechnicalTerms(processed);
+        }
+
         _buffer.Append(' ');
-        _buffer.Append(text);
+        _buffer.Append(processed);
 
         // Trim buffer if too long
         if (_buffer.Length > MaxBufferLength)
@@ -85,6 +196,125 @@ public class LlmQuestionDetector : IQuestionDetector, IDisposable
             var excess = _buffer.Length - MaxBufferLength;
             _buffer.Remove(0, excess);
         }
+    }
+
+    /// <summary>
+    /// Removes transcription noise like repeated words and filler words.
+    /// </summary>
+    internal static string RemoveTranscriptionNoise(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return string.Empty;
+
+        // Filler words to remove
+        var fillerWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "um", "uh", "er", "ah", "hmm", "hm", "mm", "mhm", "erm"
+        };
+
+        var words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (words.Length == 0)
+            return string.Empty;
+
+        // Detect repeated word patterns (same word 3+ times in a row)
+        var result = new List<string>();
+        string? lastWord = null;
+        int repeatCount = 0;
+
+        foreach (var word in words)
+        {
+            var cleanWord = word.Trim('.', ',', '!', '?', ';', ':');
+
+            // Skip filler words
+            if (fillerWords.Contains(cleanWord))
+                continue;
+
+            // Track repetition
+            if (string.Equals(cleanWord, lastWord, StringComparison.OrdinalIgnoreCase))
+            {
+                repeatCount++;
+                // Allow up to 2 repetitions (for emphasis), skip 3+
+                if (repeatCount >= 3)
+                    continue;
+            }
+            else
+            {
+                lastWord = cleanWord;
+                repeatCount = 1;
+            }
+
+            result.Add(word);
+        }
+
+        // If all words were filtered out, return empty
+        if (result.Count == 0)
+            return string.Empty;
+
+        // Check if the result is mostly a single repeated word
+        var uniqueWords = result.Select(w => w.ToLowerInvariant().Trim('.', ',', '!', '?'))
+            .Where(w => w.Length > 1)
+            .Distinct()
+            .ToList();
+
+        // If only 1 unique word and it's very short, likely noise
+        if (uniqueWords.Count <= 1 && result.Count > 2)
+        {
+            var singleWord = uniqueWords.FirstOrDefault();
+            if (singleWord != null && singleWord.Length <= 4)
+                return string.Empty;
+        }
+
+        return string.Join(' ', result);
+    }
+
+    /// <summary>
+    /// Corrects commonly misheard technical programming terms.
+    /// </summary>
+    internal static string CorrectTechnicalTerms(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return text;
+
+        var result = text;
+
+        // Apply corrections - longer patterns first to avoid partial matches
+        var sortedCorrections = TechnicalTermCorrections
+            .OrderByDescending(kvp => kvp.Key.Length)
+            .ToList();
+
+        foreach (var (pattern, replacement) in sortedCorrections)
+        {
+            // Case-insensitive replacement
+            var index = result.IndexOf(pattern, StringComparison.OrdinalIgnoreCase);
+            while (index >= 0)
+            {
+                result = result.Remove(index, pattern.Length).Insert(index, replacement);
+                // Continue searching after the replacement
+                index = result.IndexOf(pattern, index + replacement.Length, StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Checks if the text contains at least one complete sentence.
+    /// Prevents detection on partial/fragmented transcriptions.
+    /// </summary>
+    internal static bool HasCompleteSentence(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return false;
+
+        // Find the last sentence terminator (. ? !)
+        var lastPeriod = text.LastIndexOf('.');
+        var lastQuestion = text.LastIndexOf('?');
+        var lastExclamation = text.LastIndexOf('!');
+
+        var lastTerminator = Math.Max(lastPeriod, Math.Max(lastQuestion, lastExclamation));
+
+        // Must have at least one sentence with meaningful content (> 20 chars to terminator)
+        return lastTerminator > 20;
     }
 
     public async Task<List<DetectedQuestion>> DetectQuestionsAsync(CancellationToken ct = default)
@@ -99,7 +329,13 @@ public class LlmQuestionDetector : IQuestionDetector, IDisposable
         }
 
         var text = _buffer.ToString().Trim();
-        if (string.IsNullOrWhiteSpace(text) || text.Length < 15)
+        if (string.IsNullOrWhiteSpace(text) || text.Length < _minBufferLength)
+        {
+            return results;
+        }
+
+        // Check for sentence completeness before processing
+        if (!HasCompleteSentence(text))
         {
             return results;
         }
@@ -149,6 +385,10 @@ public class LlmQuestionDetector : IQuestionDetector, IDisposable
                         results.Add(question);
                         _detectedQuestions.Add(normalizedText);
 
+                        // Record detection time for time-based suppression
+                        var fingerprint = GetSemanticFingerprint(normalizedText);
+                        RecordDetectionTime(fingerprint);
+
                         // Clear the portion of buffer containing this question
                         ClearDetectedFromBuffer(question.Text);
                     }
@@ -188,6 +428,12 @@ public class LlmQuestionDetector : IQuestionDetector, IDisposable
     /// </summary>
     private bool IsAlreadyDetectedUnsafe(string normalizedText)
     {
+        var fingerprint = GetSemanticFingerprint(normalizedText);
+
+        // Check time-based suppression first
+        if (IsRecentlyDetected(fingerprint))
+            return true;
+
         // Exact match
         if (_detectedQuestions.Contains(normalizedText))
             return true;
@@ -200,6 +446,56 @@ public class LlmQuestionDetector : IQuestionDetector, IDisposable
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Extracts a semantic fingerprint from a question by identifying key technical terms.
+    /// </summary>
+    internal static string GetSemanticFingerprint(string question)
+    {
+        var significant = GetSignificantWords(question);
+        var sorted = significant.OrderBy(w => w, StringComparer.OrdinalIgnoreCase);
+        return string.Join(" ", sorted);
+    }
+
+    /// <summary>
+    /// Checks if a fingerprint was detected within the suppression window.
+    /// Must be called within _detectedQuestionsLock.
+    /// </summary>
+    private bool IsRecentlyDetected(string fingerprint)
+    {
+        if (string.IsNullOrWhiteSpace(fingerprint))
+            return false;
+
+        if (_detectionTimes.TryGetValue(fingerprint, out var lastTime))
+        {
+            if ((DateTime.UtcNow - lastTime).TotalMilliseconds < _deduplicationWindowMs)
+                return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Records the detection time for a fingerprint.
+    /// Must be called within _detectedQuestionsLock.
+    /// </summary>
+    private void RecordDetectionTime(string fingerprint)
+    {
+        if (string.IsNullOrWhiteSpace(fingerprint))
+            return;
+
+        _detectionTimes[fingerprint] = DateTime.UtcNow;
+
+        // Clean up old entries (older than deduplication window)
+        var cutoff = DateTime.UtcNow.AddMilliseconds(-_deduplicationWindowMs * 2);
+        var keysToRemove = _detectionTimes
+            .Where(kvp => kvp.Value < cutoff)
+            .Select(kvp => kvp.Key)
+            .ToList();
+
+        foreach (var key in keysToRemove)
+            _detectionTimes.Remove(key);
     }
 
     private static bool IsSimilar(string a, string b)
@@ -224,8 +520,8 @@ public class LlmQuestionDetector : IQuestionDetector, IDisposable
 
         var jaccard = (double)intersection / union;
 
-        // If 60% or more of significant words overlap, consider similar
-        return jaccard >= 0.6;
+        // Use configurable threshold for similarity
+        return jaccard >= JaccardThreshold;
     }
 
     private static HashSet<string> GetSignificantWords(string text)
@@ -251,18 +547,43 @@ public class LlmQuestionDetector : IQuestionDetector, IDisposable
 
     private void ClearDetectedFromBuffer(string questionText)
     {
-        // Only remove the specific question text, not everything before it
-        // This preserves context that may contain other undetected questions
         var bufferText = _buffer.ToString();
         var idx = bufferText.IndexOf(questionText, StringComparison.OrdinalIgnoreCase);
 
         if (idx >= 0)
         {
-            // Remove only the question text itself
-            _buffer.Remove(idx, questionText.Length);
+            // Remove the question text plus some context before it
+            // This prevents the same lead-up context from triggering re-detection
+            const int contextPadding = 50;
+            var startIdx = Math.Max(0, idx - contextPadding);
+            var endIdx = Math.Min(bufferText.Length, idx + questionText.Length);
+            var removeLength = endIdx - startIdx;
+
+            _buffer.Remove(startIdx, removeLength);
         }
-        // If exact match not found, the LLM cleaned up the text
-        // Don't aggressively clear - the deduplication logic will prevent re-detection
+        else
+        {
+            // If exact match not found, the LLM may have cleaned up the text
+            // Try fuzzy matching using significant words
+            var questionWords = GetSignificantWords(questionText.ToLowerInvariant());
+            if (questionWords.Count >= 3)
+            {
+                // Find and remove any substring that contains most of these words
+                var bufferLower = bufferText.ToLowerInvariant();
+                foreach (var word in questionWords.Take(3))
+                {
+                    var wordIdx = bufferLower.IndexOf(word, StringComparison.Ordinal);
+                    if (wordIdx >= 0)
+                    {
+                        // Found a key word - remove surrounding context
+                        var startIdx = Math.Max(0, wordIdx - 30);
+                        var removeLength = Math.Min(100, bufferText.Length - startIdx);
+                        _buffer.Remove(startIdx, removeLength);
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     private List<DetectedQuestion> ParseDetectionResponse(string responseJson)

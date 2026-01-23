@@ -1,3 +1,52 @@
+﻿IMPROVEMENT-PLAN-0001 Implementation Complete
+
+  Phase 1 - Quick Wins
+
+  - Issue 1: Transcription Noise Filter - Added RemoveTranscriptionNoise() that filters:
+    - Filler words (um, uh, er, hmm, etc.)
+    - Repeated words (keeps max 2, removes 3+)
+  - Issue 4: Sentence Boundary & Debounce - Added:
+    - HasCompleteSentence() - requires 20+ chars before terminator
+    - 500ms debounce after text arrival
+    - Minimum buffer length of 50 chars
+
+  Phase 2 - Enhanced Deduplication
+
+  - Issue 2: Improved Deduplication
+    - Added semantic fingerprinting (GetSemanticFingerprint())
+    - Increased Jaccard threshold from 0.6 to 0.7
+    - Added time-based suppression window (30 seconds)
+    - Improved buffer clearing with context padding
+
+  Phase 3 - Polish
+
+  - Issue 3: Technical Term Correction - Added dictionary with 40+ corrections:
+    - Generic types: spanty → Span, quality compare tea → IEqualityComparer
+    - Languages: sea sharp → C#, f sharp → F#
+    - Methods: configure await → ConfigureAwait, thashcode → GetHashCode
+    - Async: a weight → await, value task → ValueTask
+  - Issue 5: Configuration Options - All settings now configurable via appsettings.json:
+  "QuestionDetection": {
+    "Method": "Llm",
+    "DetectionIntervalMs": 2000,
+    "MinBufferLength": 50,
+    "DebounceMs": 500,
+    "DeduplicationWindowMs": 30000,
+    "EnableTechnicalTermCorrection": true,
+    "EnableNoiseFilter": true
+  }
+
+  Unit Tests
+
+  - Added 44 new tests for LlmQuestionDetector covering:
+    - Noise filtering
+    - Technical term correction
+    - Sentence boundary detection
+    - Semantic fingerprinting
+
+
+---
+
 # Question Detection Improvement Plan
 
 ## Overview

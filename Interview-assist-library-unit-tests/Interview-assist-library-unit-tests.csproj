@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Interview-assist-library\Interview-assist-library.csproj" />
+    <ProjectReference Include="..\Interview-assist-transcription-console\Interview-assist-transcription-console.csproj" />
   </ItemGroup>
 
   <ItemGroup>
