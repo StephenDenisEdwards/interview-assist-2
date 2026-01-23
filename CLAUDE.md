@@ -91,3 +91,32 @@ Audio is buffered to minimum 100ms chunks before sending. Silence padding applie
 - Follow existing architectural patterns
 - Prefer small, reviewable changes
 - Do not introduce new dependencies unless asked
+
+## Documentation Maintenance
+
+Architecture documentation lives in `documentation/docs/architecture/` and is visible in the VS solution under the `documentation` folder.
+
+### When to Create an ADR
+
+Create a new ADR (`ADR-XXX-short-title.md`) when:
+- Adding a new external dependency or library
+- Changing communication protocols or API integrations
+- Modifying the audio processing pipeline
+- Adding new platform-specific implementations
+- Making significant changes to the concurrency model
+- Choosing between multiple viable technical approaches
+
+ADRs use the Nygard template (Status, Context, Decision, Consequences). See `documentation/docs/architecture/decisions/README.md` for the template.
+
+### When to Update the SAD
+
+Update `documentation/docs/architecture/SAD.md` when:
+- Adding new projects to the solution
+- Creating new key interfaces or abstractions
+- Changing the building block structure
+- Modifying runtime behavior (sequence diagrams)
+- Adding new crosscutting concerns
+
+### Adding Documentation to the Solution
+
+When adding new documentation files, update `interview-assist-2.sln` to include them in the appropriate solution folder so they appear in Visual Studio's Solution Explorer.

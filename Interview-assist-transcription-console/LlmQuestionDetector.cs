@@ -15,14 +15,15 @@ public class LlmQuestionDetector : IQuestionDetector, IDisposable
     private readonly int _detectionIntervalMs;
     private readonly StringBuilder _buffer = new();
     private readonly HashSet<string> _detectedQuestions = new(StringComparer.OrdinalIgnoreCase);
+    private readonly object _detectedQuestionsLock = new();
     private DateTime _lastDetection = DateTime.MinValue;
     private const int MaxBufferLength = 2500;
     private const int MaxDetectedHistory = 50;
     private const string ChatCompletionsUrl = "https://api.openai.com/v1/chat/completions";
 
     private const string SystemPrompt = """
-        You are a question detection system analyzing interview transcripts.
-        Your task is to identify questions or imperatives directed at the interviewee.
+        You are a question detection system analyzing TECHNICAL INTERVIEW transcripts.
+        Your task is to identify TECHNICAL questions or imperatives that test programming knowledge.
 
         For each detected item, provide:
         - text: The question or imperative, made SELF-CONTAINED (see rules below)
@@ -31,26 +32,27 @@ public class LlmQuestionDetector : IQuestionDetector, IDisposable
 
         CRITICAL - Making questions self-contained:
         - Every question MUST make sense on its own without needing surrounding context
-        - If a question contains pronouns (it, this, that, they, them) that refer to a subject mentioned earlier, RESOLVE the pronoun by including the subject
+        - If a question contains pronouns (it, this, that, they, them) that refer to a technical subject, RESOLVE the pronoun
         - Examples:
-          - "When should we use it?" where "it" refers to "abstract class" → "When should we use an abstract class?"
-          - "What are the advantages?" where context is about interfaces → "What are the advantages of using interfaces?"
-          - "Can you store different types in an array?" → Keep as-is (already self-contained)
-          - "What is a jagged array?" → Keep as-is (already self-contained)
-        - If you cannot determine what a pronoun refers to, skip the question (low confidence)
+          * "When should we use it?" where "it" = "abstract class" → "When should we use an abstract class?"
+          * "What are the advantages?" where context = interfaces → "What are the advantages of using interfaces?"
+          * "What is a jagged array?" → Keep as-is (already self-contained)
+        - If you cannot determine what a pronoun refers to, skip the question
 
-        Detection guidelines:
-        - Questions: Direct questions ending in ? or implied questions
-        - Imperatives: Commands like "Explain...", "Describe...", "Tell me about..."
-        - Clarifications: "Can you elaborate?", "What do you mean by...?"
-        - Follow-ups: Questions that reference previous context (resolve the reference!)
+        MUST IGNORE (do NOT detect these):
+        - Promotional content: "subscribe", "like", "comment", "visit my site/channel"
+        - Meta/intro content: "what are we doing today", "welcome to", "in this video"
+        - Conversational filler: "how are you", "what do you think", "anything else"
+        - Transcription artifacts: repeated words like "you you you", partial sentences
+        - Non-technical questions about the video/tutorial structure
 
-        Only include items you're confident are actual interview questions/imperatives.
-        Ignore filler words, partial sentences, transcription artifacts, and rhetorical questions.
-        Ignore questions that are part of explaining how the video/tutorial is structured.
+        ONLY DETECT:
+        - Technical interview questions about programming concepts
+        - Imperatives like "Explain...", "Describe...", "Walk me through..."
+        - Follow-up technical questions
 
         Respond with a JSON object: {"detected": [...]}
-        If no questions found, return: {"detected": []}
+        If no technical questions found, return: {"detected": []}
         """;
 
     public LlmQuestionDetector(
@@ -134,30 +136,33 @@ public class LlmQuestionDetector : IQuestionDetector, IDisposable
             var responseJson = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
             var allDetected = ParseDetectionResponse(responseJson);
 
-            // Filter out already-detected questions
-            foreach (var question in allDetected)
+            // Filter out already-detected questions (thread-safe)
+            lock (_detectedQuestionsLock)
             {
-                var normalizedText = NormalizeQuestion(question.Text);
-
-                // Check if we've already detected this question (or very similar)
-                if (!IsAlreadyDetected(normalizedText))
+                foreach (var question in allDetected)
                 {
-                    results.Add(question);
-                    _detectedQuestions.Add(normalizedText);
+                    var normalizedText = NormalizeQuestion(question.Text);
 
-                    // Clear the portion of buffer containing this question
-                    ClearDetectedFromBuffer(question.Text);
+                    // Check if we've already detected this question (or very similar)
+                    if (!IsAlreadyDetectedUnsafe(normalizedText))
+                    {
+                        results.Add(question);
+                        _detectedQuestions.Add(normalizedText);
+
+                        // Clear the portion of buffer containing this question
+                        ClearDetectedFromBuffer(question.Text);
+                    }
                 }
-            }
 
-            // Keep detected history bounded
-            if (_detectedQuestions.Count > MaxDetectedHistory)
-            {
-                // Remove oldest entries (HashSet doesn't preserve order, so just clear half)
-                var toKeep = _detectedQuestions.Skip(_detectedQuestions.Count / 2).ToList();
-                _detectedQuestions.Clear();
-                foreach (var q in toKeep)
-                    _detectedQuestions.Add(q);
+                // Keep detected history bounded
+                if (_detectedQuestions.Count > MaxDetectedHistory)
+                {
+                    // Remove oldest entries (HashSet doesn't preserve order, so just clear half)
+                    var toKeep = _detectedQuestions.Skip(_detectedQuestions.Count / 2).ToList();
+                    _detectedQuestions.Clear();
+                    foreach (var q in toKeep)
+                        _detectedQuestions.Add(q);
+                }
             }
         }
         catch (OperationCanceledException)
@@ -178,7 +183,10 @@ public class LlmQuestionDetector : IQuestionDetector, IDisposable
         return string.Join(" ", text.ToLowerInvariant().Split(' ', StringSplitOptions.RemoveEmptyEntries));
     }
 
-    private bool IsAlreadyDetected(string normalizedText)
+    /// <summary>
+    /// Checks if a question was already detected. Must be called within _detectedQuestionsLock.
+    /// </summary>
+    private bool IsAlreadyDetectedUnsafe(string normalizedText)
     {
         // Exact match
         if (_detectedQuestions.Contains(normalizedText))
@@ -196,30 +204,49 @@ public class LlmQuestionDetector : IQuestionDetector, IDisposable
 
     private static bool IsSimilar(string a, string b)
     {
-        // Simple similarity: if one contains most of the other
-        if (a.Length < 10 || b.Length < 10)
+        // Very short strings - require exact match
+        if (a.Length < 15 || b.Length < 15)
             return a == b;
 
-        // Check if they share a significant common substring
-        var shorter = a.Length < b.Length ? a : b;
-        var longer = a.Length < b.Length ? b : a;
+        // Check if one contains the other
+        if (a.Contains(b) || b.Contains(a))
+            return true;
 
-        return longer.Contains(shorter) ||
-               GetCommonPrefixLength(a, b) > Math.Min(a.Length, b.Length) * 0.7;
+        // Word-based Jaccard similarity
+        var wordsA = GetSignificantWords(a);
+        var wordsB = GetSignificantWords(b);
+
+        if (wordsA.Count == 0 || wordsB.Count == 0)
+            return false;
+
+        var intersection = wordsA.Intersect(wordsB).Count();
+        var union = wordsA.Union(wordsB).Count();
+
+        var jaccard = (double)intersection / union;
+
+        // If 60% or more of significant words overlap, consider similar
+        return jaccard >= 0.6;
     }
 
-    private static int GetCommonPrefixLength(string a, string b)
+    private static HashSet<string> GetSignificantWords(string text)
     {
-        int len = Math.Min(a.Length, b.Length);
-        int common = 0;
-        for (int i = 0; i < len; i++)
+        // Stop words to ignore when comparing
+        var stopWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            if (a[i] == b[i])
-                common++;
-            else
-                break;
-        }
-        return common;
+            "a", "an", "the", "is", "are", "was", "were", "be", "been", "being",
+            "in", "on", "at", "to", "for", "of", "with", "by", "from", "as",
+            "and", "or", "but", "if", "then", "else", "when", "where", "why", "how",
+            "what", "which", "who", "whom", "this", "that", "these", "those",
+            "do", "does", "did", "have", "has", "had", "can", "could", "would", "should",
+            "will", "shall", "may", "might", "must", "you", "your", "we", "our", "me", "i"
+        };
+
+        var words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Select(w => w.Trim('.', '?', '!', ',', ';', ':'))
+            .Where(w => w.Length > 2 && !stopWords.Contains(w))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        return words;
     }
 
     private void ClearDetectedFromBuffer(string questionText)

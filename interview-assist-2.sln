@@ -26,9 +26,24 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interview-assist-transcript
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{78751797-6A9E-46A0-95BA-6D7B066ADF83}"
 	ProjectSection(SolutionItems) = preProject
+		documentation\docs\ARCHITECTURE-DOCUMENTATION-OPTIONS.md = documentation\docs\ARCHITECTURE-DOCUMENTATION-OPTIONS.md
 		documentation\docs\Detecting Questions and Imperative Sentences in English.pdf = documentation\docs\Detecting Questions and Imperative Sentences in English.pdf
 		documentation\docs\HEURISTIC_QUESTION_DETECTOR.md = documentation\docs\HEURISTIC_QUESTION_DETECTOR.md
+		documentation\docs\IMPROVEMENT-PLAN-0001.md = documentation\docs\IMPROVEMENT-PLAN-0001.md
 		documentation\docs\RATE_LIMITING.md = documentation\docs\RATE_LIMITING.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "architecture", "architecture", "{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}"
+	ProjectSection(SolutionItems) = preProject
+		documentation\docs\architecture\SAD.md = documentation\docs\architecture\SAD.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "decisions", "decisions", "{B2C3D4E5-F6A7-8901-BCDE-F12345678901}"
+	ProjectSection(SolutionItems) = preProject
+		documentation\docs\architecture\decisions\ADR-001-realtime-api-websocket.md = documentation\docs\architecture\decisions\ADR-001-realtime-api-websocket.md
+		documentation\docs\architecture\decisions\ADR-002-audio-capture-naudio.md = documentation\docs\architecture\decisions\ADR-002-audio-capture-naudio.md
+		documentation\docs\architecture\decisions\ADR-003-question-detection-llm.md = documentation\docs\architecture\decisions\ADR-003-question-detection-llm.md
+		documentation\docs\architecture\decisions\README.md = documentation\docs\architecture\decisions\README.md
 	EndProjectSection
 EndProject
 Global
@@ -132,6 +147,8 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{E7ADE783-533C-463A-873C-A9A9877EACFC} = {58BDCE7F-8562-46AD-BB65-52CFDCAC1E7F}
 		{78751797-6A9E-46A0-95BA-6D7B066ADF83} = {58BDCE7F-8562-46AD-BB65-52CFDCAC1E7F}
+		{A1B2C3D4-E5F6-7890-ABCD-EF1234567890} = {78751797-6A9E-46A0-95BA-6D7B066ADF83}
+		{B2C3D4E5-F6A7-8901-BCDE-F12345678901} = {A1B2C3D4-E5F6-7890-ABCD-EF1234567890}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0AE175CC-351C-46DC-9AF6-60FDF2E57587}
