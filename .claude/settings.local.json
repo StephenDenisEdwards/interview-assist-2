@@ -19,7 +19,9 @@
       "Bash(powershell -NoProfile -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\steph\\\\source\\\\repos\\\\AI\\\\micro-x\\\\micro-x-interview-assist-2\\\\run-test.ps1\")",
       "Bash(dir \"C:\\\\Users\\\\steph\\\\source\\\\repos\\\\AI\\\\micro-x\\\\micro-x-interview-assist-2\\\\docs\")",
       "Bash(dir /s /b \"C:\\\\Users\\\\steph\\\\source\\\\repos\\\\AI\\\\micro-x\\\\micro-x-interview-assist-2\\\\docs\\\\architecture\")",
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(dotnet nuget search:*)",
+      "Bash(dotnet list:*)"
     ]
   }
 }

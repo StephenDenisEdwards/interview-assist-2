@@ -187,6 +187,32 @@ transcription.OnError += error =>
     Console.ResetColor();
 };
 
+// Wire up speech pause signal for two-phase question detection
+transcription.OnSpeechPause += async () =>
+{
+    questionDetector.SignalSpeechPause();
+
+    // Check for questions now since no OnTranscriptionResult will fire during silence
+    var detected = await questionDetector.DetectQuestionsAsync();
+    if (detected.Count > 0)
+    {
+        foreach (var question in detected)
+        {
+            Console.WriteLine();
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Write($"[{question.Type}");
+            if (detectionMethod == QuestionDetectionMethod.Llm)
+            {
+                Console.Write($" {question.Confidence:P0}");
+            }
+            Console.Write("] ");
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine(question.Text);
+            Console.ResetColor();
+        }
+    }
+};
+
 // Handle Ctrl+C
 using var cts = new CancellationTokenSource();
 Console.CancelKeyPress += (_, e) =>

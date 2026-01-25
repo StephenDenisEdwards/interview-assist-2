@@ -131,4 +131,11 @@ public sealed record TimestampedTranscriptionOptions
     /// Optional prompt to guide transcription style/vocabulary.
     /// </summary>
     public string? Prompt { get; init; }
+
+    /// <summary>
+    /// RMS energy threshold for silence detection (0.0-1.0). Default: 0.01.
+    /// Audio below this threshold is considered silence and skipped.
+    /// Set to 0 to disable silence detection.
+    /// </summary>
+    public double SilenceThreshold { get; init; } = 0.01;
 }

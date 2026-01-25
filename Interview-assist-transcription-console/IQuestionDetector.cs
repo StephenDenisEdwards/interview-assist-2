@@ -12,6 +12,12 @@ public interface IQuestionDetector
     void AddText(string text);
 
     /// <summary>
+    /// Signals that a speech pause was detected.
+    /// This triggers confirmation of pending question candidates.
+    /// </summary>
+    void SignalSpeechPause();
+
+    /// <summary>
     /// Detects questions from the buffered text.
     /// </summary>
     /// <returns>List of detected questions.</returns>

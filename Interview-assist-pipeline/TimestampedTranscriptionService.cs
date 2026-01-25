@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using InterviewAssist.Library.Audio;
+using InterviewAssist.Library.Constants;
 
 namespace InterviewAssist.Pipeline;
 
@@ -38,6 +39,12 @@ public sealed class TimestampedTranscriptionService : IAsyncDisposable
     /// Fired when an error occurs.
     /// </summary>
     public event Action<string>? OnError;
+
+    /// <summary>
+    /// Fired when a speech pause is detected (silence in audio batch).
+    /// Useful for triggering downstream processing that waits for natural speech boundaries.
+    /// </summary>
+    public event Action? OnSpeechPause;
 
     /// <summary>
     /// Creates a transcription service with audio capture for real-time streaming.
@@ -122,9 +129,31 @@ public sealed class TimestampedTranscriptionService : IAsyncDisposable
     {
         try
         {
+            // Check minimum duration (Whisper requires >= 0.1 seconds)
+            double durationSeconds = (double)pcmData.Length / (_options.SampleRate * 2);
+            if (durationSeconds < TranscriptionConstants.MinAudioDurationSeconds)
+            {
+                // Skip - audio too short
+                return;
+            }
+
+            // Check for silence (skip if below threshold)
+            if (_options.SilenceThreshold > 0 && IsSilence(pcmData, _options.SilenceThreshold))
+            {
+                // Signal speech pause for downstream consumers
+                OnSpeechPause?.Invoke();
+                return;
+            }
+
             var result = await TranscribeAsync(pcmData, streamOffset, ct).ConfigureAwait(false);
             if (result != null)
             {
+                // Filter out hallucination patterns (excessive repetition)
+                if (HasExcessiveRepetition(result.FullText))
+                {
+                    return;
+                }
+
                 OnTranscriptionResult?.Invoke(result);
 
                 foreach (var segment in result.Segments)
@@ -141,6 +170,54 @@ public sealed class TimestampedTranscriptionService : IAsyncDisposable
         {
             OnError?.Invoke($"Transcription error: {ex.Message}");
         }
+    }
+
+    /// <summary>
+    /// Determines if audio data is silence based on RMS energy.
+    /// </summary>
+    private static bool IsSilence(byte[] pcmData, double threshold)
+    {
+        if (pcmData.Length < 2) return true;
+
+        double sumSquares = 0;
+        int sampleCount = pcmData.Length / 2;
+
+        for (int i = 0; i < pcmData.Length - 1; i += 2)
+        {
+            short sample = BitConverter.ToInt16(pcmData, i);
+            double normalized = sample / 32768.0;
+            sumSquares += normalized * normalized;
+        }
+
+        double rms = Math.Sqrt(sumSquares / sampleCount);
+        return rms < threshold;
+    }
+
+    /// <summary>
+    /// Detects excessive word repetition (Whisper hallucination pattern).
+    /// </summary>
+    private static bool HasExcessiveRepetition(string text)
+    {
+        var words = text.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (words.Length < 3) return false;
+
+        int maxConsecutive = 1;
+        int currentConsecutive = 1;
+
+        for (int i = 1; i < words.Length; i++)
+        {
+            if (words[i].Equals(words[i - 1], StringComparison.OrdinalIgnoreCase))
+            {
+                currentConsecutive++;
+                maxConsecutive = Math.Max(maxConsecutive, currentConsecutive);
+            }
+            else
+            {
+                currentConsecutive = 1;
+            }
+        }
+
+        return maxConsecutive >= TranscriptionConstants.MaxConsecutiveRepetitions;
     }
 
     /// <summary>

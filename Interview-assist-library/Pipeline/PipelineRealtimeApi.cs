@@ -37,9 +37,8 @@ public sealed class PipelineRealtimeApi : IRealtimeApi
     private Task? _responseTask;
     private int _started;
 
-    // Event dispatcher (same pattern as OpenAiRealtimeApi)
-    private Channel<Action>? _eventChannel;
-    private Task? _eventTask;
+    // Event dispatcher (shared with OpenAiRealtimeApi)
+    private readonly EventDispatcher _eventDispatcher;
 
     // Track last detected position to avoid re-detecting same questions
     private DateTime _lastDetectionTimestamp = DateTime.MinValue;
@@ -95,7 +94,11 @@ public sealed class PipelineRealtimeApi : IRealtimeApi
             _logger as ILogger<OpenAiChatCompletionService>);
 
         _transcriptBuffer = new TranscriptBuffer(options.TranscriptBufferSeconds);
-        _questionQueue = new QuestionQueue(options.MaxQueuedQuestions);
+        _questionQueue = new QuestionQueue(
+            options.MaxQueuedQuestions,
+            options.DeduplicationSimilarityThreshold,
+            options.DeduplicationWindowMs);
+        _eventDispatcher = new EventDispatcher(_logger);
     }
 
     public async Task StartAsync(CancellationToken cancellationToken)
@@ -112,14 +115,22 @@ public sealed class PipelineRealtimeApi : IRealtimeApi
         try
         {
             // Start event dispatcher
-            StartEventDispatcher(_cts.Token);
+            _eventDispatcher.Start(_cts.Token);
 
             // Fire connected event (simulated - no actual WebSocket)
             IsConnected = true;
             SafeRaise(() => OnConnected?.Invoke());
 
             // Create and start transcriber
-            _transcriber = new OpenAiMicTranscriber(_audio, _options.ApiKey, _options.SampleRate);
+            _transcriber = new OpenAiMicTranscriber(
+                _audio,
+                _options.ApiKey,
+                _options.SampleRate,
+                _options.SilenceEnergyThreshold,
+                _options.TranscriptionLanguage,
+                _options.TranscriptionPrompt,
+                _options.TranscriptionBatchMs,
+                _options.MaxTranscriptionBatchMs);
             _transcriber.OnTranscript += HandleTranscript;
             _transcriber.OnInfo += msg => SafeRaise(() => OnInfo?.Invoke(msg));
             _transcriber.OnWarning += msg => SafeRaise(() => OnWarning?.Invoke(msg));
@@ -210,11 +221,22 @@ public sealed class PipelineRealtimeApi : IRealtimeApi
 
         _logger.LogDebug("Transcript received: {Text}", text.Length > 100 ? text[..100] + "..." : text);
 
+        // Filter low-quality transcription (hallucinations, very short text)
+        if (TranscriptQualityFilter.IsLowQuality(text))
+        {
+            _logger.LogDebug("Filtered low-quality transcript: {Text}", text.Length > 50 ? text[..50] + "..." : text);
+            return;
+        }
+
+        // Clean up repetitions
+        var cleaned = TranscriptQualityFilter.CleanTranscript(text);
+        if (string.IsNullOrWhiteSpace(cleaned)) return;
+
         // Add to buffer
-        _transcriptBuffer.Add(text);
+        _transcriptBuffer.Add(cleaned);
 
         // Fire user transcript event
-        SafeRaise(() => OnUserTranscript?.Invoke(text));
+        SafeRaise(() => OnUserTranscript?.Invoke(cleaned));
     }
 
     private async Task DetectionLoopAsync(CancellationToken ct)
@@ -386,7 +408,7 @@ public sealed class PipelineRealtimeApi : IRealtimeApi
         }
 
         // Stop event dispatcher
-        StopEventDispatcher();
+        _eventDispatcher.Stop();
 
         // Cleanup CTS
         try { _cts?.Dispose(); } catch { }
@@ -400,56 +422,7 @@ public sealed class PipelineRealtimeApi : IRealtimeApi
 
     #endregion
 
-    #region Event Dispatcher (same pattern as OpenAiRealtimeApi)
-
-    private void SafeRaise(Action action)
-    {
-        try
-        {
-            if (_eventChannel != null)
-            {
-                _eventChannel.Writer.TryWrite(action);
-                return;
-            }
-            action();
-        }
-        catch
-        {
-            // Protect internal loops from subscriber exceptions
-        }
-    }
-
-    private void StartEventDispatcher(CancellationToken ct)
-    {
-        _eventChannel = Channel.CreateUnbounded<Action>(new UnboundedChannelOptions
-        {
-            SingleReader = true,
-            SingleWriter = false
-        });
-
-        _eventTask = Task.Run(async () =>
-        {
-            try
-            {
-                await foreach (var action in _eventChannel.Reader.ReadAllAsync(ct).ConfigureAwait(false))
-                {
-                    try { action(); }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Event handler exception");
-                    }
-                }
-            }
-            catch (OperationCanceledException) { }
-        }, ct);
-    }
-
-    private void StopEventDispatcher()
-    {
-        try { _eventChannel?.Writer.TryComplete(); } catch { }
-        _eventChannel = null;
-        _eventTask = null;
-    }
-
+    #region Event Dispatcher
+    private void SafeRaise(Action action) => _eventDispatcher.Raise(action);
     #endregion
 }

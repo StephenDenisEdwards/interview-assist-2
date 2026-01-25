@@ -6,23 +6,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # Build entire solution
-dotnet build interview-assist.sln
+dotnet build interview-assist-2.sln
 
 # Build specific project
-dotnet build interview-assist-maui-desktop/interview-assist-maui-desktop.csproj
+dotnet build Interview-assist-library/Interview-assist-library.csproj
 
-# Run MAUI desktop app (Windows)
-dotnet run --project interview-assist-maui-desktop/interview-assist-maui-desktop.csproj -f net10.0-windows10.0.19041.0
+# Run transcription console app
+dotnet run --project Interview-assist-transcription-console/Interview-assist-transcription-console.csproj
 
-# Run console app
-dotnet run --project interview-assist-console-windows/interview-assist-console-windows.csproj
+# Run pipeline console app
+dotnet run --project Interview-assist-pipeline-console/Interview-assist-pipeline-console.csproj
 ```
 
 ## Test Commands
 
 ```bash
 # Run all tests
-dotnet test interview-assist.sln
+dotnet test interview-assist-2.sln
 
 # Run unit tests only
 dotnet test Interview-assist-library-unit-tests/Interview-assist-library-unit-tests.csproj
@@ -42,8 +42,9 @@ This is a real-time interview assistance application that captures audio and int
 
 - **Interview-assist-library**: Core abstractions and OpenAI Realtime API implementation (net8.0)
 - **interview-assist-audio-windows**: Windows-specific audio capture using NAudio (net8.0)
-- **interview-assist-maui-desktop**: MAUI desktop UI application (net10.0-windows)
-- **interview-assist-console-windows**: Console-based CLI application
+- **Interview-assist-pipeline**: Pipeline-based STT + semantic question detection (net8.0)
+- **Interview-assist-transcription-console**: Console app for transcription testing
+- **Interview-assist-pipeline-console**: Console app for pipeline mode
 - **Interview-assist-library-unit-tests**: xUnit tests for the core library
 - **Interview-assist-library-integration-tests**: Integration tests requiring API access
 
@@ -120,3 +121,28 @@ Update `documentation/docs/architecture/SAD.md` when:
 ### Adding Documentation to the Solution
 
 When adding new documentation files, update `interview-assist-2.sln` to include them in the appropriate solution folder so they appear in Visual Studio's Solution Explorer.
+
+### Improvement Plans
+
+When planning multi-task improvements or refactoring work:
+
+1. Create a numbered plan file: `documentation/docs/todo/IMPROVEMENT-PLAN-XXXX.md`
+2. Use the next available number (e.g., 0001, 0002, 0003)
+3. Add the file to the solution under the `todo` folder in `interview-assist-2.sln`
+4. Structure the plan with:
+   - Created date and status
+   - Completed tasks (checked off)
+   - Remaining tasks with priority, effort, and affected files
+   - Implementation order/phases
+
+When completing an improvement plan:
+
+1. Add an **Implementation Summary** section at the end with:
+   - Tables showing tasks completed per phase and files changed
+   - Build and test results
+   - List of new files created
+2. Update the status to reflect completion
+3. Move the file from `documentation/docs/todo/` to `documentation/docs/`
+4. Update `interview-assist-2.sln`:
+   - Remove the file from the `todo` solution folder
+   - Add the file to the `todo-done` solution folder

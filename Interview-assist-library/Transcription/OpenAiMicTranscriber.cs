@@ -1,4 +1,5 @@
 using InterviewAssist.Library.Audio;
+using InterviewAssist.Library.Constants;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
@@ -11,6 +12,11 @@ public sealed class OpenAiMicTranscriber : IAsyncDisposable
 	private readonly IAudioCaptureService _audio;
 	private readonly string _apiKey;
 	private readonly int _sampleRate;
+	private readonly double _silenceThreshold;
+	private readonly string? _language;
+	private readonly string? _prompt;
+	private readonly int _windowMs;
+	private readonly int _maxWindowMs;
 	private CancellationTokenSource? _cts;
 	private Channel<byte[]>? _audioChannel;
 	private Action<byte[]>? _audioHandler;
@@ -22,11 +28,35 @@ public sealed class OpenAiMicTranscriber : IAsyncDisposable
 	public event Action<string>? OnWarning;
 	public event Action<Exception>? OnError;
 
-	public OpenAiMicTranscriber(IAudioCaptureService audioCaptureService, string openAiApiKey, int sampleRate = 24000)
+	/// <summary>
+	/// Creates a new transcriber instance.
+	/// </summary>
+	/// <param name="audioCaptureService">Audio capture service for input.</param>
+	/// <param name="openAiApiKey">OpenAI API key.</param>
+	/// <param name="sampleRate">Audio sample rate in Hz. Default: 24000.</param>
+	/// <param name="silenceThreshold">RMS threshold for silence detection (0.0-1.0). Default: 0.01. Set to 0 to disable.</param>
+	/// <param name="language">Language code for transcription (e.g., "en"). Null for auto-detection.</param>
+	/// <param name="prompt">Optional vocabulary prompt to guide transcription.</param>
+	/// <param name="windowMs">Minimum batch window in milliseconds. Default: 3000.</param>
+	/// <param name="maxWindowMs">Maximum batch window in milliseconds. Default: 6000. Forces flush even without silence.</param>
+	public OpenAiMicTranscriber(
+		IAudioCaptureService audioCaptureService,
+		string openAiApiKey,
+		int sampleRate = 24000,
+		double silenceThreshold = TranscriptionConstants.DefaultSilenceThreshold,
+		string? language = null,
+		string? prompt = null,
+		int windowMs = 3000,
+		int maxWindowMs = 6000)
 	{
 		_audio = audioCaptureService ?? throw new ArgumentNullException(nameof(audioCaptureService));
 		_apiKey = openAiApiKey ?? throw new ArgumentNullException(nameof(openAiApiKey));
 		_sampleRate = sampleRate;
+		_silenceThreshold = silenceThreshold;
+		_language = language;
+		_prompt = prompt;
+		_windowMs = windowMs;
+		_maxWindowMs = maxWindowMs;
 	}
 
 	public async Task StartAsync(CancellationToken cancellationToken)
@@ -101,7 +131,6 @@ public sealed class OpenAiMicTranscriber : IAsyncDisposable
 	{
 		if (_audioChannel == null) return;
 		var buffer = new MemoryStream();
-		var windowMs = 3000; // batch window
 		var lastFlush = Environment.TickCount64;
 
 		try
@@ -110,7 +139,14 @@ public sealed class OpenAiMicTranscriber : IAsyncDisposable
 			{
 				await buffer.WriteAsync(chunk, 0, chunk.Length, ct).ConfigureAwait(false);
 				var elapsed = Environment.TickCount64 - lastFlush;
-				if (elapsed >= windowMs)
+
+				// Adaptive batching: flush on speech boundary (silence after min window) or max window
+				bool minWindowReached = elapsed >= _windowMs;
+				bool maxWindowReached = elapsed >= _maxWindowMs;
+				bool recentChunkIsSilence = _silenceThreshold > 0 && IsSilence(chunk, _silenceThreshold);
+				bool speechBoundary = minWindowReached && recentChunkIsSilence;
+
+				if (speechBoundary || maxWindowReached)
 				{
 					await FlushAndTranscribeAsync(buffer, ct).ConfigureAwait(false);
 					lastFlush = Environment.TickCount64;
@@ -134,8 +170,26 @@ public sealed class OpenAiMicTranscriber : IAsyncDisposable
 	private async Task FlushAndTranscribeAsync(MemoryStream pcmBuffer, CancellationToken ct)
 	{
 		if (pcmBuffer.Length == 0) return;
-		var wav = BuildWav(pcmBuffer.ToArray(), _sampleRate, 1, 16);
+
+		var pcmData = pcmBuffer.ToArray();
 		pcmBuffer.SetLength(0);
+
+		// Check minimum duration (Whisper requires >= 0.1 seconds)
+		double durationSeconds = (double)pcmData.Length / (_sampleRate * 2); // 16-bit = 2 bytes per sample
+		if (durationSeconds < TranscriptionConstants.MinAudioDurationSeconds)
+		{
+			OnWarning?.Invoke($"Audio too short ({durationSeconds:F3}s), skipping transcription");
+			return;
+		}
+
+		// Check for silence (skip if below threshold)
+		if (_silenceThreshold > 0 && IsSilence(pcmData, _silenceThreshold))
+		{
+			OnInfo?.Invoke("Silence detected, skipping transcription");
+			return;
+		}
+
+		var wav = BuildWav(pcmData, _sampleRate, 1, 16);
 		try
 		{
 			var text = await TranscribeAsync(wav, ct).ConfigureAwait(false);
@@ -149,6 +203,30 @@ public sealed class OpenAiMicTranscriber : IAsyncDisposable
 		{
 			OnError?.Invoke(ex);
 		}
+	}
+
+	/// <summary>
+	/// Determines if audio data is silence based on RMS energy.
+	/// </summary>
+	/// <param name="pcmData">16-bit PCM audio data.</param>
+	/// <param name="threshold">RMS threshold (0.0-1.0).</param>
+	/// <returns>True if audio is considered silence.</returns>
+	private static bool IsSilence(byte[] pcmData, double threshold)
+	{
+		if (pcmData.Length < 2) return true;
+
+		double sumSquares = 0;
+		int sampleCount = pcmData.Length / 2;
+
+		for (int i = 0; i < pcmData.Length - 1; i += 2)
+		{
+			short sample = BitConverter.ToInt16(pcmData, i);
+			double normalized = sample / 32768.0;
+			sumSquares += normalized * normalized;
+		}
+
+		double rms = Math.Sqrt(sumSquares / sampleCount);
+		return rms < threshold;
 	}
 
 	private static byte[] BuildWav(byte[] pcm, int sampleRate, short channels, short bitsPerSample)
@@ -186,6 +264,18 @@ public sealed class OpenAiMicTranscriber : IAsyncDisposable
 		content.Add(audioContent, "file", "audio.wav");
 		content.Add(new StringContent("whisper-1"), "model");
 		content.Add(new StringContent("json"), "response_format");
+
+		// Add language hint for improved accuracy
+		if (!string.IsNullOrWhiteSpace(_language))
+		{
+			content.Add(new StringContent(_language), "language");
+		}
+
+		// Add vocabulary prompt for domain-specific terms
+		if (!string.IsNullOrWhiteSpace(_prompt))
+		{
+			content.Add(new StringContent(_prompt), "prompt");
+		}
 
 		using var resp = await http.PostAsync("https://api.openai.com/v1/audio/transcriptions", content, ct).ConfigureAwait(false);
 		var body = await resp.Content.ReadAsStringAsync(ct).ConfigureAwait(false);

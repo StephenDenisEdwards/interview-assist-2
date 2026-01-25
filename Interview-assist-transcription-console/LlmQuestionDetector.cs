@@ -23,6 +23,10 @@ public class LlmQuestionDetector : IQuestionDetector, IDisposable
     private readonly Dictionary<string, DateTime> _detectionTimes = new(StringComparer.OrdinalIgnoreCase);
     private readonly object _detectedQuestionsLock = new();
     private DateTime _lastDetection = DateTime.MinValue;
+    private DateTime _lastBufferChange = DateTime.MinValue;
+    private bool _hasPendingCandidate;
+    private bool _confirmedByPause;
+    private readonly int _stabilityWindowMs;
     private const int MaxBufferLength = 2500;
     private const int MaxDetectedHistory = 50;
     private const double JaccardThreshold = 0.7;
@@ -150,7 +154,8 @@ public class LlmQuestionDetector : IQuestionDetector, IDisposable
         int minBufferLength = 50,
         int deduplicationWindowMs = 30000,
         bool enableTechnicalTermCorrection = true,
-        bool enableNoiseFilter = true)
+        bool enableNoiseFilter = true,
+        int stabilityWindowMs = 800)
     {
         _apiKey = apiKey ?? throw new ArgumentNullException(nameof(apiKey));
         _model = model;
@@ -160,6 +165,7 @@ public class LlmQuestionDetector : IQuestionDetector, IDisposable
         _deduplicationWindowMs = deduplicationWindowMs;
         _enableTechnicalTermCorrection = enableTechnicalTermCorrection;
         _enableNoiseFilter = enableNoiseFilter;
+        _stabilityWindowMs = stabilityWindowMs;
         _http = new HttpClient();
         _http.DefaultRequestHeaders.Add("Authorization", $"Bearer {_apiKey}");
     }
@@ -189,6 +195,13 @@ public class LlmQuestionDetector : IQuestionDetector, IDisposable
 
         _buffer.Append(' ');
         _buffer.Append(processed);
+        _lastBufferChange = DateTime.UtcNow;
+
+        // Phase 1: Quick check for potential question candidates
+        if (HasPotentialQuestion(processed))
+        {
+            _hasPendingCandidate = true;
+        }
 
         // Trim buffer if too long
         if (_buffer.Length > MaxBufferLength)
@@ -196,6 +209,92 @@ public class LlmQuestionDetector : IQuestionDetector, IDisposable
             var excess = _buffer.Length - MaxBufferLength;
             _buffer.Remove(0, excess);
         }
+    }
+
+    /// <summary>
+    /// Quick local check for potential question markers.
+    /// This is Phase 1 of two-phase detection - just flags candidates, doesn't confirm.
+    /// </summary>
+    private static bool HasPotentialQuestion(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+            return false;
+
+        // Check for question mark
+        if (text.Contains('?'))
+            return true;
+
+        // Check for imperative patterns (case-insensitive)
+        var lowerText = text.ToLowerInvariant();
+        var imperativeStarts = new[]
+        {
+            "explain ", "describe ", "walk me through", "tell me about",
+            "what is ", "what are ", "how do ", "how does ", "how would ",
+            "why do ", "why does ", "when should ", "can you ",
+            "could you ", "give me an example"
+        };
+
+        return imperativeStarts.Any(pattern => lowerText.Contains(pattern));
+    }
+
+    /// <summary>
+    /// Signals that a speech pause was detected.
+    /// This confirms any pending candidates for detection.
+    /// </summary>
+    public void SignalSpeechPause()
+    {
+        if (_hasPendingCandidate)
+        {
+            _confirmedByPause = true;
+        }
+    }
+
+    /// <summary>
+    /// Checks if the buffer looks complete - ends with sentence terminator
+    /// and no trailing lowercase continuation that suggests more is coming.
+    /// </summary>
+    private bool BufferLooksComplete()
+    {
+        var text = _buffer.ToString().TrimEnd();
+        if (string.IsNullOrEmpty(text))
+            return false;
+
+        // Must end with terminal punctuation
+        var lastChar = text[^1];
+        if (lastChar != '.' && lastChar != '?' && lastChar != '!')
+            return false;
+
+        // Find the last terminator position
+        var lastTerminator = text.Length - 1;
+
+        // Check if there's meaningful content before the terminator
+        if (lastTerminator < 15)
+            return false;
+
+        // Look at what's after the last question mark specifically
+        // (we care most about ? since that's our primary signal)
+        var lastQuestion = text.LastIndexOf('?');
+        if (lastQuestion >= 0 && lastQuestion < text.Length - 1)
+        {
+            var afterQuestion = text.Substring(lastQuestion + 1).Trim();
+            if (!string.IsNullOrEmpty(afterQuestion))
+            {
+                // There's text after the last ?
+                // If it starts lowercase, it's likely a continuation - NOT complete
+                if (char.IsLower(afterQuestion[0]))
+                    return false;
+
+                // Check for common continuation words
+                var firstWord = afterQuestion.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                    .FirstOrDefault()?.ToLowerInvariant()?.TrimEnd('.', ',', '?', '!');
+
+                var continuationWords = new[] { "and", "or", "in", "for", "to", "with", "used", "like", "such" };
+                if (firstWord != null && continuationWords.Contains(firstWord))
+                    return false;
+            }
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -298,7 +397,7 @@ public class LlmQuestionDetector : IQuestionDetector, IDisposable
     }
 
     /// <summary>
-    /// Checks if the text contains at least one complete sentence.
+    /// Checks if the text contains at least one complete sentence that isn't likely to continue.
     /// Prevents detection on partial/fragmented transcriptions.
     /// </summary>
     internal static bool HasCompleteSentence(string text)
@@ -314,12 +413,34 @@ public class LlmQuestionDetector : IQuestionDetector, IDisposable
         var lastTerminator = Math.Max(lastPeriod, Math.Max(lastQuestion, lastExclamation));
 
         // Must have at least one sentence with meaningful content (> 20 chars to terminator)
-        return lastTerminator > 20;
+        if (lastTerminator <= 20)
+            return false;
+
+        return true;
     }
 
     public async Task<List<DetectedQuestion>> DetectQuestionsAsync(CancellationToken ct = default)
     {
         var results = new List<DetectedQuestion>();
+
+        // Phase 2: Check if we should confirm pending candidates
+        // Confirmation happens via:
+        // (1) speech pause signal - immediate
+        // (2) stability timeout - fallback
+        // (3) buffer looks complete - immediate (ends with terminator, no trailing lowercase)
+        var timeSinceLastChange = (DateTime.UtcNow - _lastBufferChange).TotalMilliseconds;
+        var confirmedByStability = _hasPendingCandidate && timeSinceLastChange >= _stabilityWindowMs;
+        var confirmedByComplete = _hasPendingCandidate && BufferLooksComplete();
+
+        if (!_confirmedByPause && !confirmedByStability && !confirmedByComplete)
+        {
+            // Not confirmed yet - wait for pause, stability, or completion
+            return results;
+        }
+
+        // Reset confirmation state
+        _hasPendingCandidate = false;
+        _confirmedByPause = false;
 
         // Rate limit detection calls
         var elapsed = DateTime.UtcNow - _lastDetection;

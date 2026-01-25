@@ -2,7 +2,7 @@
 
 **Project:** Interview Assist
 **Version:** 1.0
-**Last Updated:** 2026-01-23
+**Last Updated:** 2026-01-24
 **Template:** arc42 lite
 
 ---
@@ -95,7 +95,7 @@ C4Context
 |-------|------------|
 | Core Library | .NET 8.0, System.Net.WebSockets |
 | Audio Capture | NAudio (Windows-specific) |
-| Desktop UI | .NET MAUI (Windows) |
+| Pipeline | Whisper STT + GPT-4 Chat API |
 | Console UI | .NET Console App |
 | Testing | xUnit, Moq |
 
@@ -108,13 +108,13 @@ C4Context
 ```mermaid
 graph TB
     subgraph UI["UI Layer"]
-        MAUI[interview-assist-maui-desktop]
-        Console[interview-assist-console-windows]
         TransConsole[Interview-assist-transcription-console]
+        PipelineConsole[Interview-assist-pipeline-console]
     end
 
     subgraph Core["Core Library"]
         Lib[Interview-assist-library]
+        Pipeline[Interview-assist-pipeline]
     end
 
     subgraph Platform["Platform-Specific"]
@@ -122,16 +122,16 @@ graph TB
     end
 
     subgraph Tests["Test Projects"]
-        Unit[Unit Tests]
-        Integration[Integration Tests]
+        Unit[Interview-assist-library-unit-tests]
+        Integration[Interview-assist-library-integration-tests]
     end
 
-    MAUI --> Lib
-    Console --> Lib
     TransConsole --> Lib
-    MAUI --> Audio
-    Console --> Audio
-    Lib --> Audio
+    TransConsole --> Audio
+    PipelineConsole --> Pipeline
+    PipelineConsole --> Audio
+    Pipeline --> Lib
+    Lib -.-> Audio
     Unit --> Lib
     Integration --> Lib
 ```
@@ -292,6 +292,7 @@ See the [decisions/](decisions/) directory for Architecture Decision Records (AD
 | [ADR-001](decisions/ADR-001-realtime-api-websocket.md) | Realtime API via WebSocket | Accepted |
 | [ADR-002](decisions/ADR-002-audio-capture-naudio.md) | Audio Capture with NAudio | Accepted |
 | [ADR-003](decisions/ADR-003-question-detection-llm.md) | LLM-based Question Detection | Accepted |
+| [ADR-004](decisions/ADR-004-pipeline-vs-realtime.md) | Pipeline vs Realtime Implementation | Accepted |
 
 ---
 

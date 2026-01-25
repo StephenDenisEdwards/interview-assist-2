@@ -44,6 +44,14 @@ public class HeuristicQuestionDetector : IQuestionDetector
         }
     }
 
+    /// <summary>
+    /// Speech pause signal - not used by heuristic detector (it processes synchronously).
+    /// </summary>
+    public void SignalSpeechPause()
+    {
+        // No-op for heuristic detector - it doesn't use two-phase detection
+    }
+
     public Task<List<DetectedQuestion>> DetectQuestionsAsync(CancellationToken ct = default)
     {
         var results = DetectQuestions();

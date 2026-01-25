@@ -49,8 +49,7 @@ public class OpenAiRealtimeApi : IRealtimeApi
     private Action<byte[]>? _audioHandler;
 
     // Event dispatcher
-    private Channel<Action>? _eventChannel;
-    private Task? _eventTask;
+    private readonly EventDispatcher _eventDispatcher;
 
     // Function call state
     private readonly object _funcSync = new();
@@ -72,9 +71,8 @@ public class OpenAiRealtimeApi : IRealtimeApi
 
     // Session state tracking for graceful shutdown
     private DateTime _sessionStartTime;
-    private readonly List<string> _recentTranscripts = new();
+    private readonly Queue<string> _recentTranscripts = new();
     private readonly object _transcriptLock = new();
-    private const int MaxRecentTranscripts = 50;
 
     // Serialization
     private static readonly JsonSerializerOptions s_jsonOptions = new() { WriteIndented = false };
@@ -121,6 +119,7 @@ public class OpenAiRealtimeApi : IRealtimeApi
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _logger = logger ?? NullLogger<OpenAiRealtimeApi>.Instance;
         _wsUrl = ModelConstants.BuildRealtimeUrl(options.RealtimeModel);
+        _eventDispatcher = new EventDispatcher(_logger);
 
         _logger.LogInformation("Initializing OpenAI Live Realtime API with model {Model}", options.RealtimeModel);
 
@@ -304,7 +303,7 @@ public class OpenAiRealtimeApi : IRealtimeApi
 
     private async Task RunSessionAsync()
     {
-        StartEventDispatcher(_cts!.Token);
+        _eventDispatcher.Start(_cts!.Token);
 
         _audioChannel = Channel.CreateBounded<byte[]>(new BoundedChannelOptions(AudioConstants.AudioChannelCapacity)
         {
@@ -407,7 +406,7 @@ public class OpenAiRealtimeApi : IRealtimeApi
         Volatile.Write(ref _responseActive, 0);
         Volatile.Write(ref _responseRequested, 0);
 
-        StopEventDispatcher();
+        _eventDispatcher.Stop();
     }
     #endregion
 
@@ -596,7 +595,7 @@ public class OpenAiRealtimeApi : IRealtimeApi
     #region Response Processing
     private async Task ReceiveResponsesLoop(CancellationToken ct)
     {
-        var buffer = new byte[1024 * 64];
+        var buffer = new byte[RealtimeConstants.WebSocketBufferSize];
         var messageBuilder = new StringBuilder();
 
         try
@@ -916,7 +915,7 @@ public class OpenAiRealtimeApi : IRealtimeApi
     {
         try
         {
-            await Task.Delay(600, _cts?.Token ?? CancellationToken.None).ConfigureAwait(false);
+            await Task.Delay(RealtimeConstants.FunctionParseRetryDelayMs, _cts?.Token ?? CancellationToken.None).ConfigureAwait(false);
 
             string retry;
             lock (_funcSync)
@@ -1354,54 +1353,7 @@ public class OpenAiRealtimeApi : IRealtimeApi
     #endregion
 
     #region Event Dispatcher
-    private void SafeRaise(Action action)
-    {
-        try
-        {
-            if (_eventChannel != null)
-            {
-                _eventChannel.Writer.TryWrite(action);
-                return;
-            }
-            action();
-        }
-        catch
-        {
-            // Protect internal loops from subscriber exceptions
-        }
-    }
-
-    private void StartEventDispatcher(CancellationToken ct)
-    {
-        _eventChannel = Channel.CreateUnbounded<Action>(new UnboundedChannelOptions
-        {
-            SingleReader = true,
-            SingleWriter = false
-        });
-
-        _eventTask = Task.Run(async () =>
-        {
-            try
-            {
-                await foreach (var action in _eventChannel.Reader.ReadAllAsync(ct).ConfigureAwait(false))
-                {
-                    try { action(); }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError(ex, "Event handler exception");
-                    }
-                }
-            }
-            catch (OperationCanceledException) { }
-        }, ct);
-    }
-
-    private void StopEventDispatcher()
-    {
-        try { _eventChannel?.Writer.TryComplete(); } catch { }
-        _eventChannel = null;
-        _eventTask = null;
-    }
+    private void SafeRaise(Action action) => _eventDispatcher.Raise(action);
     #endregion
 
     #region Session State Tracking
@@ -1411,12 +1363,12 @@ public class OpenAiRealtimeApi : IRealtimeApi
 
         lock (_transcriptLock)
         {
-            _recentTranscripts.Add(transcript);
+            _recentTranscripts.Enqueue(transcript);
 
             // Keep only the most recent transcripts
-            while (_recentTranscripts.Count > MaxRecentTranscripts)
+            while (_recentTranscripts.Count > RealtimeConstants.MaxRecentTranscripts)
             {
-                _recentTranscripts.RemoveAt(0);
+                _recentTranscripts.Dequeue();
             }
         }
     }

@@ -197,21 +197,51 @@ public class QuestionQueueTests
     }
 
     [Fact]
-    public void TryEnqueue_DeduplicationCacheOverflow_AutoClears()
+    public void TryEnqueue_SimilarQuestions_Deduplicated()
     {
-        // Arrange - maxSize=2, so cache clears at 20 (2*10) items
-        var queue = new QuestionQueue(maxSize: 2);
+        // Arrange - use default similarity threshold of 0.7
+        var queue = new QuestionQueue(maxSize: 5, similarityThreshold: 0.7);
 
-        // Act - add 25 unique questions to overflow the cache
-        for (int i = 0; i < 25; i++)
-        {
-            queue.TryEnqueue(CreateQuestion($"Question {i}?"), "context");
-        }
+        // Act - add a question and then a similar one
+        var result1 = queue.TryEnqueue(CreateQuestion("What is a lock statement in C#?"), "context");
+        var result2 = queue.TryEnqueue(CreateQuestion("What is a lock statement?"), "context"); // Similar
 
-        // The first question should be re-enqueueable after cache cleared
-        var result = queue.TryEnqueue(CreateQuestion("Question 0?"), "context");
+        // Assert - first succeeds, similar one is deduplicated
+        Assert.True(result1);
+        Assert.False(result2);
+    }
 
-        // Assert - dedup cache was cleared, so first question can be re-added
+    [Fact]
+    public void TryEnqueue_DifferentQuestions_NotDeduplicated()
+    {
+        // Arrange
+        var queue = new QuestionQueue(maxSize: 5, similarityThreshold: 0.7);
+
+        // Act - add completely different questions
+        var result1 = queue.TryEnqueue(CreateQuestion("What is a lock statement?"), "context");
+        var result2 = queue.TryEnqueue(CreateQuestion("How does garbage collection work?"), "context");
+
+        // Assert - both succeed because they're different
+        Assert.True(result1);
+        Assert.True(result2);
+    }
+
+    [Fact]
+    public void TryEnqueue_AfterSuppressionWindow_AllowsReenqueue()
+    {
+        // Arrange - very short suppression window for testing
+        var queue = new QuestionQueue(maxSize: 5, similarityThreshold: 0.7, suppressionWindowMs: 1);
+
+        // Act - add a question
+        queue.TryEnqueue(CreateQuestion("What is async await?"), "context");
+
+        // Wait for suppression window to expire
+        Thread.Sleep(10);
+
+        // Try to add the same question again
+        var result = queue.TryEnqueue(CreateQuestion("What is async await?"), "context");
+
+        // Assert - can re-add after suppression window expired
         Assert.True(result);
     }
 
