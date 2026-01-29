@@ -20,18 +20,30 @@ public class TranscriptionTestFixture : IDisposable
             .AddUserSecrets<TranscriptionTestFixture>(optional: true)
             .Build();
 
-        ApiKey = config["OpenAI:ApiKey"]
-            ?? config["OPENAI_API_KEY"]
-            ?? Environment.GetEnvironmentVariable("OPENAI_API_KEY")
-            ?? string.Empty;
+        ApiKey = GetFirstNonEmpty(
+	                 config["OpenAI:ApiKey"],
+	                 config["OPENAI_API_KEY"],
+	                 Environment.GetEnvironmentVariable("OPENAI_API_KEY"))
+                 ?? string.Empty;
 
-        IsConfigured = !string.IsNullOrWhiteSpace(ApiKey);
+		// ApiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
+		IsConfigured = !string.IsNullOrWhiteSpace(ApiKey);
     }
 
-    /// <summary>
-    /// Creates a transcription service with default options.
-    /// </summary>
-    public TimestampedTranscriptionService CreateService(TimestampedTranscriptionOptions? options = null)
+    private static string? GetFirstNonEmpty(params string?[] values)
+    {
+	    foreach (var value in values)
+	    {
+		    if (!string.IsNullOrWhiteSpace(value))
+			    return value;
+	    }
+	    return null;
+    }
+
+	/// <summary>
+	/// Creates a transcription service with default options.
+	/// </summary>
+	public TimestampedTranscriptionService CreateService(TimestampedTranscriptionOptions? options = null)
     {
         if (!IsConfigured)
             throw new InvalidOperationException("OpenAI API key not configured");

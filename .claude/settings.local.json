@@ -21,7 +21,12 @@
       "Bash(dir /s /b \"C:\\\\Users\\\\steph\\\\source\\\\repos\\\\AI\\\\micro-x\\\\micro-x-interview-assist-2\\\\docs\\\\architecture\")",
       "Bash(dir:*)",
       "Bash(dotnet nuget search:*)",
-      "Bash(dotnet list:*)"
+      "Bash(dotnet list:*)",
+      "Bash($env:OPENAI_API_KEY = \"KEY\")",
+      "Bash(export:*)",
+      "Bash(echo:*)",
+      "Bash(dotnet run:*)",
+      "Bash(powershell -Command \"[System.Environment]::GetEnvironmentVariable\\(''OPENAI_API_KEY'', ''User''\\)\")"
     ]
   }
 }
