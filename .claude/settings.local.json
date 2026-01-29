@@ -27,7 +27,10 @@
       "Bash(echo:*)",
       "Bash(dotnet run:*)",
       "Bash(powershell -Command \"[System.Environment]::GetEnvironmentVariable\\(''OPENAI_API_KEY'', ''User''\\)\")",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "Bash(move \"documentation\\\\docs\\\\todo\\\\IMPROVEMENT-PLAN-0005.md\" \"documentation\\\\docs\\\\IMPROVEMENT-PLAN-0005.md\")",
+      "Bash(cmd /c move \"documentation\\\\docs\\\\todo\\\\IMPROVEMENT-PLAN-0005.md\" \"documentation\\\\docs\\\\IMPROVEMENT-PLAN-0005.md\")",
+      "Bash(git mv:*)"
     ]
   }
 }

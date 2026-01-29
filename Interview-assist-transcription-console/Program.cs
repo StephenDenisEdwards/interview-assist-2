@@ -1,5 +1,6 @@
 using InterviewAssist.Audio.Windows;
 using InterviewAssist.Library.Audio;
+using InterviewAssist.Library.Transcription;
 using InterviewAssist.Pipeline;
 using InterviewAssist.TranscriptionConsole;
 using Microsoft.Extensions.Configuration;
@@ -35,6 +36,17 @@ var source = audioSourceStr.Equals("mic", StringComparison.OrdinalIgnoreCase)
 var sampleRate = transcriptionConfig.GetValue("SampleRate", 16000);
 var batchMs = transcriptionConfig.GetValue("BatchMs", 1500);
 var language = transcriptionConfig["Language"];
+
+// Load streaming transcription settings
+var useStreaming = transcriptionConfig.GetValue("UseStreaming", false);
+var streamingModeStr = transcriptionConfig["Mode"] ?? "Basic";
+var streamingMode = streamingModeStr.ToLowerInvariant() switch
+{
+    "revision" => TranscriptionMode.Revision,
+    "streaming" => TranscriptionMode.Streaming,
+    _ => TranscriptionMode.Basic
+};
+var vocabularyPrompt = transcriptionConfig["VocabularyPrompt"];
 
 // Load question detection settings from config
 var detectionConfig = configuration.GetSection("QuestionDetection");
@@ -74,6 +86,28 @@ for (int i = 0; i < args.Length; i++)
             if (i + 1 < args.Length)
                 language = args[++i];
             break;
+        case "--streaming":
+        case "-s":
+            useStreaming = true;
+            break;
+        case "--mode":
+            if (i + 1 < args.Length)
+            {
+                var modeArg = args[++i].ToLowerInvariant();
+                streamingMode = modeArg switch
+                {
+                    "revision" => TranscriptionMode.Revision,
+                    "streaming" => TranscriptionMode.Streaming,
+                    _ => TranscriptionMode.Basic
+                };
+                useStreaming = true; // Implies streaming mode
+            }
+            break;
+        case "--vocabulary":
+        case "--vocab":
+            if (i + 1 < args.Length)
+                vocabularyPrompt = args[++i];
+            break;
         case "--detection":
         case "-d":
             if (i + 1 < args.Length)
@@ -98,12 +132,19 @@ for (int i = 0; i < args.Length; i++)
 }
 
 Console.WriteLine("=== Real-time Transcription ===");
-Console.WriteLine($"Audio: {source} | Rate: {sampleRate}Hz | Batch: {batchMs}ms | Lang: {language ?? "auto"}");
-if (detectionEnabled)
+if (useStreaming)
+{
+    Console.WriteLine($"Mode: Streaming ({streamingMode}) | Audio: {source} | Rate: {sampleRate}Hz | Lang: {language ?? "auto"}");
+}
+else
+{
+    Console.WriteLine($"Mode: Legacy | Audio: {source} | Rate: {sampleRate}Hz | Batch: {batchMs}ms | Lang: {language ?? "auto"}");
+}
+if (detectionEnabled && !useStreaming)
 {
     Console.WriteLine($"Question Detection: {detectionMethod}" + (detectionMethod == QuestionDetectionMethod.Llm ? $" ({detectionModel})" : ""));
 }
-else
+else if (!useStreaming)
 {
     Console.WriteLine("Question Detection: Disabled");
 }
@@ -113,124 +154,6 @@ Console.WriteLine();
 
 // Create audio capture
 var audio = new WindowsAudioCaptureService(sampleRate, source);
-
-// Create transcription options
-var options = new TimestampedTranscriptionOptions
-{
-    SampleRate = sampleRate,
-    BatchMs = batchMs,
-    Language = language
-};
-
-// Create transcription service
-await using var transcription = new TimestampedTranscriptionService(audio, apiKey, options);
-
-// Create question detector based on configuration (only if enabled)
-IQuestionDetector? questionDetector = null;
-if (detectionEnabled)
-{
-    questionDetector = detectionMethod switch
-    {
-        QuestionDetectionMethod.Llm => new LlmQuestionDetector(
-            apiKey,
-            detectionModel,
-            confidenceThreshold,
-            detectionIntervalMs,
-            minBufferLength,
-            deduplicationWindowMs,
-            enableTechnicalTermCorrection,
-            enableNoiseFilter),
-        _ => new HeuristicQuestionDetector()
-    };
-
-    Console.ForegroundColor = ConsoleColor.DarkGray;
-    Console.WriteLine($"Using {questionDetector.Name} question detection");
-    Console.ResetColor();
-    Console.WriteLine();
-}
-
-// Wire up events - streaming display with question detection
-transcription.OnTranscriptionResult += async result =>
-{
-    foreach (var segment in result.Segments)
-    {
-        var text = segment.Text.Trim();
-
-        // Always print transcript text first
-        Console.Write(text);
-        Console.Write(" ");
-
-        // Skip detection if disabled
-        if (questionDetector == null)
-            continue;
-
-        // Add to detector buffer
-        questionDetector.AddText(text);
-
-        // Check for questions
-        var detected = await questionDetector.DetectQuestionsAsync();
-
-        // Display detected questions (separate from transcript flow)
-        if (detected.Count > 0)
-        {
-            foreach (var question in detected)
-            {
-                Console.WriteLine();
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.Write($"[{question.Type}");
-                if (detectionMethod == QuestionDetectionMethod.Llm)
-                {
-                    Console.Write($" {question.Confidence:P0}");
-                }
-                Console.Write("] ");
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.WriteLine(question.Text);
-                Console.ResetColor();
-            }
-        }
-    }
-};
-
-transcription.OnSegment += segment =>
-{
-    // Individual segment callback - not used in streaming mode
-};
-
-transcription.OnError += error =>
-{
-    Console.ForegroundColor = ConsoleColor.Red;
-    Console.WriteLine($"[Error] {error}");
-    Console.ResetColor();
-};
-
-// Wire up speech pause signal for two-phase question detection (only if detection enabled)
-if (questionDetector != null)
-{
-    transcription.OnSpeechPause += async () =>
-    {
-        questionDetector.SignalSpeechPause();
-
-        // Check for questions now since no OnTranscriptionResult will fire during silence
-        var detected = await questionDetector.DetectQuestionsAsync();
-        if (detected.Count > 0)
-        {
-            foreach (var question in detected)
-            {
-                Console.WriteLine();
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.Write($"[{question.Type}");
-                if (detectionMethod == QuestionDetectionMethod.Llm)
-                {
-                    Console.Write($" {question.Confidence:P0}");
-                }
-                Console.Write("] ");
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.WriteLine(question.Text);
-                Console.ResetColor();
-            }
-        }
-    };
-}
 
 // Handle Ctrl+C
 using var cts = new CancellationTokenSource();
@@ -242,29 +165,268 @@ Console.CancelKeyPress += (_, e) =>
     cts.Cancel();
 };
 
-// Start transcription
-transcription.Start(cts.Token);
-
-Console.ForegroundColor = ConsoleColor.Yellow;
-Console.WriteLine("Listening for audio...");
-Console.ResetColor();
-Console.WriteLine();
-
-try
+if (useStreaming)
 {
-    await Task.Delay(Timeout.Infinite, cts.Token);
+    // Build streaming transcription options
+    var streamingOptionsBuilder = new StreamingTranscriptionOptionsBuilder()
+        .WithApiKey(apiKey)
+        .WithMode(streamingMode)
+        .WithSampleRate(sampleRate)
+        .WithLanguage(language)
+        .WithContextPrompting(true, maxChars: 200, vocabulary: vocabularyPrompt);
+
+    // Configure mode-specific options
+    if (streamingMode == TranscriptionMode.Basic)
+    {
+        streamingOptionsBuilder.WithBasicOptions(batchMs, batchMs * 2);
+    }
+
+    var streamingOptions = streamingOptionsBuilder.Build();
+
+    // Create the appropriate streaming service based on mode
+    await using IStreamingTranscriptionService streamingService = streamingMode switch
+    {
+        TranscriptionMode.Revision => new RevisionTranscriptionService(audio, streamingOptions),
+        TranscriptionMode.Streaming => new StreamingHypothesisService(audio, streamingOptions),
+        _ => new BasicTranscriptionService(audio, streamingOptions)
+    };
+
+    // Track provisional text for display updates
+    string lastProvisional = "";
+
+    // Wire up streaming transcription events
+    streamingService.OnStableText += args =>
+    {
+        // Clear provisional display if any
+        if (!string.IsNullOrEmpty(lastProvisional))
+        {
+            // Backspace over provisional text
+            Console.Write(new string('\b', lastProvisional.Length));
+            Console.Write(new string(' ', lastProvisional.Length));
+            Console.Write(new string('\b', lastProvisional.Length));
+            lastProvisional = "";
+        }
+
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.Write(args.Text);
+        Console.Write(" ");
+        Console.ResetColor();
+    };
+
+    streamingService.OnProvisionalText += args =>
+    {
+        if (string.IsNullOrWhiteSpace(args.Text)) return;
+
+        // Clear previous provisional
+        if (!string.IsNullOrEmpty(lastProvisional))
+        {
+            Console.Write(new string('\b', lastProvisional.Length));
+            Console.Write(new string(' ', lastProvisional.Length));
+            Console.Write(new string('\b', lastProvisional.Length));
+        }
+
+        // Display new provisional in different color
+        lastProvisional = args.Text;
+        Console.ForegroundColor = ConsoleColor.DarkGray;
+        Console.Write(args.Text);
+        Console.ResetColor();
+    };
+
+    streamingService.OnInfo += msg =>
+    {
+        Console.ForegroundColor = ConsoleColor.DarkCyan;
+        Console.WriteLine($"[Info] {msg}");
+        Console.ResetColor();
+    };
+
+    streamingService.OnWarning += msg =>
+    {
+        Console.ForegroundColor = ConsoleColor.DarkYellow;
+        Console.WriteLine($"[Warn] {msg}");
+        Console.ResetColor();
+    };
+
+    streamingService.OnError += ex =>
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine($"[Error] {ex.Message}");
+        Console.ResetColor();
+    };
+
+    Console.ForegroundColor = ConsoleColor.Yellow;
+    Console.WriteLine("Listening for audio...");
+    Console.ResetColor();
+    Console.WriteLine();
+
+    // Start and wait - StartAsync blocks until cancelled or stopped
+    _ = Task.Run(async () =>
+    {
+        try
+        {
+            await streamingService.StartAsync(cts.Token);
+        }
+        catch (OperationCanceledException) { }
+    });
+
+    try
+    {
+        await Task.Delay(Timeout.Infinite, cts.Token);
+    }
+    catch (OperationCanceledException)
+    {
+        // Expected on shutdown
+    }
+
+    await streamingService.StopAsync();
+
+    Console.WriteLine();
+    Console.WriteLine($"Final stable transcript: {streamingService.GetStableTranscript()}");
 }
-catch (OperationCanceledException)
+else
 {
-    // Expected on shutdown
-}
+    // Legacy transcription mode
+    // Create transcription options
+    var options = new TimestampedTranscriptionOptions
+    {
+        SampleRate = sampleRate,
+        BatchMs = batchMs,
+        Language = language
+    };
 
-await transcription.StopAsync();
+    // Create transcription service
+    await using var transcription = new TimestampedTranscriptionService(audio, apiKey, options);
 
-// Cleanup
-if (questionDetector is IDisposable disposable)
-{
-    disposable.Dispose();
+    // Create question detector based on configuration (only if enabled)
+    IQuestionDetector? questionDetector = null;
+    if (detectionEnabled)
+    {
+        questionDetector = detectionMethod switch
+        {
+            QuestionDetectionMethod.Llm => new LlmQuestionDetector(
+                apiKey,
+                detectionModel,
+                confidenceThreshold,
+                detectionIntervalMs,
+                minBufferLength,
+                deduplicationWindowMs,
+                enableTechnicalTermCorrection,
+                enableNoiseFilter),
+            _ => new HeuristicQuestionDetector()
+        };
+
+        Console.ForegroundColor = ConsoleColor.DarkGray;
+        Console.WriteLine($"Using {questionDetector.Name} question detection");
+        Console.ResetColor();
+        Console.WriteLine();
+    }
+
+    // Wire up events - streaming display with question detection
+    transcription.OnTranscriptionResult += async result =>
+    {
+        foreach (var segment in result.Segments)
+        {
+            var text = segment.Text.Trim();
+
+            // Always print transcript text first
+            Console.Write(text);
+            Console.Write(" ");
+
+            // Skip detection if disabled
+            if (questionDetector == null)
+                continue;
+
+            // Add to detector buffer
+            questionDetector.AddText(text);
+
+            // Check for questions
+            var detected = await questionDetector.DetectQuestionsAsync();
+
+            // Display detected questions (separate from transcript flow)
+            if (detected.Count > 0)
+            {
+                foreach (var question in detected)
+                {
+                    Console.WriteLine();
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write($"[{question.Type}");
+                    if (detectionMethod == QuestionDetectionMethod.Llm)
+                    {
+                        Console.Write($" {question.Confidence:P0}");
+                    }
+                    Console.Write("] ");
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine(question.Text);
+                    Console.ResetColor();
+                }
+            }
+        }
+    };
+
+    transcription.OnSegment += segment =>
+    {
+        // Individual segment callback - not used in streaming mode
+    };
+
+    transcription.OnError += error =>
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine($"[Error] {error}");
+        Console.ResetColor();
+    };
+
+    // Wire up speech pause signal for two-phase question detection (only if detection enabled)
+    if (questionDetector != null)
+    {
+        transcription.OnSpeechPause += async () =>
+        {
+            questionDetector.SignalSpeechPause();
+
+            // Check for questions now since no OnTranscriptionResult will fire during silence
+            var detected = await questionDetector.DetectQuestionsAsync();
+            if (detected.Count > 0)
+            {
+                foreach (var question in detected)
+                {
+                    Console.WriteLine();
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write($"[{question.Type}");
+                    if (detectionMethod == QuestionDetectionMethod.Llm)
+                    {
+                        Console.Write($" {question.Confidence:P0}");
+                    }
+                    Console.Write("] ");
+                    Console.ForegroundColor = ConsoleColor.White;
+                    Console.WriteLine(question.Text);
+                    Console.ResetColor();
+                }
+            }
+        };
+    }
+
+    // Start transcription
+    transcription.Start(cts.Token);
+
+    Console.ForegroundColor = ConsoleColor.Yellow;
+    Console.WriteLine("Listening for audio...");
+    Console.ResetColor();
+    Console.WriteLine();
+
+    try
+    {
+        await Task.Delay(Timeout.Infinite, cts.Token);
+    }
+    catch (OperationCanceledException)
+    {
+        // Expected on shutdown
+    }
+
+    await transcription.StopAsync();
+
+    // Cleanup
+    if (questionDetector is IDisposable disposable)
+    {
+        disposable.Dispose();
+    }
 }
 
 Console.WriteLine();
@@ -283,7 +445,16 @@ static void PrintUsage()
     Console.WriteLine("  --batch, -b <ms>       Batch interval in ms (default: 1500, lower = faster)");
     Console.WriteLine("  --lang <code>          Language code (e.g., en, es) for transcription");
     Console.WriteLine();
-    Console.WriteLine("Question Detection Options:");
+    Console.WriteLine("Streaming Transcription Options:");
+    Console.WriteLine("  --streaming, -s        Enable streaming transcription mode");
+    Console.WriteLine("  --mode <mode>          Streaming mode: basic, revision, or streaming");
+    Console.WriteLine("                         - basic: All text immediately stable (default)");
+    Console.WriteLine("                         - revision: Overlapping batches with local agreement");
+    Console.WriteLine("                         - streaming: Real-time hypothesis with stability tracking");
+    Console.WriteLine("  --vocabulary <terms>   Technical vocabulary for context prompting");
+    Console.WriteLine("                         (e.g., \"C#, async, await, IEnumerable\")");
+    Console.WriteLine();
+    Console.WriteLine("Question Detection Options (legacy mode only):");
     Console.WriteLine("  --detection, -d <method>  Detection method: heuristic (default) or llm");
     Console.WriteLine("  --detection-model <model> LLM model (default: gpt-4o-mini)");
     Console.WriteLine();
@@ -293,21 +464,15 @@ static void PrintUsage()
     Console.WriteLine("Environment:");
     Console.WriteLine("  OPENAI_API_KEY         OpenAI API key (required)");
     Console.WriteLine();
-    Console.WriteLine("Configuration:");
-    Console.WriteLine("  Settings can also be configured in appsettings.json:");
-    Console.WriteLine("  {");
-    Console.WriteLine("    \"QuestionDetection\": {");
-    Console.WriteLine("      \"Enabled\": true,        // set to false to disable detection");
-    Console.WriteLine("      \"Method\": \"Llm\",        // or \"Heuristic\"");
-    Console.WriteLine("      \"Model\": \"gpt-4o-mini\",");
-    Console.WriteLine("      \"ConfidenceThreshold\": 0.7,");
-    Console.WriteLine("      \"DetectionIntervalMs\": 2000,");
-    Console.WriteLine("      \"MinBufferLength\": 50,");
-    Console.WriteLine("      \"DeduplicationWindowMs\": 30000,");
-    Console.WriteLine("      \"EnableTechnicalTermCorrection\": true,");
-    Console.WriteLine("      \"EnableNoiseFilter\": true");
-    Console.WriteLine("    }");
-    Console.WriteLine("  }");
+    Console.WriteLine("Examples:");
+    Console.WriteLine("  # Basic streaming mode with microphone");
+    Console.WriteLine("  Interview-assist-transcription-console --streaming --mic");
+    Console.WriteLine();
+    Console.WriteLine("  # Revision mode with vocabulary prompting");
+    Console.WriteLine("  Interview-assist-transcription-console --mode revision --vocab \"C#, async\"");
+    Console.WriteLine();
+    Console.WriteLine("  # Legacy mode with LLM question detection");
+    Console.WriteLine("  Interview-assist-transcription-console --detection llm");
 }
 
 // Marker class for user secrets

@@ -13,6 +13,8 @@ An Architecture Decision Record captures an important architectural decision alo
 | [ADR-001](ADR-001-realtime-api-websocket.md) | Use OpenAI Realtime API via WebSocket | Accepted | 2026-01-23 |
 | [ADR-002](ADR-002-audio-capture-naudio.md) | Use NAudio for Windows Audio Capture | Accepted | 2026-01-23 |
 | [ADR-003](ADR-003-question-detection-llm.md) | Use LLM for Question Detection | Accepted | 2026-01-23 |
+| [ADR-004](ADR-004-pipeline-vs-realtime.md) | Pipeline vs Realtime Implementation | Accepted | 2026-01-24 |
+| [ADR-005](ADR-005-streaming-transcription-modes.md) | Streaming Transcription Modes | Accepted | 2026-01-29 |
 
 ## Status Definitions
 

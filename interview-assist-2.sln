@@ -37,6 +37,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "decisions", "decisions", "{
 		documentation\docs\architecture\decisions\ADR-002-audio-capture-naudio.md = documentation\docs\architecture\decisions\ADR-002-audio-capture-naudio.md
 		documentation\docs\architecture\decisions\ADR-003-question-detection-llm.md = documentation\docs\architecture\decisions\ADR-003-question-detection-llm.md
 		documentation\docs\architecture\decisions\ADR-004-pipeline-vs-realtime.md = documentation\docs\architecture\decisions\ADR-004-pipeline-vs-realtime.md
+		documentation\docs\architecture\decisions\ADR-005-streaming-transcription-modes.md = documentation\docs\architecture\decisions\ADR-005-streaming-transcription-modes.md
 		documentation\docs\architecture\decisions\README.md = documentation\docs\architecture\decisions\README.md
 	EndProjectSection
 EndProject
@@ -44,7 +45,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "todo", "todo", "{2A0CA0AD-8
 	ProjectSection(SolutionItems) = preProject
 		documentation\docs\HEURISTIC_QUESTION_DETECTOR.md = documentation\docs\HEURISTIC_QUESTION_DETECTOR.md
 		documentation\docs\todo\IMPROVEMENT-PLAN-0004.md = documentation\docs\todo\IMPROVEMENT-PLAN-0004.md
-		documentation\docs\todo\IMPROVEMENT-PLAN-0005.md = documentation\docs\todo\IMPROVEMENT-PLAN-0005.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "todo-done", "todo-done", "{62F3D4C7-6860-46B6-B20C-CFEB323E97DE}"
@@ -53,6 +53,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "todo-done", "todo-done", "{
 		documentation\docs\IMPROVEMENT-PLAN-0001.md = documentation\docs\IMPROVEMENT-PLAN-0001.md
 		documentation\docs\IMPROVEMENT-PLAN-0002.md = documentation\docs\IMPROVEMENT-PLAN-0002.md
 		documentation\docs\IMPROVEMENT-PLAN-0003.md = documentation\docs\IMPROVEMENT-PLAN-0003.md
+		documentation\docs\IMPROVEMENT-PLAN-0005.md = documentation\docs\IMPROVEMENT-PLAN-0005.md
 		documentation\docs\RATE_LIMITING.md = documentation\docs\RATE_LIMITING.md
 	EndProjectSection
 EndProject

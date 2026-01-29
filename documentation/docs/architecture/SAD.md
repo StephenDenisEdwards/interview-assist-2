@@ -2,7 +2,7 @@
 
 **Project:** Interview Assist
 **Version:** 1.0
-**Last Updated:** 2026-01-24
+**Last Updated:** 2026-01-29
 **Template:** arc42 lite
 
 ---
@@ -88,6 +88,7 @@ C4Context
 | API Communication | WebSocket with OpenAI Realtime API | [ADR-001](decisions/ADR-001-realtime-api-websocket.md) |
 | Audio Capture | NAudio library for Windows | [ADR-002](decisions/ADR-002-audio-capture-naudio.md) |
 | Question Detection | LLM-based detection using GPT models | [ADR-003](decisions/ADR-003-question-detection-llm.md) |
+| Streaming Transcription | Multi-mode stability tracking | [ADR-005](decisions/ADR-005-streaming-transcription-modes.md) |
 
 ### 4.2 Technology Stack
 
@@ -335,6 +336,105 @@ var pipeline = new InterviewPipeline(audio, apiKey, questionDetector: detector);
 | `QuestionDetectionOptions` | Configuration for detection (Model, ConfidenceThreshold) |
 | `QuestionDetectionOptionsBuilder` | Fluent builder for configuration |
 
+### 7.5 Streaming Transcription (Optional)
+
+Streaming transcription provides stability-aware text tracking with three modes that trade off latency vs accuracy. See [ADR-005](decisions/ADR-005-streaming-transcription-modes.md) for design rationale.
+
+#### Modes
+
+| Mode | Latency | Accuracy | Use Case |
+|------|---------|----------|----------|
+| **Basic** | Low | Standard | Simple applications, high-quality audio |
+| **Revision** | Medium | High | Accuracy-critical, acceptable delay |
+| **Streaming** | Lowest | Good | Real-time display, acceptable errors |
+
+#### Switching Modes
+
+**Command Line:**
+
+```bash
+# Basic mode (all text immediately stable)
+Interview-assist-transcription-console --streaming --mode basic
+
+# Revision mode (overlapping batches, local agreement)
+Interview-assist-transcription-console --mode revision
+
+# Streaming mode (rapid hypothesis, stability tracking)
+Interview-assist-transcription-console --mode streaming
+
+# With vocabulary prompting (improves technical term accuracy)
+Interview-assist-transcription-console --mode revision --vocab "C#, async, await"
+
+# With microphone input
+Interview-assist-transcription-console --mode revision --mic
+```
+
+**appsettings.json:**
+
+```json
+{
+  "Transcription": {
+    "UseStreaming": true,
+    "Mode": "Revision",
+    "VocabularyPrompt": "C#, async, await, IEnumerable",
+
+    "Basic": { "BatchMs": 3000, "MaxBatchMs": 6000 },
+
+    "Revision": {
+      "OverlapMs": 1500,
+      "BatchMs": 2000,
+      "AgreementCount": 2,
+      "SimilarityThreshold": 0.85
+    },
+
+    "Streaming": {
+      "MinBatchMs": 500,
+      "UpdateIntervalMs": 250,
+      "StabilityIterations": 3,
+      "StabilityTimeoutMs": 2000,
+      "FlickerCooldownMs": 100
+    }
+  }
+}
+```
+
+**DI Registration:**
+
+```csharp
+services.AddStreamingTranscription(opts => opts
+    .WithApiKey(apiKey)
+    .WithMode(TranscriptionMode.Revision)
+    .WithContextPrompting(true, maxChars: 200, vocabulary: "C#, async")
+    .WithRevisionOptions(overlapMs: 1500, agreementCount: 2));
+```
+
+#### Key Interfaces
+
+| Interface | Purpose |
+|-----------|---------|
+| `IStreamingTranscriptionService` | Stability-aware transcription with events |
+| `StreamingTranscriptionOptions` | Configuration for all modes |
+| `StreamingTranscriptionOptionsBuilder` | Fluent builder for configuration |
+| `StableTextEventArgs` | Confirmed text that won't change |
+| `ProvisionalTextEventArgs` | Text that may be revised |
+| `HypothesisEventArgs` | Full hypothesis with stability ratio |
+
+#### Event Flow
+
+```
+Audio → Whisper API → TranscriptionTextComparer
+                            ↓
+              ┌─────────────┴─────────────┐
+              ↓                           ↓
+        OnStableText              OnProvisionalText
+        (white text)               (gray text)
+              ↓                           ↓
+              └─────────────┬─────────────┘
+                            ↓
+                    OnFullHypothesis
+                  (stable + provisional)
+```
+
 ---
 
 ## 8. Architecture Decisions
@@ -347,6 +447,7 @@ See the [decisions/](decisions/) directory for Architecture Decision Records (AD
 | [ADR-002](decisions/ADR-002-audio-capture-naudio.md) | Audio Capture with NAudio | Accepted |
 | [ADR-003](decisions/ADR-003-question-detection-llm.md) | LLM-based Question Detection | Accepted |
 | [ADR-004](decisions/ADR-004-pipeline-vs-realtime.md) | Pipeline vs Realtime Implementation | Accepted |
+| [ADR-005](decisions/ADR-005-streaming-transcription-modes.md) | Streaming Transcription Modes | Accepted |
 
 ---
 

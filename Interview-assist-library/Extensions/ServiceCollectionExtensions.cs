@@ -3,6 +3,7 @@ using InterviewAssist.Library.Constants;
 using InterviewAssist.Library.Health;
 using InterviewAssist.Library.Pipeline;
 using InterviewAssist.Library.Realtime;
+using InterviewAssist.Library.Transcription;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -130,6 +131,47 @@ public static class ServiceCollectionExtensions
                 opts.ApiKey,
                 opts.Model,
                 opts.ConfidenceThreshold);
+        });
+
+        return services;
+    }
+
+    /// <summary>
+    /// Adds streaming transcription services with mode-based stability tracking.
+    /// Requires IAudioCaptureService to be registered separately (platform-specific).
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configureOptions">Action to configure the StreamingTranscriptionOptions using a builder.</param>
+    /// <returns>The service collection for chaining.</returns>
+    /// <example>
+    /// services.AddStreamingTranscription(options => options
+    ///     .WithApiKey("your-api-key")
+    ///     .WithMode(TranscriptionMode.Revision)
+    ///     .WithContextPrompting(true, maxChars: 200, vocabulary: "C#, async"));
+    /// </example>
+    public static IServiceCollection AddStreamingTranscription(
+        this IServiceCollection services,
+        Action<StreamingTranscriptionOptionsBuilder> configureOptions)
+    {
+        ArgumentNullException.ThrowIfNull(configureOptions);
+
+        var builder = new StreamingTranscriptionOptionsBuilder();
+        configureOptions(builder);
+        var options = builder.Build();
+
+        services.AddSingleton(options);
+        services.TryAddSingleton<IStreamingTranscriptionService>(sp =>
+        {
+            var audioService = sp.GetRequiredService<IAudioCaptureService>();
+            var opts = sp.GetRequiredService<StreamingTranscriptionOptions>();
+
+            return opts.Mode switch
+            {
+                TranscriptionMode.Basic => new BasicTranscriptionService(audioService, opts),
+                TranscriptionMode.Revision => new RevisionTranscriptionService(audioService, opts),
+                TranscriptionMode.Streaming => new StreamingHypothesisService(audioService, opts),
+                _ => throw new InvalidOperationException($"Unknown transcription mode: {opts.Mode}")
+            };
         });
 
         return services;
