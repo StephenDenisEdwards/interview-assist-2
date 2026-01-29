@@ -38,6 +38,7 @@ var language = transcriptionConfig["Language"];
 
 // Load question detection settings from config
 var detectionConfig = configuration.GetSection("QuestionDetection");
+var detectionEnabled = detectionConfig.GetValue("Enabled", true);
 var detectionMethodStr = detectionConfig["Method"] ?? "Heuristic";
 var detectionMethod = detectionMethodStr.Equals("llm", StringComparison.OrdinalIgnoreCase)
     ? QuestionDetectionMethod.Llm
@@ -98,7 +99,14 @@ for (int i = 0; i < args.Length; i++)
 
 Console.WriteLine("=== Real-time Transcription ===");
 Console.WriteLine($"Audio: {source} | Rate: {sampleRate}Hz | Batch: {batchMs}ms | Lang: {language ?? "auto"}");
-Console.WriteLine($"Question Detection: {detectionMethod}" + (detectionMethod == QuestionDetectionMethod.Llm ? $" ({detectionModel})" : ""));
+if (detectionEnabled)
+{
+    Console.WriteLine($"Question Detection: {detectionMethod}" + (detectionMethod == QuestionDetectionMethod.Llm ? $" ({detectionModel})" : ""));
+}
+else
+{
+    Console.WriteLine("Question Detection: Disabled");
+}
 Console.WriteLine("Press Ctrl+C to stop");
 Console.WriteLine(new string('-', 60));
 Console.WriteLine();
@@ -117,25 +125,29 @@ var options = new TimestampedTranscriptionOptions
 // Create transcription service
 await using var transcription = new TimestampedTranscriptionService(audio, apiKey, options);
 
-// Create question detector based on configuration
-IQuestionDetector questionDetector = detectionMethod switch
+// Create question detector based on configuration (only if enabled)
+IQuestionDetector? questionDetector = null;
+if (detectionEnabled)
 {
-    QuestionDetectionMethod.Llm => new LlmQuestionDetector(
-        apiKey,
-        detectionModel,
-        confidenceThreshold,
-        detectionIntervalMs,
-        minBufferLength,
-        deduplicationWindowMs,
-        enableTechnicalTermCorrection,
-        enableNoiseFilter),
-    _ => new HeuristicQuestionDetector()
-};
+    questionDetector = detectionMethod switch
+    {
+        QuestionDetectionMethod.Llm => new LlmQuestionDetector(
+            apiKey,
+            detectionModel,
+            confidenceThreshold,
+            detectionIntervalMs,
+            minBufferLength,
+            deduplicationWindowMs,
+            enableTechnicalTermCorrection,
+            enableNoiseFilter),
+        _ => new HeuristicQuestionDetector()
+    };
 
-Console.ForegroundColor = ConsoleColor.DarkGray;
-Console.WriteLine($"Using {questionDetector.Name} question detection");
-Console.ResetColor();
-Console.WriteLine();
+    Console.ForegroundColor = ConsoleColor.DarkGray;
+    Console.WriteLine($"Using {questionDetector.Name} question detection");
+    Console.ResetColor();
+    Console.WriteLine();
+}
 
 // Wire up events - streaming display with question detection
 transcription.OnTranscriptionResult += async result =>
@@ -147,6 +159,10 @@ transcription.OnTranscriptionResult += async result =>
         // Always print transcript text first
         Console.Write(text);
         Console.Write(" ");
+
+        // Skip detection if disabled
+        if (questionDetector == null)
+            continue;
 
         // Add to detector buffer
         questionDetector.AddText(text);
@@ -187,31 +203,34 @@ transcription.OnError += error =>
     Console.ResetColor();
 };
 
-// Wire up speech pause signal for two-phase question detection
-transcription.OnSpeechPause += async () =>
+// Wire up speech pause signal for two-phase question detection (only if detection enabled)
+if (questionDetector != null)
 {
-    questionDetector.SignalSpeechPause();
-
-    // Check for questions now since no OnTranscriptionResult will fire during silence
-    var detected = await questionDetector.DetectQuestionsAsync();
-    if (detected.Count > 0)
+    transcription.OnSpeechPause += async () =>
     {
-        foreach (var question in detected)
+        questionDetector.SignalSpeechPause();
+
+        // Check for questions now since no OnTranscriptionResult will fire during silence
+        var detected = await questionDetector.DetectQuestionsAsync();
+        if (detected.Count > 0)
         {
-            Console.WriteLine();
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Write($"[{question.Type}");
-            if (detectionMethod == QuestionDetectionMethod.Llm)
+            foreach (var question in detected)
             {
-                Console.Write($" {question.Confidence:P0}");
+                Console.WriteLine();
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.Write($"[{question.Type}");
+                if (detectionMethod == QuestionDetectionMethod.Llm)
+                {
+                    Console.Write($" {question.Confidence:P0}");
+                }
+                Console.Write("] ");
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine(question.Text);
+                Console.ResetColor();
             }
-            Console.Write("] ");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine(question.Text);
-            Console.ResetColor();
         }
-    }
-};
+    };
+}
 
 // Handle Ctrl+C
 using var cts = new CancellationTokenSource();
@@ -278,6 +297,7 @@ static void PrintUsage()
     Console.WriteLine("  Settings can also be configured in appsettings.json:");
     Console.WriteLine("  {");
     Console.WriteLine("    \"QuestionDetection\": {");
+    Console.WriteLine("      \"Enabled\": true,        // set to false to disable detection");
     Console.WriteLine("      \"Method\": \"Llm\",        // or \"Heuristic\"");
     Console.WriteLine("      \"Model\": \"gpt-4o-mini\",");
     Console.WriteLine("      \"ConfidenceThreshold\": 0.7,");

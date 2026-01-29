@@ -50,18 +50,12 @@ public record PipelineApiOptions
     public int MaxTranscriptionBatchMs { get; init; } = 6000;
 
     // Question Detection Configuration
-    /// <summary>
-    /// Model to use for question detection. Default: gpt-4o-mini.
-    /// </summary>
-    public string DetectionModel { get; init; } = "gpt-4o-mini";
-
-    /// <summary>
-    /// Minimum confidence threshold for question detection (0.0-1.0). Default: 0.7.
-    /// </summary>
-    public double DetectionConfidenceThreshold { get; init; } = 0.7;
+    // Note: To enable question detection, register IQuestionDetectionService via
+    // services.AddQuestionDetection(). If not registered, detection is disabled.
 
     /// <summary>
     /// Interval between detection checks in milliseconds. Default: 1500ms.
+    /// Only used when IQuestionDetectionService is registered.
     /// </summary>
     public int DetectionIntervalMs { get; init; } = 1500;
 

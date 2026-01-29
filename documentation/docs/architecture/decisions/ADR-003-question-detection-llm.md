@@ -64,9 +64,43 @@ The system prompt instructs the model to:
 
 | Parameter | Default | Purpose |
 |-----------|---------|---------|
-| `model` | gpt-4o-mini | Balances cost and quality |
-| `confidenceThreshold` | 0.7 | Minimum confidence to report |
-| `detectionIntervalMs` | 1000 | Rate limit between API calls |
+| `Enabled` | true | Enable/disable detection entirely |
+| `Model` | gpt-4o-mini | Balances cost and quality |
+| `ConfidenceThreshold` | 0.7 | Minimum confidence to report |
+| `DetectionIntervalMs` | 1500 | Rate limit between detection cycles |
+
+### Enabling/Disabling Detection
+
+Question detection is **optional** and controlled via dependency injection:
+
+**appsettings.json:**
+```json
+{
+  "QuestionDetection": {
+    "Enabled": true,
+    "Model": "gpt-4o-mini",
+    "ConfidenceThreshold": 0.7
+  }
+}
+```
+
+**DI Registration:**
+```csharp
+// Only register if enabled in config
+if (config.GetValue<bool>("QuestionDetection:Enabled", true))
+{
+    services.AddQuestionDetection(opts => opts
+        .WithApiKey(apiKey)
+        .WithModel("gpt-4o-mini")
+        .WithConfidenceThreshold(0.7));
+}
+```
+
+When `IQuestionDetectionService` is not registered:
+- `PipelineRealtimeApi` skips detection loops entirely
+- `InterviewPipeline` only performs transcription
+- No detection API calls are made (saves cost)
+- Console output shows "question detection disabled"
 
 ### Future Considerations
 

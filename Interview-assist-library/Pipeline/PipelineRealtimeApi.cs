@@ -23,7 +23,7 @@ public sealed class PipelineRealtimeApi : IRealtimeApi
     private readonly ILogger<PipelineRealtimeApi> _logger;
 
     // Internal services
-    private readonly IQuestionDetectionService _detector;
+    private readonly IQuestionDetectionService? _detector;
     private readonly IChatCompletionService _chat;
     private readonly TranscriptBuffer _transcriptBuffer;
     private readonly QuestionQueue _questionQueue;
@@ -64,27 +64,33 @@ public sealed class PipelineRealtimeApi : IRealtimeApi
 
     public bool IsConnected { get; private set; }
 
+    /// <summary>
+    /// Creates a new PipelineRealtimeApi instance.
+    /// </summary>
+    /// <param name="audioCaptureService">Audio capture service for microphone/loopback input.</param>
+    /// <param name="options">Pipeline configuration options.</param>
+    /// <param name="questionDetectionService">
+    /// Optional question detection service. If null, question detection is disabled
+    /// and only transcription will occur. Register via services.AddQuestionDetection()
+    /// to enable detection.
+    /// </param>
+    /// <param name="logger">Optional logger.</param>
     public PipelineRealtimeApi(
         IAudioCaptureService audioCaptureService,
         PipelineApiOptions options,
+        IQuestionDetectionService? questionDetectionService = null,
         ILogger<PipelineRealtimeApi>? logger = null)
     {
         _audio = audioCaptureService ?? throw new ArgumentNullException(nameof(audioCaptureService));
         _options = options ?? throw new ArgumentNullException(nameof(options));
+        _detector = questionDetectionService; // null means detection disabled
         _logger = logger ?? NullLogger<PipelineRealtimeApi>.Instance;
 
-        _logger.LogInformation("Initializing Pipeline Realtime API");
+        _logger.LogInformation("Initializing Pipeline Realtime API (detection: {DetectionEnabled})",
+            _detector != null ? "enabled" : "disabled");
 
-
-		if (string.IsNullOrWhiteSpace(options.ApiKey))
+        if (string.IsNullOrWhiteSpace(options.ApiKey))
             throw new ArgumentException("API key is required", nameof(options));
-
-        // Create internal services
-        _detector = new OpenAiQuestionDetectionService(
-            options.ApiKey,
-            options.DetectionModel,
-            options.DetectionConfidenceThreshold,
-            _logger as ILogger<OpenAiQuestionDetectionService>);
 
         _chat = new OpenAiChatCompletionService(
             options.ApiKey,
@@ -136,11 +142,17 @@ public sealed class PipelineRealtimeApi : IRealtimeApi
             _transcriber.OnWarning += msg => SafeRaise(() => OnWarning?.Invoke(msg));
             _transcriber.OnError += ex => SafeRaise(() => OnError?.Invoke(ex));
 
-            // Start detection and response loops
-            _detectionTask = DetectionLoopAsync(_cts.Token);
-            _responseTask = ResponseLoopAsync(_cts.Token);
-
-            SafeRaise(() => OnInfo?.Invoke("Pipeline mode: continuous transcription active"));
+            // Start detection and response loops only if detection service is registered
+            if (_detector != null)
+            {
+                _detectionTask = DetectionLoopAsync(_cts.Token);
+                _responseTask = ResponseLoopAsync(_cts.Token);
+                SafeRaise(() => OnInfo?.Invoke("Pipeline mode: continuous transcription with question detection active"));
+            }
+            else
+            {
+                SafeRaise(() => OnInfo?.Invoke("Pipeline mode: continuous transcription active (question detection disabled)"));
+            }
             SafeRaise(() => OnReady?.Invoke());
 
             // Start transcriber (blocks until cancelled)
@@ -271,6 +283,12 @@ public sealed class PipelineRealtimeApi : IRealtimeApi
 
     private async Task DetectAndQueueQuestionsAsync(CancellationToken ct)
     {
+        // Skip if detection is disabled
+        if (_detector == null)
+        {
+            return;
+        }
+
         // Get transcript since last detection
         var lastTimestamp = _lastDetectionTimestamp;
         var entries = _transcriptBuffer.GetRecentEntries(_options.TranscriptBufferSeconds);

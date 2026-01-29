@@ -279,7 +279,61 @@ stateDiagram-v2
 | `appsettings.json` | Default settings |
 | Environment variables | `OPENAI_API_KEY` |
 | User secrets | Development credentials |
-| `RealtimeApiOptions` | Runtime configuration |
+| `RealtimeApiOptions` | Runtime configuration for Realtime API mode |
+| `PipelineApiOptions` | Runtime configuration for Pipeline mode |
+| `QuestionDetectionOptions` | Question detection settings (when enabled) |
+
+### 7.4 Question Detection (Optional)
+
+Question detection is an **optional feature** controlled via dependency injection. If `IQuestionDetectionService` is not registered, detection is disabled and only transcription occurs.
+
+#### Configuration (appsettings.json)
+
+```json
+{
+  "QuestionDetection": {
+    "Enabled": true,
+    "Model": "gpt-4o-mini",
+    "ConfidenceThreshold": 0.7
+  }
+}
+```
+
+#### DI Registration
+
+```csharp
+// Enable question detection (call BEFORE AddInterviewAssistPipeline)
+if (config.GetValue<bool>("QuestionDetection:Enabled", true))
+{
+    services.AddQuestionDetection(opts => opts
+        .WithApiKey(apiKey)
+        .WithModel("gpt-4o-mini")
+        .WithConfidenceThreshold(0.7));
+}
+
+// Add pipeline (picks up detection service if registered)
+services.AddInterviewAssistPipeline(opts => opts.WithApiKey(apiKey));
+```
+
+#### Console Apps (without full DI)
+
+```csharp
+// Create detector only if enabled
+QuestionDetector? detector = detectionEnabled
+    ? new QuestionDetector(apiKey, model, confidence)
+    : null;
+
+// Pass to pipeline (null = detection disabled)
+var pipeline = new InterviewPipeline(audio, apiKey, questionDetector: detector);
+```
+
+#### Key Interfaces
+
+| Interface | Purpose |
+|-----------|---------|
+| `IQuestionDetectionService` | Detects questions in transcript text |
+| `QuestionDetectionOptions` | Configuration for detection (Model, ConfidenceThreshold) |
+| `QuestionDetectionOptionsBuilder` | Fluent builder for configuration |
 
 ---
 

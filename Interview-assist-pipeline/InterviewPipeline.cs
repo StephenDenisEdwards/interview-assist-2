@@ -12,7 +12,7 @@ namespace InterviewAssist.Pipeline;
 public sealed class InterviewPipeline : IAsyncDisposable
 {
     private readonly TranscriptionService _transcription;
-    private readonly QuestionDetector _detector;
+    private readonly QuestionDetector? _detector;
     private readonly List<string> _transcriptWindow = new();
     private readonly List<string> _detectedQuestions = new();
     private readonly int _windowSize;
@@ -26,27 +26,41 @@ public sealed class InterviewPipeline : IAsyncDisposable
     public event Action<string>? OnError;
     public event Action<string>? OnInfo;
 
+    /// <summary>
+    /// Creates a new InterviewPipeline with optional question detection.
+    /// </summary>
+    /// <param name="audioCapture">Audio capture service.</param>
+    /// <param name="apiKey">OpenAI API key for transcription.</param>
+    /// <param name="sampleRate">Audio sample rate in Hz.</param>
+    /// <param name="transcriptionBatchMs">Transcription batch interval in milliseconds.</param>
+    /// <param name="questionDetector">
+    /// Optional question detector. If null, question detection is disabled
+    /// and only transcription will occur.
+    /// </param>
+    /// <param name="windowSize">Number of transcripts to keep in sliding window for detection.</param>
     public InterviewPipeline(
         IAudioCaptureService audioCapture,
         string apiKey,
         int sampleRate = 24000,
         int transcriptionBatchMs = 3000,
-        string detectionModel = "gpt-4o-mini",
-        double detectionConfidence = 0.7,
+        QuestionDetector? questionDetector = null,
         int windowSize = 6)
     {
         _windowSize = windowSize;
+        _detector = questionDetector;
 
         _transcription = new TranscriptionService(audioCapture, apiKey, sampleRate, transcriptionBatchMs);
-        _detector = new QuestionDetector(apiKey, detectionModel, detectionConfidence);
+
+        // Wire up detector events if present
+        if (_detector != null)
+        {
+            _detector.OnQuestionDetected += HandleDetectedQuestion;
+            _detector.OnError += err => OnError?.Invoke($"[Detection] {err}");
+        }
 
         // Wire transcription events
         _transcription.OnTranscript += HandleTranscript;
         _transcription.OnError += err => OnError?.Invoke($"[Transcription] {err}");
-
-        // Wire detection events - filter duplicates before forwarding
-        _detector.OnQuestionDetected += HandleDetectedQuestion;
-        _detector.OnError += err => OnError?.Invoke($"[Detection] {err}");
     }
 
     public void Start(CancellationToken cancellationToken = default)
@@ -65,6 +79,12 @@ public sealed class InterviewPipeline : IAsyncDisposable
     {
         // Fire transcript event
         OnTranscript?.Invoke(text);
+
+        // Skip detection if no detector registered
+        if (_detector == null)
+        {
+            return;
+        }
 
         // Build sliding window
         string windowText;
@@ -167,6 +187,6 @@ public sealed class InterviewPipeline : IAsyncDisposable
     {
         await StopAsync().ConfigureAwait(false);
         await _transcription.DisposeAsync().ConfigureAwait(false);
-        _detector.Dispose();
+        _detector?.Dispose();
     }
 }

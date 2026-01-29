@@ -5,6 +5,7 @@ using InterviewAssist.Library.Pipeline;
 using InterviewAssist.Library.Realtime;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 
 namespace InterviewAssist.Library.Extensions;
 
@@ -75,7 +76,10 @@ public static class ServiceCollectionExtensions
         {
             var audioService = sp.GetRequiredService<IAudioCaptureService>();
             var opts = sp.GetRequiredService<PipelineApiOptions>();
-            return new PipelineRealtimeApi(audioService, opts);
+            // Get optional question detection service - null if not registered
+            var detector = sp.GetService<IQuestionDetectionService>();
+            var logger = sp.GetService<ILogger<PipelineRealtimeApi>>();
+            return new PipelineRealtimeApi(audioService, opts, detector, logger);
         });
 
         return services;
@@ -91,6 +95,106 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IHealthCheck, RealtimeApiHealthCheck>();
         services.AddSingleton<HealthCheckService>();
         return services;
+    }
+
+    /// <summary>
+    /// Adds question detection services to the pipeline.
+    /// If this method is not called, question detection will be disabled.
+    /// Must be called BEFORE AddInterviewAssistPipeline() to take effect.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configureOptions">Optional action to configure detection options.</param>
+    /// <returns>The service collection for chaining.</returns>
+    /// <example>
+    /// // Enable detection with defaults
+    /// services.AddQuestionDetection();
+    ///
+    /// // Enable detection with custom settings
+    /// services.AddQuestionDetection(options => options
+    ///     .WithModel("gpt-4o-mini")
+    ///     .WithConfidenceThreshold(0.8));
+    /// </example>
+    public static IServiceCollection AddQuestionDetection(
+        this IServiceCollection services,
+        Action<QuestionDetectionOptionsBuilder>? configureOptions = null)
+    {
+        var builder = new QuestionDetectionOptionsBuilder();
+        configureOptions?.Invoke(builder);
+        var options = builder.Build();
+
+        services.AddSingleton(options);
+        services.AddSingleton<IQuestionDetectionService>(sp =>
+        {
+            var opts = sp.GetRequiredService<QuestionDetectionOptions>();
+            return new OpenAiQuestionDetectionService(
+                opts.ApiKey,
+                opts.Model,
+                opts.ConfidenceThreshold);
+        });
+
+        return services;
+    }
+}
+
+/// <summary>
+/// Configuration options for question detection service.
+/// </summary>
+public record QuestionDetectionOptions
+{
+    /// <summary>
+    /// OpenAI API key for detection API calls.
+    /// </summary>
+    public required string ApiKey { get; init; }
+
+    /// <summary>
+    /// Model to use for question detection. Default: gpt-4o-mini.
+    /// </summary>
+    public string Model { get; init; } = "gpt-4o-mini";
+
+    /// <summary>
+    /// Minimum confidence threshold for question detection (0.0-1.0). Default: 0.7.
+    /// </summary>
+    public double ConfidenceThreshold { get; init; } = 0.7;
+}
+
+/// <summary>
+/// Builder class for constructing QuestionDetectionOptions with a fluent API.
+/// </summary>
+public class QuestionDetectionOptionsBuilder
+{
+    private string _apiKey = string.Empty;
+    private string _model = "gpt-4o-mini";
+    private double _confidenceThreshold = 0.7;
+
+    public QuestionDetectionOptionsBuilder WithApiKey(string apiKey)
+    {
+        _apiKey = apiKey;
+        return this;
+    }
+
+    public QuestionDetectionOptionsBuilder WithModel(string model)
+    {
+        _model = model;
+        return this;
+    }
+
+    public QuestionDetectionOptionsBuilder WithConfidenceThreshold(double threshold)
+    {
+        _confidenceThreshold = threshold;
+        return this;
+    }
+
+    internal QuestionDetectionOptions Build()
+    {
+        if (string.IsNullOrWhiteSpace(_apiKey))
+            throw new InvalidOperationException("API key is required. Call WithApiKey() first.");
+
+        return new QuestionDetectionOptions
+        {
+            ApiKey = _apiKey,
+            Model = _model,
+            ConfidenceThreshold = _confidenceThreshold
+        };
     }
 }
 
@@ -283,8 +387,6 @@ public class PipelineApiOptionsBuilder
     private string _apiKey = string.Empty;
     private int _transcriptionBatchMs = 3000;
     private int _sampleRate = 24000;
-    private string _detectionModel = "gpt-4o-mini";
-    private double _detectionConfidenceThreshold = 0.7;
     private int _detectionIntervalMs = 1500;
     private int _transcriptBufferSeconds = 30;
     private string _responseModel = "gpt-4o";
@@ -311,18 +413,6 @@ public class PipelineApiOptionsBuilder
     public PipelineApiOptionsBuilder WithSampleRate(int rate)
     {
         _sampleRate = rate;
-        return this;
-    }
-
-    public PipelineApiOptionsBuilder WithDetectionModel(string model)
-    {
-        _detectionModel = model;
-        return this;
-    }
-
-    public PipelineApiOptionsBuilder WithDetectionConfidenceThreshold(double threshold)
-    {
-        _detectionConfidenceThreshold = threshold;
         return this;
     }
 
@@ -391,8 +481,6 @@ public class PipelineApiOptionsBuilder
             ApiKey = _apiKey,
             TranscriptionBatchMs = _transcriptionBatchMs,
             SampleRate = _sampleRate,
-            DetectionModel = _detectionModel,
-            DetectionConfidenceThreshold = _detectionConfidenceThreshold,
             DetectionIntervalMs = _detectionIntervalMs,
             TranscriptBufferSeconds = _transcriptBufferSeconds,
             ResponseModel = _responseModel,

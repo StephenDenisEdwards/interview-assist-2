@@ -72,10 +72,49 @@ Audio is buffered to minimum 100ms chunks before sending. Silence padding applie
 
 ### Configuration
 
-- `appsettings.json` in MAUI project for defaults
+- `appsettings.json` in console projects for defaults
 - Environment variable `OPENAI_API_KEY` for API authentication
 - User secrets supported (see csproj UserSecretsId)
 - `RealtimeApiOptions` record type configures: model, voice, VAD settings, reconnection behavior
+- `PipelineApiOptions` record type configures: transcription, response generation settings
+- `QuestionDetectionOptions` record type configures: detection model, confidence threshold
+
+### Question Detection (Optional)
+
+Question detection is controlled via dependency injection. If `IQuestionDetectionService` is not registered, detection is disabled and only transcription occurs.
+
+**appsettings.json:**
+```json
+{
+  "QuestionDetection": {
+    "Enabled": true,
+    "Model": "gpt-4o-mini",
+    "ConfidenceThreshold": 0.7
+  }
+}
+```
+
+**DI Registration:**
+```csharp
+// Enable detection (call BEFORE AddInterviewAssistPipeline)
+if (config.GetValue<bool>("QuestionDetection:Enabled", true))
+{
+    services.AddQuestionDetection(opts => opts
+        .WithApiKey(apiKey)
+        .WithModel("gpt-4o-mini"));
+}
+
+services.AddInterviewAssistPipeline(opts => opts.WithApiKey(apiKey));
+```
+
+**Console apps (without DI):**
+```csharp
+QuestionDetector? detector = detectionEnabled
+    ? new QuestionDetector(apiKey, model, confidence)
+    : null;
+
+var pipeline = new InterviewPipeline(audio, apiKey, questionDetector: detector);
+```
 
 ### Concurrency Model
 

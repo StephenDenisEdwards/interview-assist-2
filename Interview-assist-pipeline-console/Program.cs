@@ -40,28 +40,42 @@ var source = audioSourceStr.Equals("mic", StringComparison.OrdinalIgnoreCase)
 // Parse other settings with defaults
 var sampleRate = pipelineConfig.GetValue("SampleRate", 24000);
 var transcriptionBatchMs = pipelineConfig.GetValue("TranscriptionBatchMs", 3000);
-var detectionModel = pipelineConfig["DetectionModel"] ?? "gpt-4o-mini";
-var detectionConfidence = pipelineConfig.GetValue("DetectionConfidence", 0.7);
+
+// Load question detection settings
+var detectionConfig = configuration.GetSection("QuestionDetection");
+var detectionEnabled = detectionConfig.GetValue("Enabled", true);
+var detectionModel = detectionConfig["Model"] ?? "gpt-4o-mini";
+var detectionConfidence = detectionConfig.GetValue("ConfidenceThreshold", 0.7);
 
 Console.WriteLine("=== Interview Pipeline Demo ===");
 Console.WriteLine($"Audio source: {source}");
 Console.WriteLine($"Sample rate: {sampleRate} Hz");
-Console.WriteLine($"Detection model: {detectionModel}");
-Console.WriteLine($"Detection confidence: {detectionConfidence:P0}");
+Console.WriteLine($"Question detection: {(detectionEnabled ? "enabled" : "disabled")}");
+if (detectionEnabled)
+{
+    Console.WriteLine($"Detection model: {detectionModel}");
+    Console.WriteLine($"Detection confidence: {detectionConfidence:P0}");
+}
 Console.WriteLine("Press Ctrl+C to stop");
 Console.WriteLine();
 
 // Create audio capture
 var audio = new WindowsAudioCaptureService(sampleRate, source);
 
-// Create pipeline
+// Create question detector only if enabled
+QuestionDetector? detector = null;
+if (detectionEnabled)
+{
+    detector = new QuestionDetector(apiKey, detectionModel, detectionConfidence);
+}
+
+// Create pipeline with optional detector
 await using var pipeline = new InterviewPipeline(
     audio,
     apiKey,
     sampleRate: sampleRate,
     transcriptionBatchMs: transcriptionBatchMs,
-    detectionModel: detectionModel,
-    detectionConfidence: detectionConfidence);
+    questionDetector: detector);
 
 // Wire up events
 pipeline.OnInfo += msg =>
