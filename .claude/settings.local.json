@@ -26,7 +26,8 @@
       "Bash(export:*)",
       "Bash(echo:*)",
       "Bash(dotnet run:*)",
-      "Bash(powershell -Command \"[System.Environment]::GetEnvironmentVariable\\(''OPENAI_API_KEY'', ''User''\\)\")"
+      "Bash(powershell -Command \"[System.Environment]::GetEnvironmentVariable\\(''OPENAI_API_KEY'', ''User''\\)\")",
+      "WebFetch(domain:github.com)"
     ]
   }
 }

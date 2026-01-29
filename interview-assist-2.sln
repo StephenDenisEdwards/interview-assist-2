@@ -44,6 +44,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "todo", "todo", "{2A0CA0AD-8
 	ProjectSection(SolutionItems) = preProject
 		documentation\docs\HEURISTIC_QUESTION_DETECTOR.md = documentation\docs\HEURISTIC_QUESTION_DETECTOR.md
 		documentation\docs\todo\IMPROVEMENT-PLAN-0004.md = documentation\docs\todo\IMPROVEMENT-PLAN-0004.md
+		documentation\docs\todo\IMPROVEMENT-PLAN-0005.md = documentation\docs\todo\IMPROVEMENT-PLAN-0005.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "todo-done", "todo-done", "{62F3D4C7-6860-46B6-B20C-CFEB323E97DE}"
