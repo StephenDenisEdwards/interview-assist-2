@@ -169,7 +169,9 @@ public static class ServiceCollectionExtensions
             {
                 TranscriptionMode.Basic => new BasicTranscriptionService(audioService, opts),
                 TranscriptionMode.Revision => new RevisionTranscriptionService(audioService, opts),
-                TranscriptionMode.Streaming => new StreamingHypothesisService(audioService, opts),
+                TranscriptionMode.Hypothesis => new StreamingHypothesisService(audioService, opts),
+                TranscriptionMode.Legacy => throw new InvalidOperationException(
+                    "Legacy mode is not supported via DI. Use TimestampedTranscriptionService directly."),
                 _ => throw new InvalidOperationException($"Unknown transcription mode: {opts.Mode}")
             };
         });

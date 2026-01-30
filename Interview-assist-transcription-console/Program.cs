@@ -37,14 +37,14 @@ var sampleRate = transcriptionConfig.GetValue("SampleRate", 16000);
 var batchMs = transcriptionConfig.GetValue("BatchMs", 1500);
 var language = transcriptionConfig["Language"];
 
-// Load streaming transcription settings
-var useStreaming = transcriptionConfig.GetValue("UseStreaming", false);
-var streamingModeStr = transcriptionConfig["Mode"] ?? "Basic";
-var streamingMode = streamingModeStr.ToLowerInvariant() switch
+// Load transcription mode setting
+var modeStr = transcriptionConfig["Mode"] ?? "Legacy";
+var transcriptionMode = modeStr.ToLowerInvariant() switch
 {
+    "basic" => TranscriptionMode.Basic,
     "revision" => TranscriptionMode.Revision,
-    "streaming" => TranscriptionMode.Streaming,
-    _ => TranscriptionMode.Basic
+    "hypothesis" => TranscriptionMode.Hypothesis,
+    _ => TranscriptionMode.Legacy
 };
 var vocabularyPrompt = transcriptionConfig["VocabularyPrompt"];
 
@@ -86,21 +86,17 @@ for (int i = 0; i < args.Length; i++)
             if (i + 1 < args.Length)
                 language = args[++i];
             break;
-        case "--streaming":
-        case "-s":
-            useStreaming = true;
-            break;
         case "--mode":
             if (i + 1 < args.Length)
             {
                 var modeArg = args[++i].ToLowerInvariant();
-                streamingMode = modeArg switch
+                transcriptionMode = modeArg switch
                 {
+                    "basic" => TranscriptionMode.Basic,
                     "revision" => TranscriptionMode.Revision,
-                    "streaming" => TranscriptionMode.Streaming,
-                    _ => TranscriptionMode.Basic
+                    "hypothesis" => TranscriptionMode.Hypothesis,
+                    _ => TranscriptionMode.Legacy
                 };
-                useStreaming = true; // Implies streaming mode
             }
             break;
         case "--vocabulary":
@@ -132,21 +128,18 @@ for (int i = 0; i < args.Length; i++)
 }
 
 Console.WriteLine("=== Real-time Transcription ===");
-if (useStreaming)
+Console.WriteLine($"Mode: {transcriptionMode} | Audio: {source} | Rate: {sampleRate}Hz | Lang: {language ?? "auto"}");
+if (transcriptionMode == TranscriptionMode.Legacy)
 {
-    Console.WriteLine($"Mode: Streaming ({streamingMode}) | Audio: {source} | Rate: {sampleRate}Hz | Lang: {language ?? "auto"}");
-}
-else
-{
-    Console.WriteLine($"Mode: Legacy | Audio: {source} | Rate: {sampleRate}Hz | Batch: {batchMs}ms | Lang: {language ?? "auto"}");
-}
-if (detectionEnabled && !useStreaming)
-{
-    Console.WriteLine($"Question Detection: {detectionMethod}" + (detectionMethod == QuestionDetectionMethod.Llm ? $" ({detectionModel})" : ""));
-}
-else if (!useStreaming)
-{
-    Console.WriteLine("Question Detection: Disabled");
+    Console.WriteLine($"Batch: {batchMs}ms");
+    if (detectionEnabled)
+    {
+        Console.WriteLine($"Question Detection: {detectionMethod}" + (detectionMethod == QuestionDetectionMethod.Llm ? $" ({detectionModel})" : ""));
+    }
+    else
+    {
+        Console.WriteLine("Question Detection: Disabled");
+    }
 }
 Console.WriteLine("Press Ctrl+C to stop");
 Console.WriteLine(new string('-', 60));
@@ -165,18 +158,18 @@ Console.CancelKeyPress += (_, e) =>
     cts.Cancel();
 };
 
-if (useStreaming)
+if (transcriptionMode != TranscriptionMode.Legacy)
 {
     // Build streaming transcription options
     var streamingOptionsBuilder = new StreamingTranscriptionOptionsBuilder()
         .WithApiKey(apiKey)
-        .WithMode(streamingMode)
+        .WithMode(transcriptionMode)
         .WithSampleRate(sampleRate)
         .WithLanguage(language)
         .WithContextPrompting(true, maxChars: 200, vocabulary: vocabularyPrompt);
 
     // Configure mode-specific options
-    if (streamingMode == TranscriptionMode.Basic)
+    if (transcriptionMode == TranscriptionMode.Basic)
     {
         streamingOptionsBuilder.WithBasicOptions(batchMs, batchMs * 2);
     }
@@ -184,10 +177,10 @@ if (useStreaming)
     var streamingOptions = streamingOptionsBuilder.Build();
 
     // Create the appropriate streaming service based on mode
-    await using IStreamingTranscriptionService streamingService = streamingMode switch
+    await using IStreamingTranscriptionService streamingService = transcriptionMode switch
     {
         TranscriptionMode.Revision => new RevisionTranscriptionService(audio, streamingOptions),
-        TranscriptionMode.Streaming => new StreamingHypothesisService(audio, streamingOptions),
+        TranscriptionMode.Hypothesis => new StreamingHypothesisService(audio, streamingOptions),
         _ => new BasicTranscriptionService(audio, streamingOptions)
     };
 
@@ -445,16 +438,16 @@ static void PrintUsage()
     Console.WriteLine("  --batch, -b <ms>       Batch interval in ms (default: 1500, lower = faster)");
     Console.WriteLine("  --lang <code>          Language code (e.g., en, es) for transcription");
     Console.WriteLine();
-    Console.WriteLine("Streaming Transcription Options:");
-    Console.WriteLine("  --streaming, -s        Enable streaming transcription mode");
-    Console.WriteLine("  --mode <mode>          Streaming mode: basic, revision, or streaming");
-    Console.WriteLine("                         - basic: All text immediately stable (default)");
+    Console.WriteLine("Transcription Mode Options:");
+    Console.WriteLine("  --mode <mode>          Transcription mode: legacy, basic, revision, or hypothesis");
+    Console.WriteLine("                         - legacy: Traditional batched transcription with question detection (default)");
+    Console.WriteLine("                         - basic: Streaming with all text immediately stable");
     Console.WriteLine("                         - revision: Overlapping batches with local agreement");
-    Console.WriteLine("                         - streaming: Real-time hypothesis with stability tracking");
+    Console.WriteLine("                         - hypothesis: Real-time hypothesis with stability tracking");
     Console.WriteLine("  --vocabulary <terms>   Technical vocabulary for context prompting");
     Console.WriteLine("                         (e.g., \"C#, async, await, IEnumerable\")");
     Console.WriteLine();
-    Console.WriteLine("Question Detection Options (legacy mode only):");
+    Console.WriteLine("Question Detection Options (Legacy mode only):");
     Console.WriteLine("  --detection, -d <method>  Detection method: heuristic (default) or llm");
     Console.WriteLine("  --detection-model <model> LLM model (default: gpt-4o-mini)");
     Console.WriteLine();
@@ -465,11 +458,14 @@ static void PrintUsage()
     Console.WriteLine("  OPENAI_API_KEY         OpenAI API key (required)");
     Console.WriteLine();
     Console.WriteLine("Examples:");
-    Console.WriteLine("  # Basic streaming mode with microphone");
-    Console.WriteLine("  Interview-assist-transcription-console --streaming --mic");
+    Console.WriteLine("  # Basic mode with microphone");
+    Console.WriteLine("  Interview-assist-transcription-console --mode basic --mic");
     Console.WriteLine();
     Console.WriteLine("  # Revision mode with vocabulary prompting");
     Console.WriteLine("  Interview-assist-transcription-console --mode revision --vocab \"C#, async\"");
+    Console.WriteLine();
+    Console.WriteLine("  # Hypothesis mode for real-time updates");
+    Console.WriteLine("  Interview-assist-transcription-console --mode hypothesis");
     Console.WriteLine();
     Console.WriteLine("  # Legacy mode with LLM question detection");
     Console.WriteLine("  Interview-assist-transcription-console --detection llm");

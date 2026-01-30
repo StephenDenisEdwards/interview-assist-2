@@ -58,9 +58,9 @@ public record StreamingTranscriptionOptions
     public RevisionModeOptions Revision { get; init; } = new();
 
     /// <summary>
-    /// Options specific to Streaming mode.
+    /// Options specific to Hypothesis mode.
     /// </summary>
-    public StreamingModeOptions Streaming { get; init; } = new();
+    public HypothesisModeOptions Hypothesis { get; init; } = new();
 }
 
 /// <summary>
@@ -106,9 +106,9 @@ public record RevisionModeOptions
 }
 
 /// <summary>
-/// Options for Streaming transcription mode.
+/// Options for Hypothesis transcription mode.
 /// </summary>
-public record StreamingModeOptions
+public record HypothesisModeOptions
 {
     /// <summary>
     /// Minimum batch duration in milliseconds before transcription. Default: 500.

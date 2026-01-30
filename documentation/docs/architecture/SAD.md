@@ -387,7 +387,7 @@ Interview-assist-transcription-console --mode revision --mic
       "SimilarityThreshold": 0.85
     },
 
-    "Streaming": {
+    "Hypothesis": {
       "MinBatchMs": 500,
       "UpdateIntervalMs": 250,
       "StabilityIterations": 3,

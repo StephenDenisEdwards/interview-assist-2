@@ -32,6 +32,8 @@ public sealed class StreamingHypothesisService : IStreamingTranscriptionService
     private int _provisionalUnchangedCount;
     private DateTime _provisionalFirstSeen = DateTime.UtcNow;
     private DateTime _lastProvisionalEmitTime = DateTime.MinValue;
+    private volatile bool _shouldClearBuffer;
+    private string _currentSegmentBaseline = string.Empty;  // Reset when buffer clears
 
     public event Action<StableTextEventArgs>? OnStableText;
     public event Action<ProvisionalTextEventArgs>? OnProvisionalText;
@@ -146,13 +148,15 @@ public sealed class StreamingHypothesisService : IStreamingTranscriptionService
         _lastProvisionalEmitted = string.Empty;
         _provisionalUnchangedCount = 0;
         _provisionalFirstSeen = DateTime.UtcNow;
+        _shouldClearBuffer = false;
+        _currentSegmentBaseline = string.Empty;
     }
 
     private async Task TranscriptionLoop(CancellationToken ct)
     {
         if (_audioChannel == null) return;
         var audioBuffer = new MemoryStream();
-        var streamingOptions = _options.Streaming;
+        var streamingOptions = _options.Hypothesis;
         var lastTranscribeTime = Environment.TickCount64;
         var lastUpdateTime = Environment.TickCount64;
 
@@ -160,10 +164,19 @@ public sealed class StreamingHypothesisService : IStreamingTranscriptionService
         int bytesPerMs = _options.SampleRate * 2 / 1000;
         int minBatchBytes = streamingOptions.MinBatchMs * bytesPerMs;
 
+        int chunkCount = 0;
+        int transcribeAttempts = 0;
+
         try
         {
             await foreach (var chunk in _audioChannel.Reader.ReadAllAsync(ct).ConfigureAwait(false))
             {
+                chunkCount++;
+                if (chunkCount == 1)
+                {
+                    OnInfo?.Invoke($"Receiving audio chunks (first chunk: {chunk.Length} bytes)");
+                }
+
                 await audioBuffer.WriteAsync(chunk, 0, chunk.Length, ct).ConfigureAwait(false);
                 var now = Environment.TickCount64;
 
@@ -182,6 +195,16 @@ public sealed class StreamingHypothesisService : IStreamingTranscriptionService
 
                     // Check for stability timeout on provisional text
                     CheckStabilityTimeout();
+
+                    // Clear buffer if text was promoted to stable
+                    if (_shouldClearBuffer)
+                    {
+                        _shouldClearBuffer = false;
+                        audioBuffer.SetLength(0);
+                        lastTranscribeTime = now;
+                        _currentSegmentBaseline = string.Empty;  // Reset segment baseline for new audio
+                        OnInfo?.Invoke("Buffer cleared after text stabilized");
+                    }
                 }
 
                 // Check for silence-based flush
@@ -199,6 +222,7 @@ public sealed class StreamingHypothesisService : IStreamingTranscriptionService
                         audioBuffer.SetLength(0);
                         lastTranscribeTime = now;
                         lastUpdateTime = now;
+                        _currentSegmentBaseline = string.Empty;  // Reset for new segment
                     }
                 }
             }
@@ -229,14 +253,18 @@ public sealed class StreamingHypothesisService : IStreamingTranscriptionService
         double durationSeconds = (double)audioData.Length / (_options.SampleRate * 2);
         if (durationSeconds < TranscriptionConstants.MinAudioDurationSeconds)
         {
+            OnInfo?.Invoke($"Skipping transcription: duration {durationSeconds:F2}s < {TranscriptionConstants.MinAudioDurationSeconds}s minimum");
             return;
         }
 
         // Check for silence (entire buffer)
         if (_options.SilenceThreshold > 0 && IsSilence(audioData, _options.SilenceThreshold))
         {
+            OnInfo?.Invoke($"Skipping transcription: audio buffer ({durationSeconds:F2}s) detected as silence");
             return;
         }
+
+        OnInfo?.Invoke($"Transcribing {durationSeconds:F2}s of audio...");
 
         var wav = BuildWav(audioData, _options.SampleRate, 1, 16);
         try
@@ -254,9 +282,11 @@ public sealed class StreamingHypothesisService : IStreamingTranscriptionService
 
             if (string.IsNullOrWhiteSpace(fullTranscript))
             {
+                OnInfo?.Invoke("Transcription returned empty after filtering");
                 return;
             }
 
+            OnInfo?.Invoke($"Transcription received: \"{fullTranscript.Substring(0, Math.Min(50, fullTranscript.Length))}...\"");
             UpdateHypothesis(fullTranscript);
         }
         catch (OperationCanceledException) { }
@@ -269,12 +299,19 @@ public sealed class StreamingHypothesisService : IStreamingTranscriptionService
     private void UpdateHypothesis(string fullTranscript)
     {
         var now = DateTime.UtcNow;
-        var stableText = GetStableTranscript();
-        var streamingOptions = _options.Streaming;
+        var streamingOptions = _options.Hypothesis;
 
-        // Extract provisional portion (beyond stable text)
-        var provisional = TranscriptionTextComparer.GetExtension(stableText, fullTranscript);
+        // Extract provisional portion (beyond current segment's stable baseline)
+        // Use segment baseline, not full stable transcript, because after buffer clear
+        // the new transcription is unrelated to previous segments
+        var provisional = TranscriptionTextComparer.GetExtension(_currentSegmentBaseline, fullTranscript);
         provisional = provisional?.Trim() ?? string.Empty;
+
+        // If no extension found but we have text, use the full transcript as provisional
+        if (string.IsNullOrEmpty(provisional) && !string.IsNullOrWhiteSpace(fullTranscript))
+        {
+            provisional = fullTranscript.Trim();
+        }
 
         // Check if provisional text has changed
         if (string.Equals(_currentProvisional, provisional, StringComparison.Ordinal))
@@ -328,7 +365,7 @@ public sealed class StreamingHypothesisService : IStreamingTranscriptionService
             return;
 
         var elapsed = (DateTime.UtcNow - _provisionalFirstSeen).TotalMilliseconds;
-        if (elapsed >= _options.Streaming.StabilityTimeoutMs)
+        if (elapsed >= _options.Hypothesis.StabilityTimeoutMs)
         {
             PromoteProvisionalToStable();
         }
@@ -349,6 +386,13 @@ public sealed class StreamingHypothesisService : IStreamingTranscriptionService
         }
 
         _lastStableTime = now;
+        _shouldClearBuffer = true;  // Signal to clear the audio buffer
+
+        // Update segment baseline with the promoted text
+        if (string.IsNullOrEmpty(_currentSegmentBaseline))
+            _currentSegmentBaseline = _currentProvisional;
+        else
+            _currentSegmentBaseline = $"{_currentSegmentBaseline} {_currentProvisional}";
 
         OnStableText?.Invoke(new StableTextEventArgs
         {
@@ -364,7 +408,7 @@ public sealed class StreamingHypothesisService : IStreamingTranscriptionService
 
     private double CalculateConfidence()
     {
-        var streamingOptions = _options.Streaming;
+        var streamingOptions = _options.Hypothesis;
 
         // Confidence based on unchanged iterations
         double iterationConfidence = (double)_provisionalUnchangedCount / streamingOptions.StabilityIterations;

@@ -6,6 +6,11 @@ namespace InterviewAssist.Library.Transcription;
 public enum TranscriptionMode
 {
     /// <summary>
+    /// Legacy mode using TimestampedTranscriptionService with optional question detection.
+    /// </summary>
+    Legacy,
+
+    /// <summary>
     /// All transcribed text is immediately stable. Uses context prompting for continuity.
     /// </summary>
     Basic,
@@ -20,7 +25,7 @@ public enum TranscriptionMode
     /// Rapid hypothesis updates with stability tracking. Text becomes stable after
     /// remaining unchanged for N iterations or a timeout period.
     /// </summary>
-    Streaming
+    Hypothesis
 }
 
 /// <summary>

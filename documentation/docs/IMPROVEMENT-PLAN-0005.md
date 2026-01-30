@@ -146,7 +146,7 @@ public enum TranscriptionMode { Basic, Revision, Streaming }
       "SimilarityThreshold": 0.85
     },
 
-    "Streaming": {
+    "Hypothesis": {
       "MinBatchMs": 500,
       "UpdateIntervalMs": 250,
       "StabilityIterations": 3,

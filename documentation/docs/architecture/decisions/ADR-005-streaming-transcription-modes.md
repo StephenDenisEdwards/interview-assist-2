@@ -37,7 +37,7 @@ Overlapping batches with local agreement policy. Text confirmed by N consecutive
 
 **Best for:** High-accuracy requirements where moderate latency is acceptable.
 
-### Mode 3: Streaming
+### Mode 3: Hypothesis
 
 Rapid hypothesis updates with stability tracking. Text unchanged for N iterations OR timeout becomes stable.
 
@@ -77,7 +77,7 @@ Overlap:           |====|    |====|
 4. Text agreed by N iterations becomes stable
 5. Remainder is provisional
 
-### Streaming Mode Algorithm
+### Hypothesis Mode Algorithm
 
 1. Transcribe rapidly (default: every 250ms)
 2. Track stability via iteration count + timeout
@@ -96,7 +96,7 @@ Overlap:           |====|    |====|
 ### Negative
 
 - **Complexity**: Three implementations to maintain
-- **Higher API Costs**: Revision/Streaming modes make more API calls
+- **Higher API Costs**: Revision/Hypothesis modes make more API calls
 - **Learning Curve**: Users must understand mode differences
 - **Configuration Surface**: More options to tune
 
@@ -119,7 +119,7 @@ Overlap:           |====|    |====|
       "SimilarityThreshold": 0.85
     },
 
-    "Streaming": {
+    "Hypothesis": {
       "MinBatchMs": 500,
       "UpdateIntervalMs": 250,
       "StabilityIterations": 3,
@@ -141,14 +141,17 @@ services.AddStreamingTranscription(opts => opts
 ### Via Command Line
 
 ```bash
-# Basic mode
-Interview-assist-transcription-console --streaming --mode basic
+# Legacy mode (default, with question detection)
+Interview-assist-transcription-console --mode legacy
 
-# Revision mode (recommended)
+# Basic mode
+Interview-assist-transcription-console --mode basic --mic
+
+# Revision mode (recommended for accuracy)
 Interview-assist-transcription-console --mode revision
 
-# Streaming mode (lowest latency)
-Interview-assist-transcription-console --mode streaming --vocab "C#, async"
+# Hypothesis mode (lowest latency)
+Interview-assist-transcription-console --mode hypothesis --vocab "C#, async"
 ```
 
 ## References

@@ -26,12 +26,12 @@ public class StreamingTranscriptionOptionsBuilder
     private int _revisionAgreementCount = 2;
     private double _revisionSimilarityThreshold = 0.85;
 
-    // Streaming mode options
-    private int _streamingMinBatchMs = 500;
-    private int _streamingUpdateIntervalMs = 250;
-    private int _streamingStabilityIterations = 3;
-    private int _streamingStabilityTimeoutMs = 2000;
-    private int _streamingFlickerCooldownMs = 100;
+    // Hypothesis mode options
+    private int _hypothesisMinBatchMs = 500;
+    private int _hypothesisUpdateIntervalMs = 250;
+    private int _hypothesisStabilityIterations = 3;
+    private int _hypothesisStabilityTimeoutMs = 2000;
+    private int _hypothesisFlickerCooldownMs = 100;
 
     /// <summary>
     /// Sets the OpenAI API key.
@@ -130,25 +130,25 @@ public class StreamingTranscriptionOptionsBuilder
     }
 
     /// <summary>
-    /// Configures Streaming mode options.
+    /// Configures Hypothesis mode options.
     /// </summary>
     /// <param name="minBatchMs">Minimum batch duration before transcription.</param>
     /// <param name="updateIntervalMs">Interval between hypothesis updates.</param>
     /// <param name="stabilityIterations">Unchanged iterations before stability.</param>
     /// <param name="stabilityTimeoutMs">Timeout before provisional becomes stable.</param>
     /// <param name="flickerCooldownMs">Cooldown to prevent rapid updates.</param>
-    public StreamingTranscriptionOptionsBuilder WithStreamingOptions(
+    public StreamingTranscriptionOptionsBuilder WithHypothesisOptions(
         int minBatchMs = 500,
         int updateIntervalMs = 250,
         int stabilityIterations = 3,
         int stabilityTimeoutMs = 2000,
         int flickerCooldownMs = 100)
     {
-        _streamingMinBatchMs = minBatchMs;
-        _streamingUpdateIntervalMs = updateIntervalMs;
-        _streamingStabilityIterations = stabilityIterations;
-        _streamingStabilityTimeoutMs = stabilityTimeoutMs;
-        _streamingFlickerCooldownMs = flickerCooldownMs;
+        _hypothesisMinBatchMs = minBatchMs;
+        _hypothesisUpdateIntervalMs = updateIntervalMs;
+        _hypothesisStabilityIterations = stabilityIterations;
+        _hypothesisStabilityTimeoutMs = stabilityTimeoutMs;
+        _hypothesisFlickerCooldownMs = flickerCooldownMs;
         return this;
     }
 
@@ -184,13 +184,13 @@ public class StreamingTranscriptionOptionsBuilder
                 AgreementCount = _revisionAgreementCount,
                 SimilarityThreshold = _revisionSimilarityThreshold
             },
-            Streaming = new StreamingModeOptions
+            Hypothesis = new HypothesisModeOptions
             {
-                MinBatchMs = _streamingMinBatchMs,
-                UpdateIntervalMs = _streamingUpdateIntervalMs,
-                StabilityIterations = _streamingStabilityIterations,
-                StabilityTimeoutMs = _streamingStabilityTimeoutMs,
-                FlickerCooldownMs = _streamingFlickerCooldownMs
+                MinBatchMs = _hypothesisMinBatchMs,
+                UpdateIntervalMs = _hypothesisUpdateIntervalMs,
+                StabilityIterations = _hypothesisStabilityIterations,
+                StabilityTimeoutMs = _hypothesisStabilityTimeoutMs,
+                FlickerCooldownMs = _hypothesisFlickerCooldownMs
             }
         };
     }
