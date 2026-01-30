@@ -1,7 +1,7 @@
 # IMPROVEMENT-PLAN-0006: Hypothesis Mode Redesign with Streaming-Native APIs
 
 **Created:** 2025-01-30
-**Status:** Planning
+**Status:** Implemented (Option A - Deepgram)
 
 ## Problem Statement
 
@@ -84,7 +84,9 @@ At T=3s: "What is a lock statement used for in C sharp"
 
 ---
 
-## Option A: Deepgram Implementation
+## Option A: Deepgram Implementation (Recommended)
+
+> **This is the recommended approach** for implementing Hypothesis mode with proper interim/final transcription support.
 
 ### Rationale
 
@@ -93,6 +95,7 @@ At T=3s: "What is a lock statement used for in C sharp"
 - Explicit `is_final` flag matches our mental model exactly
 - Configurable endpointing for fine-tuning pause detection
 - Well-documented WebSocket API
+- Reliable interim results (documented, not a side effect)
 
 ### Architecture
 
@@ -132,27 +135,27 @@ At T=3s: "What is a lock statement used for in C sharp"
 ### Tasks
 
 #### Phase 1: Foundation
-- [ ] Add Deepgram NuGet package or implement WebSocket client
-- [ ] Create `DeepgramOptions.cs` with API key, model, endpointing settings
-- [ ] Create `DeepgramModels.cs` with WebSocket message DTOs
+- [x] Add Deepgram NuGet package or implement WebSocket client (used native ClientWebSocket)
+- [x] Create `DeepgramOptions.cs` with API key, model, endpointing settings
+- [x] Create `DeepgramModels.cs` with WebSocket message DTOs
 
 #### Phase 2: Core Implementation
-- [ ] Create `DeepgramTranscriptionService.cs` implementing `IStreamingTranscriptionService`
-- [ ] Implement WebSocket connection lifecycle (connect, reconnect, disconnect)
-- [ ] Implement audio streaming to Deepgram
-- [ ] Parse interim/final results from WebSocket messages
+- [x] Create `DeepgramTranscriptionService.cs` implementing `IStreamingTranscriptionService`
+- [x] Implement WebSocket connection lifecycle (connect, reconnect, disconnect)
+- [x] Implement audio streaming to Deepgram
+- [x] Parse interim/final results from WebSocket messages
 
 #### Phase 3: Event Mapping
-- [ ] Map `is_final: false` → `OnProvisionalText`
-- [ ] Map `is_final: true` → `OnStableText`
+- [x] Map `is_final: false` → `OnProvisionalText`
+- [x] Map `is_final: true` → `OnStableText`
 - [ ] Implement revision detection (when final differs from last interim)
 - [ ] Add `OnRevision` event for corrections
 
 #### Phase 4: Integration
-- [ ] Add `TranscriptionMode.Deepgram` enum value
+- [x] Add `TranscriptionMode.Deepgram` enum value
 - [ ] Update `ServiceCollectionExtensions.cs`
-- [ ] Update console app for testing
-- [ ] Add Deepgram API key to configuration
+- [x] Update console app for testing
+- [x] Add Deepgram API key to configuration
 
 #### Phase 5: Testing & Documentation
 - [ ] Create unit tests with mocked WebSocket
@@ -182,15 +185,17 @@ At T=3s: "What is a lock statement used for in C sharp"
 
 ---
 
-## Option B: OpenAI Realtime API Implementation
+## Option B: OpenAI Realtime API Implementation (Not Recommended)
 
-### Rationale
+> **Note:** After further analysis, this option is **not recommended**. See the "Option B Reassessment" section below for details.
 
-- Already used in project (`OpenAiRealtimeApi.cs`)
-- No new API dependency
-- `gpt-4o-transcribe` supports true streaming deltas
-- VAD built-in, handles voice activity detection automatically
-- Transcription-only mode available (no response generation overhead)
+### Original Rationale (Revisited)
+
+- ~~Already used in project (`OpenAiRealtimeApi.cs`)~~ - Existing usage is for conversation mode, not transcription-only
+- ~~No new API dependency~~ - True, but significant refactoring still required
+- `gpt-4o-transcribe` supports streaming deltas - But reliability of interim results is questionable
+- VAD built-in - But no fine-grained endpointing control
+- ~~Transcription-only mode available~~ - Exists but not the primary design purpose
 
 ### Architecture
 
@@ -286,23 +291,62 @@ Refactor existing `OpenAiRealtimeApi.cs` or create new service that:
 |--------|---------------------|---------------------------|
 | **Cost** | ~$0.0077/min | ~$0.06/min |
 | **New dependency** | Yes (new API) | No (already in project) |
-| **Implementation effort** | Higher (new WebSocket client) | Lower (refactor existing) |
+| **Implementation effort** | Higher (new WebSocket client) | Medium (significant refactor) |
 | **Interim/Final model** | Explicit `is_final` flag | Delta + completed events |
-| **Endpointing control** | Configurable (ms) | VAD-based |
+| **Endpointing control** | Configurable (ms) | VAD-based only |
 | **Accuracy** | Nova-2 model, highly optimized | GPT-4o transcribe |
 | **Latency** | ~150ms | ~150-300ms |
+| **Purpose-built for streaming** | Yes | No (conversation-first) |
+| **Interim results reliability** | Documented, reliable | Reports of issues |
+
+### Option B Reassessment
+
+Initial analysis suggested Option B would have lower implementation effort because the OpenAI Realtime API is already used in the project. However, deeper analysis reveals this benefit is **overstated**:
+
+#### Existing Usage vs Option B Requirements
+
+| Aspect | Existing `OpenAiRealtimeApi.cs` | Option B Requirements |
+|--------|--------------------------------|----------------------|
+| **Mode** | Full conversational AI | Transcription-only |
+| **Modalities** | `["text", "audio"]` (AI responds) | Disabled (no responses) |
+| **Events handled** | Only `transcription.completed` | Need `transcription.delta` + `completed` |
+| **Purpose** | User → AI conversation | Pure transcription with interim results |
+
+The existing code uses the Realtime API for **bidirectional conversation** (user speaks, AI responds). Option B requires **transcription-only mode** with streaming delta events - a fundamentally different usage pattern.
+
+#### Concerns with Option B
+
+1. **Delta events may not provide true interim results**
+
+   Developer reports indicate: *"Some developers report that they don't get any transcription deltas back until the user stops talking"* - this defeats the purpose of interim results for the revision model.
+
+2. **Significant refactoring still required**
+
+   Would need to: change session configuration, add delta event handling, disable response generation, implement revision tracking. The "code already exists" benefit is minimal.
+
+3. **Not purpose-built for this use case**
+
+   OpenAI Realtime API is designed for conversational AI, not pure streaming transcription with interim/final model.
+
+4. **8x higher cost**
+
+   ~$0.06/min vs Deepgram's ~$0.0077/min, with no clear quality advantage for transcription-only use.
 
 ### Recommendation
 
-**Start with Option B** (OpenAI Realtime API) because:
-1. No new API dependency
-2. Lower implementation effort (code already exists)
-3. Faster path to working solution
+**Option A (Deepgram) is the recommended approach** because:
 
-**Consider Option A** (Deepgram) if:
-1. Cost becomes a concern (8x cheaper)
-2. More control over endpointing is needed
-3. OpenAI Realtime API has limitations
+1. **Purpose-built for streaming transcription** - Explicit `is_final` flag matches our mental model exactly
+2. **Reliable interim results** - Well-documented behavior, not a side effect of conversation mode
+3. **Configurable endpointing** - Fine-grained control over pause detection (ms granularity)
+4. **8x cheaper** - Significant cost savings at scale
+5. **Simpler mental model** - API designed specifically for this use case
+
+**Option B is not recommended** because:
+1. Questionable interim results reliability
+2. Still requires significant implementation effort
+3. Higher cost with no clear benefit
+4. Conversation-first API repurposed for transcription
 
 ---
 
@@ -549,3 +593,73 @@ while audio_has_not_ended:
 - [Whisper Streaming Paper](https://arxiv.org/html/2307.14743)
 - [NVIDIA NeMo Canary Blog](https://developer.nvidia.com/blog/new-standard-for-speech-recognition-and-translation-from-the-nvidia-nemo-canary-model/)
 - [Vosk Speech Recognition Guide](https://www.videosdk.live/developer-hub/stt/vosk-speech-recognition)
+
+---
+
+# Appendix C: Getting a Deepgram API Key
+
+## Step 1: Create a Deepgram Account
+
+1. Go to [Deepgram Console Signup](https://console.deepgram.com/signup)
+2. Sign up with email or OAuth (Google, GitHub)
+3. Verify your email address
+
+**Free Tier Benefits:**
+- **$200 in free credit** (no credit card required)
+- Access to all Deepgram features including Nova-2 model
+- No time limit on free credits
+
+## Step 2: Create an API Key
+
+1. Log in to the [Deepgram Console](https://console.deepgram.com)
+2. Click **"API Keys"** in the left sidebar
+3. Click the **"Create Key"** button
+4. Give your key a descriptive name (e.g., "Interview Assist Development")
+5. For permissions, select **"Member"** (sufficient for transcription)
+6. Click **"Create Key"**
+
+**Important:** Copy your API key immediately - it will only be shown once!
+
+## Step 3: Configure the Application
+
+Set your API key using one of these methods:
+
+### Option A: Environment Variable (Recommended)
+
+```bash
+# Windows (PowerShell)
+$env:DEEPGRAM_API_KEY = "your-api-key-here"
+
+# Windows (Command Prompt)
+set DEEPGRAM_API_KEY=your-api-key-here
+
+# Linux/macOS
+export DEEPGRAM_API_KEY=your-api-key-here
+```
+
+### Option B: appsettings.json
+
+```json
+{
+  "Deepgram": {
+    "ApiKey": "your-api-key-here"
+  }
+}
+```
+
+### Option C: User Secrets (Development)
+
+```bash
+dotnet user-secrets set "Deepgram:ApiKey" "your-api-key-here"
+```
+
+## Try Without Signing Up
+
+You can test Deepgram's transcription at the [Deepgram Playground](https://playground.deepgram.com/) with no sign-up required.
+
+## References
+
+- [Deepgram Console Signup](https://console.deepgram.com/signup)
+- [Creating API Keys Documentation](https://developers.deepgram.com/docs/create-additional-api-keys)
+- [Authentication Guide](https://developers.deepgram.com/guides/fundamentals/authenticating)
+- [Make Your First API Request](https://developers.deepgram.com/guides/fundamentals/make-your-first-api-request)

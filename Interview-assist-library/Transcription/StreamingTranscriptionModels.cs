@@ -25,7 +25,13 @@ public enum TranscriptionMode
     /// Rapid hypothesis updates with stability tracking. Text becomes stable after
     /// remaining unchanged for N iterations or a timeout period.
     /// </summary>
-    Hypothesis
+    Hypothesis,
+
+    /// <summary>
+    /// Deepgram streaming transcription with native interim/final results.
+    /// Uses Deepgram's is_final flag for stability tracking.
+    /// </summary>
+    Deepgram
 }
 
 /// <summary>

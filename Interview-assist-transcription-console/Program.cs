@@ -5,6 +5,16 @@ using InterviewAssist.Pipeline;
 using InterviewAssist.TranscriptionConsole;
 using Microsoft.Extensions.Configuration;
 
+static string? GetFirstNonEmpty(params string?[] values)
+{
+    foreach (var value in values)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+            return value;
+    }
+    return null;
+}
+
 // Build configuration
 var configuration = new ConfigurationBuilder()
     .SetBasePath(Directory.GetCurrentDirectory())
@@ -14,8 +24,9 @@ var configuration = new ConfigurationBuilder()
     .Build();
 
 // Get API key from configuration or environment
-var apiKey = configuration["OpenAI:ApiKey"]
-    ?? Environment.GetEnvironmentVariable("OPENAI_API_KEY");
+var apiKey = GetFirstNonEmpty(
+    configuration["OpenAI:ApiKey"],
+    Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
 
 if (string.IsNullOrWhiteSpace(apiKey))
 {
@@ -44,6 +55,7 @@ var transcriptionMode = modeStr.ToLowerInvariant() switch
     "basic" => TranscriptionMode.Basic,
     "revision" => TranscriptionMode.Revision,
     "hypothesis" => TranscriptionMode.Hypothesis,
+    "deepgram" => TranscriptionMode.Deepgram,
     _ => TranscriptionMode.Legacy
 };
 var vocabularyPrompt = transcriptionConfig["VocabularyPrompt"];
@@ -95,6 +107,7 @@ for (int i = 0; i < args.Length; i++)
                     "basic" => TranscriptionMode.Basic,
                     "revision" => TranscriptionMode.Revision,
                     "hypothesis" => TranscriptionMode.Hypothesis,
+                    "deepgram" => TranscriptionMode.Deepgram,
                     _ => TranscriptionMode.Legacy
                 };
             }
@@ -158,7 +171,130 @@ Console.CancelKeyPress += (_, e) =>
     cts.Cancel();
 };
 
-if (transcriptionMode != TranscriptionMode.Legacy)
+if (transcriptionMode == TranscriptionMode.Deepgram)
+{
+    // Deepgram mode - uses Deepgram's native streaming API with interim/final results
+    var deepgramApiKey = GetFirstNonEmpty(
+        configuration["Deepgram:ApiKey"],
+        Environment.GetEnvironmentVariable("DEEPGRAM_API_KEY"));
+
+    if (string.IsNullOrWhiteSpace(deepgramApiKey))
+    {
+        Console.WriteLine("Error: Deepgram API key not configured.");
+        Console.WriteLine("Set DEEPGRAM_API_KEY environment variable or add Deepgram:ApiKey to appsettings.json/user secrets.");
+        return 1;
+    }
+
+    // Load Deepgram-specific settings
+    var deepgramConfig = transcriptionConfig.GetSection("Deepgram");
+    var deepgramOptions = new DeepgramOptions
+    {
+        ApiKey = deepgramApiKey,
+        Model = deepgramConfig["Model"] ?? "nova-2",
+        Language = language ?? "en",
+        SampleRate = sampleRate,
+        InterimResults = deepgramConfig.GetValue("InterimResults", true),
+        Punctuate = deepgramConfig.GetValue("Punctuate", true),
+        SmartFormat = deepgramConfig.GetValue("SmartFormat", true),
+        EndpointingMs = deepgramConfig.GetValue("EndpointingMs", 300),
+        UtteranceEndMs = deepgramConfig.GetValue("UtteranceEndMs", 1000),
+        Keywords = deepgramConfig["Keywords"],
+        Vad = deepgramConfig.GetValue("Vad", true)
+    };
+
+    await using var deepgramService = new DeepgramTranscriptionService(audio, deepgramOptions);
+
+    // Track provisional text for display updates
+    string lastProvisional = "";
+
+    // Wire up streaming transcription events
+    deepgramService.OnStableText += args =>
+    {
+        // Clear provisional display if any
+        if (!string.IsNullOrEmpty(lastProvisional))
+        {
+            Console.Write(new string('\b', lastProvisional.Length));
+            Console.Write(new string(' ', lastProvisional.Length));
+            Console.Write(new string('\b', lastProvisional.Length));
+            lastProvisional = "";
+        }
+
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.Write(args.Text);
+        Console.Write(" ");
+        Console.ResetColor();
+    };
+
+    deepgramService.OnProvisionalText += args =>
+    {
+        if (string.IsNullOrWhiteSpace(args.Text)) return;
+
+        // Clear previous provisional
+        if (!string.IsNullOrEmpty(lastProvisional))
+        {
+            Console.Write(new string('\b', lastProvisional.Length));
+            Console.Write(new string(' ', lastProvisional.Length));
+            Console.Write(new string('\b', lastProvisional.Length));
+        }
+
+        // Display new provisional in different color
+        lastProvisional = args.Text;
+        Console.ForegroundColor = ConsoleColor.DarkGray;
+        Console.Write(args.Text);
+        Console.ResetColor();
+    };
+
+    deepgramService.OnInfo += msg =>
+    {
+        Console.ForegroundColor = ConsoleColor.DarkCyan;
+        Console.WriteLine($"[Info] {msg}");
+        Console.ResetColor();
+    };
+
+    deepgramService.OnWarning += msg =>
+    {
+        Console.ForegroundColor = ConsoleColor.DarkYellow;
+        Console.WriteLine($"[Warn] {msg}");
+        Console.ResetColor();
+    };
+
+    deepgramService.OnError += ex =>
+    {
+        Console.ForegroundColor = ConsoleColor.Red;
+        Console.WriteLine($"[Error] {ex.Message}");
+        Console.ResetColor();
+    };
+
+    Console.ForegroundColor = ConsoleColor.Yellow;
+    Console.WriteLine("Listening for audio (Deepgram)...");
+    Console.ResetColor();
+    Console.WriteLine();
+
+    // Start and wait
+    _ = Task.Run(async () =>
+    {
+        try
+        {
+            await deepgramService.StartAsync(cts.Token);
+        }
+        catch (OperationCanceledException) { }
+    });
+
+    try
+    {
+        await Task.Delay(Timeout.Infinite, cts.Token);
+    }
+    catch (OperationCanceledException)
+    {
+        // Expected on shutdown
+    }
+
+    await deepgramService.StopAsync();
+
+    Console.WriteLine();
+    Console.WriteLine($"Final stable transcript: {deepgramService.GetStableTranscript()}");
+}
+else if (transcriptionMode != TranscriptionMode.Legacy)
 {
     // Build streaming transcription options
     var streamingOptionsBuilder = new StreamingTranscriptionOptionsBuilder()
@@ -439,11 +575,12 @@ static void PrintUsage()
     Console.WriteLine("  --lang <code>          Language code (e.g., en, es) for transcription");
     Console.WriteLine();
     Console.WriteLine("Transcription Mode Options:");
-    Console.WriteLine("  --mode <mode>          Transcription mode: legacy, basic, revision, or hypothesis");
+    Console.WriteLine("  --mode <mode>          Transcription mode: legacy, basic, revision, hypothesis, or deepgram");
     Console.WriteLine("                         - legacy: Traditional batched transcription with question detection (default)");
     Console.WriteLine("                         - basic: Streaming with all text immediately stable");
     Console.WriteLine("                         - revision: Overlapping batches with local agreement");
     Console.WriteLine("                         - hypothesis: Real-time hypothesis with stability tracking");
+    Console.WriteLine("                         - deepgram: Deepgram streaming API with native interim/final results");
     Console.WriteLine("  --vocabulary <terms>   Technical vocabulary for context prompting");
     Console.WriteLine("                         (e.g., \"C#, async, await, IEnumerable\")");
     Console.WriteLine();
@@ -455,7 +592,8 @@ static void PrintUsage()
     Console.WriteLine("  --help, -h             Show this help message");
     Console.WriteLine();
     Console.WriteLine("Environment:");
-    Console.WriteLine("  OPENAI_API_KEY         OpenAI API key (required)");
+    Console.WriteLine("  OPENAI_API_KEY         OpenAI API key (required for legacy/basic/revision/hypothesis modes)");
+    Console.WriteLine("  DEEPGRAM_API_KEY       Deepgram API key (required for deepgram mode)");
     Console.WriteLine();
     Console.WriteLine("Examples:");
     Console.WriteLine("  # Basic mode with microphone");
@@ -466,6 +604,9 @@ static void PrintUsage()
     Console.WriteLine();
     Console.WriteLine("  # Hypothesis mode for real-time updates");
     Console.WriteLine("  Interview-assist-transcription-console --mode hypothesis");
+    Console.WriteLine();
+    Console.WriteLine("  # Deepgram streaming with native interim/final results");
+    Console.WriteLine("  Interview-assist-transcription-console --mode deepgram");
     Console.WriteLine();
     Console.WriteLine("  # Legacy mode with LLM question detection");
     Console.WriteLine("  Interview-assist-transcription-console --detection llm");
