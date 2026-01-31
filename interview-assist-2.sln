@@ -45,6 +45,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "todo", "todo", "{2A0CA0AD-8
 	ProjectSection(SolutionItems) = preProject
 		documentation\docs\HEURISTIC_QUESTION_DETECTOR.md = documentation\docs\HEURISTIC_QUESTION_DETECTOR.md
 		documentation\docs\todo\IMPROVEMENT-PLAN-0004.md = documentation\docs\todo\IMPROVEMENT-PLAN-0004.md
+		documentation\docs\todo\IMPROVEMENT-PLAN-0007.md = documentation\docs\todo\IMPROVEMENT-PLAN-0007.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "todo-done", "todo-done", "{62F3D4C7-6860-46B6-B20C-CFEB323E97DE}"
@@ -64,6 +65,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "domain", "domain", "{DAE56B
 		Deepgram-overview.md = Deepgram-overview.md
 		documentation\docs\Detecting Questions and Imperative Sentences in English.pdf = documentation\docs\Detecting Questions and Imperative Sentences in English.pdf
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interview-assist-transcription-detection-console", "Interview-assist-transcription-detection-console\Interview-assist-transcription-detection-console.csproj", "{9A0A441F-CAC7-4665-972E-F299C443D00F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -159,6 +162,18 @@ Global
 		{4A8DE410-D494-4040-B585-EAE02ACFF5F3}.Release|x64.Build.0 = Release|Any CPU
 		{4A8DE410-D494-4040-B585-EAE02ACFF5F3}.Release|x86.ActiveCfg = Release|Any CPU
 		{4A8DE410-D494-4040-B585-EAE02ACFF5F3}.Release|x86.Build.0 = Release|Any CPU
+		{9A0A441F-CAC7-4665-972E-F299C443D00F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A0A441F-CAC7-4665-972E-F299C443D00F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A0A441F-CAC7-4665-972E-F299C443D00F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{9A0A441F-CAC7-4665-972E-F299C443D00F}.Debug|x64.Build.0 = Debug|Any CPU
+		{9A0A441F-CAC7-4665-972E-F299C443D00F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{9A0A441F-CAC7-4665-972E-F299C443D00F}.Debug|x86.Build.0 = Debug|Any CPU
+		{9A0A441F-CAC7-4665-972E-F299C443D00F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9A0A441F-CAC7-4665-972E-F299C443D00F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9A0A441F-CAC7-4665-972E-F299C443D00F}.Release|x64.ActiveCfg = Release|Any CPU
+		{9A0A441F-CAC7-4665-972E-F299C443D00F}.Release|x64.Build.0 = Release|Any CPU
+		{9A0A441F-CAC7-4665-972E-F299C443D00F}.Release|x86.ActiveCfg = Release|Any CPU
+		{9A0A441F-CAC7-4665-972E-F299C443D00F}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

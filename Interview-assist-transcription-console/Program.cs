@@ -1,5 +1,6 @@
 using InterviewAssist.Audio.Windows;
 using InterviewAssist.Library.Audio;
+using InterviewAssist.Library.Pipeline.Utterance;
 using InterviewAssist.Library.Transcription;
 using InterviewAssist.Pipeline;
 using InterviewAssist.TranscriptionConsole;
@@ -191,6 +192,7 @@ if (transcriptionMode == TranscriptionMode.Deepgram)
     // Load Deepgram-specific settings
     var deepgramConfig = transcriptionConfig.GetSection("Deepgram");
     var diarizeEnabled = deepgramConfig.GetValue("Diarize", false) || args.Contains("--diarize");
+    var intentDetectionEnabled = transcriptionConfig.GetValue("IntentDetection:Enabled", false);
     var deepgramOptions = new DeepgramOptions
     {
         ApiKey = deepgramApiKey,
@@ -209,26 +211,18 @@ if (transcriptionMode == TranscriptionMode.Deepgram)
 
     await using var deepgramService = new DeepgramTranscriptionService(audio, deepgramOptions);
 
-    // Track provisional text for display updates
-    string lastProvisional = "";
+    // Create utterance-intent pipeline for question detection (optional)
+    UtteranceIntentPipeline? intentPipeline = intentDetectionEnabled ? new UtteranceIntentPipeline() : null;
+
     // Track current speaker for diarization display
     int? currentSpeaker = null;
 
     // Speaker colors for visual distinction
     ConsoleColor[] speakerColors = { ConsoleColor.Cyan, ConsoleColor.Green, ConsoleColor.Magenta, ConsoleColor.Yellow, ConsoleColor.Blue };
 
-    // Wire up streaming transcription events
+    // Wire up streaming transcription events - only display final stable text
     deepgramService.OnStableText += args =>
     {
-        // Clear provisional display if any
-        if (!string.IsNullOrEmpty(lastProvisional))
-        {
-            Console.Write(new string('\b', lastProvisional.Length));
-            Console.Write(new string(' ', lastProvisional.Length));
-            Console.Write(new string('\b', lastProvisional.Length));
-            lastProvisional = "";
-        }
-
         // Display speaker label if diarization is enabled and speaker changed
         if (diarizeEnabled && args.Speaker.HasValue && args.Speaker != currentSpeaker)
         {
@@ -244,29 +238,71 @@ if (transcriptionMode == TranscriptionMode.Deepgram)
         Console.Write(args.Text);
         Console.Write(" ");
         Console.ResetColor();
+
+        // Feed stable text to intent pipeline as final ASR event
+        intentPipeline?.ProcessAsrEvent(new AsrEvent
+        {
+            Text = args.Text,
+            IsFinal = true,
+            SpeakerId = args.Speaker?.ToString()
+        });
     };
 
+    // Feed provisional text to intent pipeline for early detection, but don't display
     deepgramService.OnProvisionalText += args =>
     {
         if (string.IsNullOrWhiteSpace(args.Text)) return;
 
-        // Clear previous provisional
-        if (!string.IsNullOrEmpty(lastProvisional))
+        // Feed provisional text to intent pipeline as partial ASR event (for early detection)
+        intentPipeline?.ProcessAsrEvent(new AsrEvent
         {
-            Console.Write(new string('\b', lastProvisional.Length));
-            Console.Write(new string(' ', lastProvisional.Length));
-            Console.Write(new string('\b', lastProvisional.Length));
-        }
-
-        // Display new provisional in different color
-        lastProvisional = args.Text;
-        Console.ForegroundColor = ConsoleColor.DarkGray;
-        Console.Write(args.Text);
-        Console.ResetColor();
+            Text = args.Text,
+            IsFinal = false,
+            SpeakerId = args.Speaker?.ToString()
+        });
     };
+
+    // Display detected intents in yellow (only if intent detection is enabled)
+    if (intentPipeline != null)
+    {
+        intentPipeline.OnIntentFinal += evt =>
+        {
+            if (evt.Intent.Type == IntentType.Question)
+            {
+                var subtypeLabel = evt.Intent.Subtype switch
+                {
+                    IntentSubtype.Definition => "Definition",
+                    IntentSubtype.HowTo => "How-To",
+                    IntentSubtype.Compare => "Compare",
+                    IntentSubtype.Troubleshoot => "Troubleshoot",
+                    _ => "Question"
+                };
+
+                // Print on new line for clean separation
+                Console.WriteLine();
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine($"  [{subtypeLabel}] {evt.Intent.SourceText}");
+                Console.ResetColor();
+            }
+        };
+    }
 
     deepgramService.OnInfo += msg =>
     {
+        // Signal utterance end to the intent pipeline
+        if (msg.Contains("Utterance end"))
+        {
+            intentPipeline?.SignalUtteranceEnd();
+        }
+
+        // Filter out noisy messages - only show connection-related info
+        if (msg.Contains("Speech started") ||
+            msg.Contains("Speech final") ||
+            msg.Contains("Utterance end"))
+        {
+            return; // Suppress noisy messages
+        }
+
         Console.ForegroundColor = ConsoleColor.DarkCyan;
         Console.WriteLine($"[Info] {msg}");
         Console.ResetColor();
@@ -292,6 +328,10 @@ if (transcriptionMode == TranscriptionMode.Deepgram)
     {
         Console.Write(" + Diarization");
     }
+    if (intentDetectionEnabled)
+    {
+        Console.Write(" + Question Detection");
+    }
     Console.WriteLine(")...");
     Console.ResetColor();
     Console.WriteLine();
@@ -316,6 +356,7 @@ if (transcriptionMode == TranscriptionMode.Deepgram)
     }
 
     await deepgramService.StopAsync();
+    intentPipeline?.Dispose();
 
     Console.WriteLine();
     Console.WriteLine($"Final stable transcript: {deepgramService.GetStableTranscript()}");
