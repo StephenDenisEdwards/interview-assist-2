@@ -126,6 +126,12 @@ public record DeepgramWord
     /// </summary>
     [JsonPropertyName("punctuated_word")]
     public string? PunctuatedWord { get; init; }
+
+    /// <summary>
+    /// Speaker identifier (0-based index) when diarization is enabled.
+    /// </summary>
+    [JsonPropertyName("speaker")]
+    public int? Speaker { get; init; }
 }
 
 /// <summary>

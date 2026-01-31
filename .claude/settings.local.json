@@ -30,7 +30,10 @@
       "WebFetch(domain:github.com)",
       "Bash(move \"documentation\\\\docs\\\\todo\\\\IMPROVEMENT-PLAN-0005.md\" \"documentation\\\\docs\\\\IMPROVEMENT-PLAN-0005.md\")",
       "Bash(cmd /c move \"documentation\\\\docs\\\\todo\\\\IMPROVEMENT-PLAN-0005.md\" \"documentation\\\\docs\\\\IMPROVEMENT-PLAN-0005.md\")",
-      "Bash(git mv:*)"
+      "Bash(git mv:*)",
+      "Bash(move:*)",
+      "Bash(Move-Item \"C:\\\\Users\\\\steph\\\\source\\\\repos\\\\interview-assist-2\\\\documentation\\\\docs\\\\todo\\\\IMPROVEMENT-PLAN-0006.md\" \"C:\\\\Users\\\\steph\\\\source\\\\repos\\\\interview-assist-2\\\\documentation\\\\docs\\\\IMPROVEMENT-PLAN-0006.md\")",
+      "WebFetch(domain:developers.deepgram.com)"
     ]
   }
 }

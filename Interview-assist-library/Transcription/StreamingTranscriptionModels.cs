@@ -59,6 +59,12 @@ public record StableTextEventArgs
     /// Always 1 for Basic mode.
     /// </summary>
     public int ConfirmationCount { get; init; } = 1;
+
+    /// <summary>
+    /// Speaker identifier (0-based index) when diarization is enabled.
+    /// Null if diarization is not enabled or speaker is unknown.
+    /// </summary>
+    public int? Speaker { get; init; }
 }
 
 /// <summary>
@@ -85,6 +91,12 @@ public record ProvisionalTextEventArgs
     /// Timestamp of this provisional update.
     /// </summary>
     public DateTime Timestamp { get; init; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// Speaker identifier (0-based index) when diarization is enabled.
+    /// Null if diarization is not enabled or speaker is unknown.
+    /// </summary>
+    public int? Speaker { get; init; }
 }
 
 /// <summary>

@@ -75,6 +75,12 @@ public record DeepgramOptions
     public bool Vad { get; init; } = true;
 
     /// <summary>
+    /// Enable speaker diarization. Default: false.
+    /// When enabled, each word will include a speaker identifier.
+    /// </summary>
+    public bool Diarize { get; init; } = false;
+
+    /// <summary>
     /// WebSocket URL for Deepgram streaming API.
     /// </summary>
     public string WebSocketUrl { get; init; } = "wss://api.deepgram.com/v1/listen";

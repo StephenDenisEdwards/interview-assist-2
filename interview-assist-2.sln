@@ -45,22 +45,23 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "todo", "todo", "{2A0CA0AD-8
 	ProjectSection(SolutionItems) = preProject
 		documentation\docs\HEURISTIC_QUESTION_DETECTOR.md = documentation\docs\HEURISTIC_QUESTION_DETECTOR.md
 		documentation\docs\todo\IMPROVEMENT-PLAN-0004.md = documentation\docs\todo\IMPROVEMENT-PLAN-0004.md
-		documentation\docs\todo\IMPROVEMENT-PLAN-0006.md = documentation\docs\todo\IMPROVEMENT-PLAN-0006.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "todo-done", "todo-done", "{62F3D4C7-6860-46B6-B20C-CFEB323E97DE}"
 	ProjectSection(SolutionItems) = preProject
+		documentation\docs\appsettings.md = documentation\docs\appsettings.md
 		documentation\docs\ARCHITECTURE-DOCUMENTATION-OPTIONS.md = documentation\docs\ARCHITECTURE-DOCUMENTATION-OPTIONS.md
 		documentation\docs\IMPROVEMENT-PLAN-0001.md = documentation\docs\IMPROVEMENT-PLAN-0001.md
 		documentation\docs\IMPROVEMENT-PLAN-0002.md = documentation\docs\IMPROVEMENT-PLAN-0002.md
 		documentation\docs\IMPROVEMENT-PLAN-0003.md = documentation\docs\IMPROVEMENT-PLAN-0003.md
 		documentation\docs\IMPROVEMENT-PLAN-0005.md = documentation\docs\IMPROVEMENT-PLAN-0005.md
+		documentation\docs\IMPROVEMENT-PLAN-0006.md = documentation\docs\IMPROVEMENT-PLAN-0006.md
 		documentation\docs\RATE_LIMITING.md = documentation\docs\RATE_LIMITING.md
-		documentation\docs\appsettings.md = documentation\docs\appsettings.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "domain", "domain", "{DAE56BC8-6701-48C6-BB0E-11AEA66F8D9A}"
 	ProjectSection(SolutionItems) = preProject
+		Deepgram-overview.md = Deepgram-overview.md
 		documentation\docs\Detecting Questions and Imperative Sentences in English.pdf = documentation\docs\Detecting Questions and Imperative Sentences in English.pdf
 	EndProjectSection
 EndProject

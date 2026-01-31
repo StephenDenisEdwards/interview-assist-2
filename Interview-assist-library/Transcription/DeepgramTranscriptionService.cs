@@ -207,6 +207,11 @@ public sealed class DeepgramTranscriptionService : IStreamingTranscriptionServic
             parameters.Add($"utterance_end_ms={_options.UtteranceEndMs}");
         }
 
+        if (_options.Diarize)
+        {
+            parameters.Add("diarize=true");
+        }
+
         if (!string.IsNullOrWhiteSpace(_options.Keywords))
         {
             // Split keywords and add each one
@@ -332,9 +337,10 @@ public sealed class DeepgramTranscriptionService : IStreamingTranscriptionServic
         var isFinal = root.TryGetProperty("is_final", out var finalProp) && finalProp.GetBoolean();
         var speechFinal = root.TryGetProperty("speech_final", out var speechProp) && speechProp.GetBoolean();
 
-        // Get transcript text
+        // Get transcript text and speaker info
         string transcript = string.Empty;
         double confidence = 0;
+        int? speaker = null;
 
         if (root.TryGetProperty("channel", out var channel) &&
             channel.TryGetProperty("alternatives", out var alternatives) &&
@@ -347,6 +353,16 @@ public sealed class DeepgramTranscriptionService : IStreamingTranscriptionServic
             confidence = firstAlt.TryGetProperty("confidence", out var confProp)
                 ? confProp.GetDouble()
                 : 0;
+
+            // Extract speaker from first word (diarization)
+            if (firstAlt.TryGetProperty("words", out var words) && words.GetArrayLength() > 0)
+            {
+                var firstWord = words[0];
+                if (firstWord.TryGetProperty("speaker", out var speakerProp))
+                {
+                    speaker = speakerProp.GetInt32();
+                }
+            }
         }
 
         // Skip empty transcripts
@@ -378,7 +394,8 @@ public sealed class DeepgramTranscriptionService : IStreamingTranscriptionServic
                 Text = transcript.Trim(),
                 StreamOffsetMs = _streamOffsetMs,
                 Timestamp = DateTime.UtcNow,
-                ConfirmationCount = 1
+                ConfirmationCount = 1,
+                Speaker = speaker
             });
 
             _lastProvisionalText = string.Empty;
@@ -396,7 +413,8 @@ public sealed class DeepgramTranscriptionService : IStreamingTranscriptionServic
                 Text = transcript.Trim(),
                 Confidence = confidence,
                 StreamOffsetMs = _streamOffsetMs,
-                Timestamp = DateTime.UtcNow
+                Timestamp = DateTime.UtcNow,
+                Speaker = speaker
             });
 
             _lastProvisionalText = transcript.Trim();

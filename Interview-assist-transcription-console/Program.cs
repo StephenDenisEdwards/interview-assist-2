@@ -133,6 +133,9 @@ for (int i = 0; i < args.Length; i++)
             if (i + 1 < args.Length)
                 detectionModel = args[++i];
             break;
+        case "--diarize":
+            // Will be handled in Deepgram mode section
+            break;
         case "--help":
         case "-h":
             PrintUsage();
@@ -187,6 +190,7 @@ if (transcriptionMode == TranscriptionMode.Deepgram)
 
     // Load Deepgram-specific settings
     var deepgramConfig = transcriptionConfig.GetSection("Deepgram");
+    var diarizeEnabled = deepgramConfig.GetValue("Diarize", false) || args.Contains("--diarize");
     var deepgramOptions = new DeepgramOptions
     {
         ApiKey = deepgramApiKey,
@@ -199,13 +203,19 @@ if (transcriptionMode == TranscriptionMode.Deepgram)
         EndpointingMs = deepgramConfig.GetValue("EndpointingMs", 300),
         UtteranceEndMs = deepgramConfig.GetValue("UtteranceEndMs", 1000),
         Keywords = deepgramConfig["Keywords"],
-        Vad = deepgramConfig.GetValue("Vad", true)
+        Vad = deepgramConfig.GetValue("Vad", true),
+        Diarize = diarizeEnabled
     };
 
     await using var deepgramService = new DeepgramTranscriptionService(audio, deepgramOptions);
 
     // Track provisional text for display updates
     string lastProvisional = "";
+    // Track current speaker for diarization display
+    int? currentSpeaker = null;
+
+    // Speaker colors for visual distinction
+    ConsoleColor[] speakerColors = { ConsoleColor.Cyan, ConsoleColor.Green, ConsoleColor.Magenta, ConsoleColor.Yellow, ConsoleColor.Blue };
 
     // Wire up streaming transcription events
     deepgramService.OnStableText += args =>
@@ -217,6 +227,17 @@ if (transcriptionMode == TranscriptionMode.Deepgram)
             Console.Write(new string(' ', lastProvisional.Length));
             Console.Write(new string('\b', lastProvisional.Length));
             lastProvisional = "";
+        }
+
+        // Display speaker label if diarization is enabled and speaker changed
+        if (diarizeEnabled && args.Speaker.HasValue && args.Speaker != currentSpeaker)
+        {
+            currentSpeaker = args.Speaker;
+            Console.WriteLine();
+            var speakerColor = speakerColors[args.Speaker.Value % speakerColors.Length];
+            Console.ForegroundColor = speakerColor;
+            Console.Write($"[Speaker {args.Speaker.Value}] ");
+            Console.ResetColor();
         }
 
         Console.ForegroundColor = ConsoleColor.White;
@@ -266,7 +287,12 @@ if (transcriptionMode == TranscriptionMode.Deepgram)
     };
 
     Console.ForegroundColor = ConsoleColor.Yellow;
-    Console.WriteLine("Listening for audio (Deepgram)...");
+    Console.Write("Listening for audio (Deepgram");
+    if (diarizeEnabled)
+    {
+        Console.Write(" + Diarization");
+    }
+    Console.WriteLine(")...");
     Console.ResetColor();
     Console.WriteLine();
 
@@ -584,6 +610,9 @@ static void PrintUsage()
     Console.WriteLine("  --vocabulary <terms>   Technical vocabulary for context prompting");
     Console.WriteLine("                         (e.g., \"C#, async, await, IEnumerable\")");
     Console.WriteLine();
+    Console.WriteLine("Deepgram Options:");
+    Console.WriteLine("  --diarize              Enable speaker diarization (identifies different speakers)");
+    Console.WriteLine();
     Console.WriteLine("Question Detection Options (Legacy mode only):");
     Console.WriteLine("  --detection, -d <method>  Detection method: heuristic (default) or llm");
     Console.WriteLine("  --detection-model <model> LLM model (default: gpt-4o-mini)");
@@ -607,6 +636,9 @@ static void PrintUsage()
     Console.WriteLine();
     Console.WriteLine("  # Deepgram streaming with native interim/final results");
     Console.WriteLine("  Interview-assist-transcription-console --mode deepgram");
+    Console.WriteLine();
+    Console.WriteLine("  # Deepgram with speaker diarization");
+    Console.WriteLine("  Interview-assist-transcription-console --mode deepgram --diarize");
     Console.WriteLine();
     Console.WriteLine("  # Legacy mode with LLM question detection");
     Console.WriteLine("  Interview-assist-transcription-console --detection llm");
