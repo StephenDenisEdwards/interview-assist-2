@@ -132,56 +132,42 @@ var pipeline = new InterviewPipeline(audio, apiKey, questionDetector: detector);
 - Prefer small, reviewable changes
 - Do not introduce new dependencies unless asked
 
-## Documentation Maintenance
+## Documentation
 
-Architecture documentation lives in `documentation/docs/architecture/` and is visible in the VS solution under the `documentation` folder.
+Documentation lives in `documentation/docs/` and is organized by purpose. See [documentation/docs/index.md](documentation/docs/index.md) for navigation.
 
-### When to Create an ADR
+### Documentation Structure
 
-Create a new ADR (`ADR-XXX-short-title.md`) when:
-- Adding a new external dependency or library
-- Changing communication protocols or API integrations
-- Modifying the audio processing pipeline
-- Adding new platform-specific implementations
-- Making significant changes to the concurrency model
-- Choosing between multiple viable technical approaches
+```
+documentation/docs/
+├── index.md              # Navigation index
+├── architecture/         # SAD and ADRs
+│   ├── SAD.md
+│   └── decisions/
+├── design/               # Design documents
+├── domain/               # Domain knowledge (Deepgram, question detection)
+├── operations/           # Configuration and operational guides
+└── plans/
+    ├── in-progress/      # Active improvement plans
+    └── completed/        # Finished improvement plans
+```
 
-ADRs use the Nygard template (Status, Context, Decision, Consequences). See `documentation/docs/architecture/decisions/README.md` for the template.
+### Quick Reference
 
-### When to Update the SAD
+| Document Type | Location | When to Create/Update |
+|--------------|----------|----------------------|
+| Architecture Decision Record | `architecture/decisions/ADR-XXX-*.md` | New dependency, protocol change, significant design choice |
+| Software Architecture Document | `architecture/SAD.md` | New projects, interfaces, building blocks |
+| Design Document | `design/DESIGN-*.md` | Complex feature designs, pipelines |
+| Domain Knowledge | `domain/` | External service integrations, algorithms |
+| Operations Guide | `operations/` | Configuration, deployment, rate limiting |
+| Improvement Plan | `plans/in-progress/IMPROVEMENT-PLAN-XXXX.md` | Multi-task refactoring or feature work |
 
-Update `documentation/docs/architecture/SAD.md` when:
-- Adding new projects to the solution
-- Creating new key interfaces or abstractions
-- Changing the building block structure
-- Modifying runtime behavior (sequence diagrams)
-- Adding new crosscutting concerns
+### Detailed Guidelines
 
-### Adding Documentation to the Solution
+For comprehensive documentation guidelines including templates and examples, see:
+- [.github/instructions/documentation.instructions.md](.github/instructions/documentation.instructions.md)
 
-When adding new documentation files, update `interview-assist-2.sln` to include them in the appropriate solution folder so they appear in Visual Studio's Solution Explorer.
+### Solution Integration
 
-### Improvement Plans
-
-When planning multi-task improvements or refactoring work:
-
-1. Create a numbered plan file: `documentation/docs/todo/IMPROVEMENT-PLAN-XXXX.md`
-2. Use the next available number (e.g., 0001, 0002, 0003)
-3. Add the file to the solution under the `todo` folder in `interview-assist-2.sln`
-4. Structure the plan with:
-   - Created date and status
-   - Completed tasks (checked off)
-   - Remaining tasks with priority, effort, and affected files
-   - Implementation order/phases
-
-When completing an improvement plan:
-
-1. Add an **Implementation Summary** section at the end with:
-   - Tables showing tasks completed per phase and files changed
-   - Build and test results
-   - List of new files created
-2. Update the status to reflect completion
-3. Move the file from `documentation/docs/todo/` to `documentation/docs/`
-4. Update `interview-assist-2.sln`:
-   - Remove the file from the `todo` solution folder
-   - Add the file to the `todo-done` solution folder
+All documentation files must be added to `interview-assist-2.sln` under the appropriate solution folder to appear in Visual Studio's Solution Explorer.
