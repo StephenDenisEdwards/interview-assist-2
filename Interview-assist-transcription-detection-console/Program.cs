@@ -1,5 +1,7 @@
 using InterviewAssist.Audio.Windows;
 using InterviewAssist.Library.Audio;
+using InterviewAssist.Library.Pipeline.Detection;
+using InterviewAssist.Library.Pipeline.Recording;
 using InterviewAssist.Library.Pipeline.Utterance;
 using InterviewAssist.Library.Transcription;
 using Microsoft.Extensions.Configuration;
@@ -11,6 +13,35 @@ public partial class Program
 {
     public static async Task<int> Main(string[] args)
     {
+        // Parse command-line arguments
+        string? playbackFile = null;
+        for (int i = 0; i < args.Length; i++)
+        {
+            if (args[i] == "--playback" && i + 1 < args.Length)
+            {
+                playbackFile = args[i + 1];
+                i++;
+            }
+            else if (args[i] == "--help" || args[i] == "-h")
+            {
+                Console.WriteLine("Interview Assist - Transcription & Detection Console");
+                Console.WriteLine();
+                Console.WriteLine("Usage:");
+                Console.WriteLine("  dotnet run                         Normal mode (live audio)");
+                Console.WriteLine("  dotnet run -- --playback <file>    Playback mode (from recorded session)");
+                Console.WriteLine();
+                Console.WriteLine("Options:");
+                Console.WriteLine("  --playback <file>    Play back a recorded session file (.jsonl)");
+                Console.WriteLine("  --help, -h           Show this help message");
+                Console.WriteLine();
+                Console.WriteLine("Keyboard shortcuts in normal mode:");
+                Console.WriteLine("  Ctrl+S    Stop transcription");
+                Console.WriteLine("  Ctrl+R    Toggle recording (or use AutoStart in appsettings.json)");
+                Console.WriteLine("  Ctrl+Q    Quit");
+                return 0;
+            }
+        }
+
         // Build configuration
         var configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
@@ -19,16 +50,21 @@ public partial class Program
             .AddUserSecrets<Program>(optional: true)
             .Build();
 
-        // Get Deepgram API key
-        var deepgramApiKey = GetFirstNonEmpty(
-            configuration["Deepgram:ApiKey"],
-            Environment.GetEnvironmentVariable("DEEPGRAM_API_KEY"));
-
-        if (string.IsNullOrWhiteSpace(deepgramApiKey))
+        // In playback mode, Deepgram API key is not required
+        string? deepgramApiKey = null;
+        if (playbackFile == null)
         {
-            Console.WriteLine("Error: Deepgram API key not configured.");
-            Console.WriteLine("Set DEEPGRAM_API_KEY environment variable or add Deepgram:ApiKey to appsettings.json/user secrets.");
-            return 1;
+            // Get Deepgram API key
+            deepgramApiKey = GetFirstNonEmpty(
+                configuration["Deepgram:ApiKey"],
+                Environment.GetEnvironmentVariable("DEEPGRAM_API_KEY"));
+
+            if (string.IsNullOrWhiteSpace(deepgramApiKey))
+            {
+                Console.WriteLine("Error: Deepgram API key not configured.");
+                Console.WriteLine("Set DEEPGRAM_API_KEY environment variable or add Deepgram:ApiKey to appsettings.json/user secrets.");
+                return 1;
+            }
         }
 
         // Load transcription settings
@@ -45,6 +81,21 @@ public partial class Program
         var language = transcriptionConfig["Language"] ?? "en";
         var diarizeEnabled = deepgramConfig.GetValue("Diarize", false);
         var intentDetectionEnabled = transcriptionConfig.GetValue("IntentDetection:Enabled", true);
+
+        // Load intent detection options
+        var intentConfig = transcriptionConfig.GetSection("IntentDetection");
+        var intentDetectionOptions = LoadIntentDetectionOptions(intentConfig, configuration);
+
+        // Validate API key for LLM modes (before starting UI)
+        if (playbackFile == null && intentDetectionEnabled &&
+            intentDetectionOptions.Mode != IntentDetectionMode.Heuristic &&
+            string.IsNullOrWhiteSpace(intentDetectionOptions.Llm.ApiKey))
+        {
+            Console.WriteLine($"Error: OpenAI API key required for {intentDetectionOptions.Mode} detection mode.");
+            Console.WriteLine("Set OPENAI_API_KEY environment variable or add IntentDetection:Llm:ApiKey to appsettings.json.");
+            Console.WriteLine("Alternatively, set Mode to \"Heuristic\" to use free regex-based detection.");
+            return 1;
+        }
 
         var deepgramOptions = new DeepgramOptions
         {
@@ -67,13 +118,24 @@ public partial class Program
         var backgroundColorHex = uiConfig["BackgroundColor"] ?? "#1E1E1E";
         var intentColorHex = uiConfig["IntentColor"] ?? "#FFFF00";
 
+        // Load recording settings
+        var recordingConfig = configuration.GetSection("Recording");
+        var recordingOptions = new RecordingOptions
+        {
+            Folder = recordingConfig["Folder"] ?? "recordings",
+            FileNamePattern = recordingConfig["FileNamePattern"] ?? "session-{timestamp}.jsonl",
+            AutoStart = recordingConfig.GetValue("AutoStart", false)
+        };
+
         // Initialize Terminal.Gui
         Application.Init();
 
         try
         {
             // Create the main UI and run
-            var app = new TranscriptionApp(source, sampleRate, deepgramOptions, diarizeEnabled, intentDetectionEnabled, backgroundColorHex, intentColorHex);
+            var app = new TranscriptionApp(
+                source, sampleRate, deepgramOptions, diarizeEnabled, intentDetectionEnabled,
+                intentDetectionOptions, backgroundColorHex, intentColorHex, recordingOptions, playbackFile);
             await app.RunAsync();
         }
         finally
@@ -93,6 +155,57 @@ public partial class Program
         }
         return null;
     }
+
+    private static IntentDetectionOptions LoadIntentDetectionOptions(
+        IConfigurationSection intentConfig,
+        IConfiguration rootConfig)
+    {
+        var modeStr = intentConfig["Mode"] ?? "Heuristic";
+        var mode = modeStr.ToLowerInvariant() switch
+        {
+            "heuristic" => IntentDetectionMode.Heuristic,
+            "llm" => IntentDetectionMode.Llm,
+            "parallel" => IntentDetectionMode.Parallel,
+            _ => IntentDetectionMode.Heuristic
+        };
+
+        var heuristicConfig = intentConfig.GetSection("Heuristic");
+        var llmConfig = intentConfig.GetSection("Llm");
+
+        // Get OpenAI API key for LLM modes
+        string? openAiApiKey = null;
+        if (mode != IntentDetectionMode.Heuristic)
+        {
+            openAiApiKey = GetFirstNonEmpty(
+                llmConfig["ApiKey"],
+                rootConfig["OpenAI:ApiKey"],
+                Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
+        }
+
+        return new IntentDetectionOptions
+        {
+            Enabled = intentConfig.GetValue("Enabled", true),
+            Mode = mode,
+            Heuristic = new HeuristicDetectionOptions
+            {
+                MinConfidence = heuristicConfig.GetValue("MinConfidence", 0.4)
+            },
+            Llm = new LlmDetectionOptions
+            {
+                ApiKey = openAiApiKey,
+                Model = llmConfig["Model"] ?? "gpt-4o-mini",
+                ConfidenceThreshold = llmConfig.GetValue("ConfidenceThreshold", 0.7),
+                RateLimitMs = llmConfig.GetValue("RateLimitMs", 2000),
+                BufferMaxChars = llmConfig.GetValue("BufferMaxChars", 800),
+                TriggerOnQuestionMark = llmConfig.GetValue("TriggerOnQuestionMark", true),
+                TriggerOnPause = llmConfig.GetValue("TriggerOnPause", true),
+                TriggerTimeoutMs = llmConfig.GetValue("TriggerTimeoutMs", 3000),
+                EnablePreprocessing = llmConfig.GetValue("EnablePreprocessing", true),
+                EnableDeduplication = llmConfig.GetValue("EnableDeduplication", true),
+                DeduplicationWindowMs = llmConfig.GetValue("DeduplicationWindowMs", 30000)
+            }
+        };
+    }
 }
 
 /// <summary>
@@ -105,13 +218,17 @@ public class TranscriptionApp
     private readonly DeepgramOptions _deepgramOptions;
     private readonly bool _diarizeEnabled;
     private readonly bool _intentDetectionEnabled;
+    private readonly IntentDetectionOptions _intentDetectionOptions;
     private readonly string _backgroundColorHex;
     private readonly string _intentColorHex;
+    private readonly RecordingOptions _recordingOptions;
+    private readonly string? _playbackFile;
 
     // UI elements
     private TextView _transcriptView = null!;
-    private Label _intentLabel = null!;
+    private TextView _intentView = null!;
     private TextView _debugView = null!;
+    private StatusItem _recordingStatusItem = null!;
 
     // State
     private readonly List<string> _debugLines = new();
@@ -121,6 +238,11 @@ public class TranscriptionApp
     private DeepgramTranscriptionService? _deepgramService;
     private UtteranceIntentPipeline? _intentPipeline;
     private ColorScheme? _intentColorScheme;
+    private SessionRecorder? _recorder;
+    private SessionPlayer? _player;
+    private bool _isTranscribing;
+    private StatusItem _transcriptionStatusItem = null!;
+    private StatusItem _detectionModeStatusItem = null!;
 
     public TranscriptionApp(
         AudioInputSource audioSource,
@@ -128,16 +250,22 @@ public class TranscriptionApp
         DeepgramOptions deepgramOptions,
         bool diarizeEnabled,
         bool intentDetectionEnabled,
+        IntentDetectionOptions intentDetectionOptions,
         string backgroundColorHex,
-        string intentColorHex)
+        string intentColorHex,
+        RecordingOptions recordingOptions,
+        string? playbackFile)
     {
         _audioSource = audioSource;
         _sampleRate = sampleRate;
         _deepgramOptions = deepgramOptions;
         _diarizeEnabled = diarizeEnabled;
         _intentDetectionEnabled = intentDetectionEnabled;
+        _intentDetectionOptions = intentDetectionOptions;
         _backgroundColorHex = backgroundColorHex;
         _intentColorHex = intentColorHex;
+        _recordingOptions = recordingOptions;
+        _playbackFile = playbackFile;
     }
 
     public async Task RunAsync()
@@ -167,7 +295,10 @@ public class TranscriptionApp
         };
 
         // Create the main window
-        var mainWindow = new Window("Interview Assist - Transcription & Detection")
+        var windowTitle = _playbackFile != null
+            ? $"Interview Assist - PLAYBACK: {Path.GetFileName(_playbackFile)}"
+            : "Interview Assist - Transcription & Detection";
+        var mainWindow = new Window(windowTitle)
         {
             X = 0,
             Y = 0,
@@ -217,16 +348,17 @@ public class TranscriptionApp
             Height = Dim.Fill()
         };
 
-        _intentLabel = new Label()
+        _intentView = new TextView()
         {
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
             Height = Dim.Fill(),
             ColorScheme = _intentColorScheme,
-            Text = ""
+            ReadOnly = true,
+            WordWrap = true
         };
-        intentFrame.Add(_intentLabel);
+        intentFrame.Add(_intentView);
 
         topContainer.Add(transcriptFrame, intentFrame);
 
@@ -250,25 +382,56 @@ public class TranscriptionApp
         };
         bottomFrame.Add(_debugView);
 
-        // Status bar at very bottom
-        var statusBar = new StatusBar(new StatusItem[]
+        // Status bar at very bottom - different for playback vs live mode
+        _recordingStatusItem = new StatusItem(Key.Null, "", null);
+        _transcriptionStatusItem = new StatusItem(Key.Null, "", null);
+        _detectionModeStatusItem = new StatusItem(Key.Null, "", null);
+
+        StatusBar statusBar;
+        if (_playbackFile != null)
         {
-            new StatusItem(Key.Q | Key.CtrlMask, "~Ctrl+Q~ Quit", () => Application.RequestStop()),
-            new StatusItem(Key.Null, $"Audio: {_audioSource} | Diarize: {_diarizeEnabled} | Intent: {_intentDetectionEnabled}", null)
-        });
+            statusBar = new StatusBar(new StatusItem[]
+            {
+                new StatusItem(Key.Q | Key.CtrlMask, "~Ctrl+Q~ Quit", () => Application.RequestStop()),
+                new StatusItem(Key.Null, "PLAYBACK MODE", null),
+                _detectionModeStatusItem
+            });
+        }
+        else
+        {
+            statusBar = new StatusBar(new StatusItem[]
+            {
+                new StatusItem(Key.Q | Key.CtrlMask, "~Ctrl+Q~ Quit", () => Application.RequestStop()),
+                new StatusItem(Key.S | Key.CtrlMask, "~Ctrl+S~ Stop", StopTranscription),
+                new StatusItem(Key.R | Key.CtrlMask, "~Ctrl+R~ Record", ToggleRecording),
+                _recordingStatusItem,
+                _transcriptionStatusItem,
+                _detectionModeStatusItem,
+                new StatusItem(Key.Null, $"Audio: {_audioSource} | Diarize: {_diarizeEnabled}", null)
+            });
+        }
 
         mainWindow.Add(topContainer, bottomFrame);
         Application.Top.Add(mainWindow, statusBar);
 
-        // Start transcription in background
+        // Start transcription or playback in background
         _cts = new CancellationTokenSource();
-        _ = Task.Run(() => StartTranscriptionAsync(_cts.Token));
+        if (_playbackFile != null)
+        {
+            _ = Task.Run(() => StartPlaybackAsync(_cts.Token));
+        }
+        else
+        {
+            _ = Task.Run(() => StartTranscriptionAsync(_cts.Token));
+        }
 
         // Run the UI
         Application.Run();
 
         // Cleanup
         _cts.Cancel();
+        _recorder?.Stop();
+        _player?.Stop();
         if (_deepgramService != null)
         {
             await _deepgramService.StopAsync();
@@ -277,10 +440,123 @@ public class TranscriptionApp
         _intentPipeline?.Dispose();
     }
 
+    private void ToggleRecording()
+    {
+        if (_recorder == null || _intentPipeline == null) return;
+
+        if (_recorder.IsRecording)
+        {
+            _recorder.Stop();
+            _recordingStatusItem.Title = "";
+            AddDebug("Recording stopped");
+        }
+        else
+        {
+            StartRecording();
+        }
+    }
+
+    private void StartRecording()
+    {
+        if (_recorder == null || _intentPipeline == null || _recorder.IsRecording) return;
+
+        var filePath = _recordingOptions.GenerateFilePath();
+        var config = new SessionConfig
+        {
+            DeepgramModel = _deepgramOptions.Model,
+            Diarize = _diarizeEnabled,
+            IntentDetectionEnabled = _intentDetectionEnabled,
+            IntentDetectionMode = _intentPipeline?.DetectionModeName,
+            AudioSource = _audioSource.ToString(),
+            SampleRate = _sampleRate
+        };
+        _recorder.Start(filePath, config);
+        _recordingStatusItem.Title = "REC";
+        AddDebug($"Recording to: {filePath}");
+    }
+
+    private void StopTranscription()
+    {
+        if (!_isTranscribing) return;
+
+        AddDebug("Stopping transcription...");
+
+        // Stop recording first if active
+        if (_recorder?.IsRecording == true)
+        {
+            _recorder.Stop();
+            _recordingStatusItem.Title = "";
+        }
+
+        // Cancel transcription
+        _cts?.Cancel();
+        _isTranscribing = false;
+        _transcriptionStatusItem.Title = "STOPPED";
+        AddDebug("Transcription stopped. Press Ctrl+Q to quit.");
+    }
+
+    private async Task StartPlaybackAsync(CancellationToken ct)
+    {
+        try
+        {
+            AddDebug($"Loading playback file: {_playbackFile}");
+
+            _player = new SessionPlayer();
+            _player.OnInfo += msg => Application.MainLoop?.Invoke(() => AddDebug($"[Playback] {msg}"));
+
+            await _player.LoadAsync(_playbackFile!, ct);
+
+            // Create intent pipeline with detection strategy
+            var strategy = CreateDetectionStrategy();
+            _intentPipeline = new UtteranceIntentPipeline(detectionStrategy: strategy);
+            WireIntentPipelineEvents();
+
+            var modeName = _intentPipeline.DetectionModeName;
+            Application.MainLoop?.Invoke(() => _detectionModeStatusItem.Title = $"Mode: {modeName}");
+            AddDebug($"Detection mode: {modeName}");
+
+            // Wire playback events for transcript display
+            _player.OnEventPlayed += evt =>
+            {
+                if (evt is RecordedAsrEvent asr && asr.Data.IsFinal)
+                {
+                    Application.MainLoop?.Invoke(() =>
+                    {
+                        if (_diarizeEnabled && asr.Data.SpeakerId != null)
+                        {
+                            var speaker = int.TryParse(asr.Data.SpeakerId, out var s) ? s : 0;
+                            if (speaker != _currentSpeaker)
+                            {
+                                _currentSpeaker = speaker;
+                                AddTranscript($"\n[Speaker {speaker}] ");
+                            }
+                        }
+                        AddTranscript(asr.Data.Text + " ");
+                    });
+                }
+            };
+
+            AddDebug($"Starting playback ({_player.TotalEvents} events)...");
+
+            await _player.PlayAsync(_intentPipeline, ct);
+        }
+        catch (OperationCanceledException)
+        {
+            AddDebug("Playback cancelled.");
+        }
+        catch (Exception ex)
+        {
+            AddDebug($"ERROR: {ex.Message}");
+        }
+    }
+
     private async Task StartTranscriptionAsync(CancellationToken ct)
     {
         try
         {
+            _isTranscribing = true;
+            Application.MainLoop?.Invoke(() => _transcriptionStatusItem.Title = "RUNNING");
+
             AddDebug("Starting audio capture...");
 
             var audio = new WindowsAudioCaptureService(_sampleRate, _audioSource);
@@ -289,9 +565,30 @@ public class TranscriptionApp
             // Create intent pipeline if enabled
             if (_intentDetectionEnabled)
             {
-                _intentPipeline = new UtteranceIntentPipeline();
+                var strategy = CreateDetectionStrategy();
+                _intentPipeline = new UtteranceIntentPipeline(detectionStrategy: strategy);
                 WireIntentPipelineEvents();
-                AddDebug("Intent detection enabled");
+                var modeName = _intentPipeline.DetectionModeName;
+                Application.MainLoop?.Invoke(() => _detectionModeStatusItem.Title = $"Mode: {modeName}");
+                AddDebug($"Intent detection enabled (mode: {modeName})");
+
+                // Create session recorder (attached to pipeline)
+                _recorder = new SessionRecorder(_intentPipeline);
+                _recorder.OnInfo += msg => Application.MainLoop?.Invoke(() => AddDebug($"[Recording] {msg}"));
+
+                // Auto-start recording if configured
+                if (_recordingOptions.AutoStart)
+                {
+                    Application.MainLoop?.Invoke(() =>
+                    {
+                        StartRecording();
+                        AddDebug("Recording auto-started (AutoStart=true)");
+                    });
+                }
+                else
+                {
+                    AddDebug("Recording available (Ctrl+R to start)");
+                }
             }
 
             WireDeepgramEvents();
@@ -302,10 +599,14 @@ public class TranscriptionApp
         }
         catch (OperationCanceledException)
         {
+            _isTranscribing = false;
+            Application.MainLoop?.Invoke(() => _transcriptionStatusItem.Title = "STOPPED");
             AddDebug("Transcription stopped.");
         }
         catch (Exception ex)
         {
+            _isTranscribing = false;
+            Application.MainLoop?.Invoke(() => _transcriptionStatusItem.Title = "ERROR");
             AddDebug($"ERROR: {ex.Message}");
         }
     }
@@ -408,13 +709,14 @@ public class TranscriptionApp
 
                     // Include speaker if available
                     var speakerPrefix = _currentSpeaker.HasValue
-                        ? $"Speaker {_currentSpeaker.Value} "
+                        ? $"S{_currentSpeaker.Value} "
                         : "";
 
-                    var intentMarker = $"[{speakerPrefix}{subtypeLabel}]";
+                    // Show confidence for quality evaluation
+                    var confidence = evt.Intent.Confidence.ToString("F1");
 
                     // Add to intent list
-                    AddIntent($"{intentMarker} {evt.Intent.SourceText}");
+                    AddIntent($"[{speakerPrefix}{subtypeLabel} {confidence}] {evt.Intent.SourceText}");
                 }
             });
         };
@@ -434,6 +736,38 @@ public class TranscriptionApp
                 AddDebug($"[Action] {evt.ActionName} (debounced={evt.WasDebounced})");
             });
         };
+
+        _intentPipeline.OnIntentCorrected += evt =>
+        {
+            Application.MainLoop?.Invoke(() =>
+            {
+                var originalType = evt.OriginalIntent?.Type.ToString() ?? "None";
+                var correctedType = evt.CorrectedIntent.Type.ToString();
+                AddDebug($"[Intent.corrected] {evt.CorrectionType}: {originalType} → {correctedType}");
+
+                // Handle corrections that result in questions
+                if (evt.CorrectedIntent.Type == IntentType.Question)
+                {
+                    var subtypeLabel = evt.CorrectedIntent.Subtype switch
+                    {
+                        IntentSubtype.Definition => "Definition",
+                        IntentSubtype.HowTo => "How-To",
+                        IntentSubtype.Compare => "Compare",
+                        IntentSubtype.Troubleshoot => "Troubleshoot",
+                        _ => "Question"
+                    };
+
+                    var prefix = evt.CorrectionType switch
+                    {
+                        IntentCorrectionType.Added => "[LLM+]",      // LLM found something heuristic missed
+                        IntentCorrectionType.TypeChanged => "[LLM~]", // LLM corrected the type
+                        _ => "[LLM]"
+                    };
+
+                    AddIntent($"{prefix} [{subtypeLabel}] {evt.CorrectedIntent.SourceText}");
+                }
+            });
+        };
     }
 
     private void AddTranscript(string text)
@@ -450,7 +784,10 @@ public class TranscriptionApp
     {
         _intentLines.Add(intent);
 
-        _intentLabel.Text = string.Join("\n", _intentLines);
+        _intentView.Text = string.Join("\n", _intentLines);
+
+        // Auto-scroll to bottom
+        _intentView.MoveEnd();
     }
 
     private void AddDebug(string message)
@@ -477,6 +814,49 @@ public class TranscriptionApp
         if (string.IsNullOrEmpty(text) || text.Length <= maxLength)
             return text;
         return text[..maxLength] + "...";
+    }
+
+    private IIntentDetectionStrategy? CreateDetectionStrategy()
+    {
+        if (!_intentDetectionEnabled || !_intentDetectionOptions.Enabled)
+            return null;
+
+        return _intentDetectionOptions.Mode switch
+        {
+            IntentDetectionMode.Heuristic => new HeuristicIntentStrategy(_intentDetectionOptions.Heuristic),
+            IntentDetectionMode.Llm => CreateLlmStrategy(),
+            IntentDetectionMode.Parallel => CreateParallelStrategy(),
+            _ => new HeuristicIntentStrategy(_intentDetectionOptions.Heuristic)
+        };
+    }
+
+    private LlmIntentStrategy CreateLlmStrategy()
+    {
+        var apiKey = _intentDetectionOptions.Llm.ApiKey
+            ?? throw new InvalidOperationException("OpenAI API key is required for LLM detection mode. Set OPENAI_API_KEY environment variable.");
+
+        var detector = new OpenAiIntentDetector(
+            apiKey,
+            _intentDetectionOptions.Llm.Model,
+            _intentDetectionOptions.Llm.ConfidenceThreshold);
+
+        return new LlmIntentStrategy(detector, _intentDetectionOptions.Llm);
+    }
+
+    private ParallelIntentStrategy CreateParallelStrategy()
+    {
+        var apiKey = _intentDetectionOptions.Llm.ApiKey
+            ?? throw new InvalidOperationException("OpenAI API key is required for Parallel detection mode. Set OPENAI_API_KEY environment variable.");
+
+        var llmDetector = new OpenAiIntentDetector(
+            apiKey,
+            _intentDetectionOptions.Llm.Model,
+            _intentDetectionOptions.Llm.ConfidenceThreshold);
+
+        return new ParallelIntentStrategy(
+            llmDetector,
+            _intentDetectionOptions.Heuristic,
+            _intentDetectionOptions.Llm);
     }
 
     private static Color ParseHexColor(string hex)

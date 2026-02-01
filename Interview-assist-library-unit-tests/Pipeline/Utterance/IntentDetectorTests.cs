@@ -227,4 +227,54 @@ public class IntentDetectorTests
     }
 
     #endregion
+
+    #region Real Transcript Questions
+
+    /// <summary>
+    /// Tests question detection from a real interview transcript.
+    /// Source: Political interview discussing Western policy and geopolitical risks.
+    /// </summary>
+    [Theory]
+    [InlineData("Is there a risk with this strategy?")]
+    [InlineData("Can we now do the things we've always wanted to do?")]
+    [InlineData("And they thought they could do that and divide them in your view?")]
+    public void DetectFinal_RealTranscriptQuestions_ReturnsQuestionType(string text)
+    {
+        var result = _detector.DetectFinal(text);
+
+        Assert.Equal(IntentType.Question, result.Type);
+        Assert.True(result.Confidence >= 0.4, $"Expected confidence >= 0.4 but got {result.Confidence} for: {text}");
+    }
+
+    [Fact]
+    public void DetectFinal_IsThereARisk_DetectsAsQuestion()
+    {
+        var result = _detector.DetectFinal("Is there a risk with this strategy?");
+
+        Assert.Equal(IntentType.Question, result.Type);
+        // "Is" is auxiliary verb at start + question mark = high confidence
+        Assert.True(result.Confidence >= 0.5);
+    }
+
+    [Fact]
+    public void DetectFinal_CanWeNow_DetectsAsQuestion()
+    {
+        var result = _detector.DetectFinal("Can we now do the things we've always wanted to do?");
+
+        Assert.Equal(IntentType.Question, result.Type);
+        // "Can" is auxiliary verb at start + question mark = high confidence
+        Assert.True(result.Confidence >= 0.5);
+    }
+
+    [Fact]
+    public void DetectFinal_InYourView_DetectsAsQuestion()
+    {
+        // This is a harder case - doesn't start with WH-word or aux verb
+        // but ends with question mark
+        var result = _detector.DetectFinal("And they thought they could do that and divide them in your view?");
+
+        Assert.Equal(IntentType.Question, result.Type);
+    }
+
+    #endregion
 }

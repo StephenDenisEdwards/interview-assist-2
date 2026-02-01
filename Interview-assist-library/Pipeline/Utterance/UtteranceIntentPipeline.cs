@@ -1,3 +1,5 @@
+using InterviewAssist.Library.Pipeline.Detection;
+
 namespace InterviewAssist.Library.Pipeline.Utterance;
 
 /// <summary>
@@ -9,6 +11,7 @@ public sealed class UtteranceIntentPipeline : IDisposable
     private readonly IUtteranceBuilder _utteranceBuilder;
     private readonly IIntentDetector _intentDetector;
     private readonly IActionRouter _actionRouter;
+    private readonly IIntentDetectionStrategy? _detectionStrategy;
     private readonly Timer? _timeoutTimer;
     private readonly Timer? _conflictTimer;
 
@@ -23,21 +26,30 @@ public sealed class UtteranceIntentPipeline : IDisposable
     public event Action<IntentEvent>? OnIntentCandidate;
     public event Action<IntentEvent>? OnIntentFinal;
     public event Action<ActionEvent>? OnActionTriggered;
+    public event Action<IntentCorrectionEvent>? OnIntentCorrected;
 
     public UtteranceIntentPipeline(
         PipelineOptions? options = null,
         IUtteranceBuilder? utteranceBuilder = null,
         IIntentDetector? intentDetector = null,
-        IActionRouter? actionRouter = null)
+        IActionRouter? actionRouter = null,
+        IIntentDetectionStrategy? detectionStrategy = null)
     {
         options ??= PipelineOptions.Default;
 
         _utteranceBuilder = utteranceBuilder ?? new UtteranceBuilder(options);
         _intentDetector = intentDetector ?? new IntentDetector();
         _actionRouter = actionRouter ?? new ActionRouter(options);
+        _detectionStrategy = detectionStrategy;
 
         // Wire internal events
         WireEvents();
+
+        // Wire detection strategy events if provided
+        if (_detectionStrategy != null)
+        {
+            WireDetectionStrategyEvents();
+        }
 
         // Start timeout checking timer (100ms interval)
         _timeoutTimer = new Timer(_ => _utteranceBuilder.CheckTimeouts(), null, 100, 100);
@@ -48,6 +60,11 @@ public sealed class UtteranceIntentPipeline : IDisposable
             _conflictTimer = new Timer(_ => router.CheckConflictWindow(), null, 100, 100);
         }
     }
+
+    /// <summary>
+    /// The detection mode name (Heuristic, LLM, or Parallel).
+    /// </summary>
+    public string DetectionModeName => _detectionStrategy?.ModeName ?? "Heuristic";
 
     /// <summary>
     /// Process an incoming ASR event from Deepgram or other source.
@@ -77,6 +94,7 @@ public sealed class UtteranceIntentPipeline : IDisposable
     {
         if (_disposed) return;
         _utteranceBuilder.SignalUtteranceEnd();
+        _detectionStrategy?.SignalPause();
     }
 
     /// <summary>
@@ -102,6 +120,7 @@ public sealed class UtteranceIntentPipeline : IDisposable
     public IUtteranceBuilder UtteranceBuilder => _utteranceBuilder;
     public IIntentDetector IntentDetector => _intentDetector;
     public IActionRouter ActionRouter => _actionRouter;
+    public IIntentDetectionStrategy? DetectionStrategy => _detectionStrategy;
 
     private void WireEvents()
     {
@@ -115,7 +134,7 @@ public sealed class UtteranceIntentPipeline : IDisposable
         {
             OnUtteranceUpdate?.Invoke(evt);
 
-            // Candidate intent detection on update
+            // Candidate intent detection on update (heuristic only - for immediate feedback)
             var candidate = _intentDetector.DetectCandidate(evt.StableText);
             if (candidate != null)
             {
@@ -132,24 +151,51 @@ public sealed class UtteranceIntentPipeline : IDisposable
         {
             OnUtteranceFinal?.Invoke(evt);
 
-            // Final intent detection
-            var finalIntent = _intentDetector.DetectFinal(evt.StableText);
-
-            OnIntentFinal?.Invoke(new IntentEvent
+            // If using a detection strategy, delegate to it
+            if (_detectionStrategy != null)
             {
-                Intent = finalIntent,
-                UtteranceId = evt.Id,
-                IsCandidate = false
-            });
+                // Strategy will fire OnIntentDetected events asynchronously
+                _ = _detectionStrategy.ProcessUtteranceAsync(evt);
+            }
+            else
+            {
+                // Legacy behavior: synchronous heuristic detection
+                var finalIntent = _intentDetector.DetectFinal(evt.StableText);
 
-            // Route to action if applicable
-            _actionRouter.Route(finalIntent, evt.Id);
+                OnIntentFinal?.Invoke(new IntentEvent
+                {
+                    Intent = finalIntent,
+                    UtteranceId = evt.Id,
+                    IsCandidate = false
+                });
+
+                // Route to action if applicable
+                _actionRouter.Route(finalIntent, evt.Id);
+            }
         };
 
         // Action events
         _actionRouter.OnActionTriggered += evt =>
         {
             OnActionTriggered?.Invoke(evt);
+        };
+    }
+
+    private void WireDetectionStrategyEvents()
+    {
+        if (_detectionStrategy == null) return;
+
+        _detectionStrategy.OnIntentDetected += evt =>
+        {
+            OnIntentFinal?.Invoke(evt);
+
+            // Route to action if applicable
+            _actionRouter.Route(evt.Intent, evt.UtteranceId);
+        };
+
+        _detectionStrategy.OnIntentCorrected += evt =>
+        {
+            OnIntentCorrected?.Invoke(evt);
         };
     }
 
@@ -160,5 +206,6 @@ public sealed class UtteranceIntentPipeline : IDisposable
 
         _timeoutTimer?.Dispose();
         _conflictTimer?.Dispose();
+        _detectionStrategy?.Dispose();
     }
 }

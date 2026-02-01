@@ -2,6 +2,7 @@ using InterviewAssist.Library.Audio;
 using InterviewAssist.Library.Constants;
 using InterviewAssist.Library.Health;
 using InterviewAssist.Library.Pipeline;
+using InterviewAssist.Library.Pipeline.Detection;
 using InterviewAssist.Library.Realtime;
 using InterviewAssist.Library.Transcription;
 using Microsoft.Extensions.DependencyInjection;
@@ -134,6 +135,68 @@ public static class ServiceCollectionExtensions
         });
 
         return services;
+    }
+
+    /// <summary>
+    /// Adds intent detection strategy to the service collection.
+    /// The strategy used depends on the configured Mode.
+    /// </summary>
+    /// <param name="services">The service collection.</param>
+    /// <param name="configureOptions">Action to configure intent detection options.</param>
+    /// <returns>The service collection for chaining.</returns>
+    /// <example>
+    /// services.AddIntentDetection(options => options
+    ///     .WithMode(IntentDetectionMode.Parallel)
+    ///     .WithApiKey("your-api-key")
+    ///     .WithLlmModel("gpt-4o-mini"));
+    /// </example>
+    public static IServiceCollection AddIntentDetection(
+        this IServiceCollection services,
+        Action<IntentDetectionOptionsBuilder> configureOptions)
+    {
+        ArgumentNullException.ThrowIfNull(configureOptions);
+
+        var builder = new IntentDetectionOptionsBuilder();
+        configureOptions(builder);
+        var options = builder.Build();
+
+        services.AddSingleton(options);
+        services.TryAddSingleton<IIntentDetectionStrategy>(sp =>
+        {
+            var opts = sp.GetRequiredService<IntentDetectionOptions>();
+            return CreateStrategy(opts);
+        });
+
+        return services;
+    }
+
+    private static IIntentDetectionStrategy CreateStrategy(IntentDetectionOptions options)
+    {
+        return options.Mode switch
+        {
+            IntentDetectionMode.Heuristic => new HeuristicIntentStrategy(options.Heuristic),
+            IntentDetectionMode.Llm => CreateLlmStrategy(options.Llm),
+            IntentDetectionMode.Parallel => CreateParallelStrategy(options.Heuristic, options.Llm),
+            _ => throw new InvalidOperationException($"Unknown detection mode: {options.Mode}")
+        };
+    }
+
+    private static LlmIntentStrategy CreateLlmStrategy(LlmDetectionOptions options)
+    {
+        var apiKey = options.ApiKey ?? Environment.GetEnvironmentVariable("OPENAI_API_KEY")
+            ?? throw new InvalidOperationException("OpenAI API key is required for LLM detection mode. Set Llm:ApiKey or OPENAI_API_KEY environment variable.");
+
+        var detector = new OpenAiIntentDetector(apiKey, options.Model, options.ConfidenceThreshold);
+        return new LlmIntentStrategy(detector, options);
+    }
+
+    private static ParallelIntentStrategy CreateParallelStrategy(HeuristicDetectionOptions heuristicOptions, LlmDetectionOptions llmOptions)
+    {
+        var apiKey = llmOptions.ApiKey ?? Environment.GetEnvironmentVariable("OPENAI_API_KEY")
+            ?? throw new InvalidOperationException("OpenAI API key is required for Parallel detection mode. Set Llm:ApiKey or OPENAI_API_KEY environment variable.");
+
+        var llmDetector = new OpenAiIntentDetector(apiKey, llmOptions.Model, llmOptions.ConfidenceThreshold);
+        return new ParallelIntentStrategy(llmDetector, heuristicOptions, llmOptions);
     }
 
     /// <summary>
@@ -535,6 +598,133 @@ public class PipelineApiOptionsBuilder
             SystemInstructions = _systemInstructions,
             MaxQueuedQuestions = _maxQueuedQuestions,
             AllowParallelResponses = _allowParallelResponses
+        };
+    }
+}
+
+/// <summary>
+/// Builder class for constructing IntentDetectionOptions with a fluent API.
+/// </summary>
+public class IntentDetectionOptionsBuilder
+{
+    private bool _enabled = true;
+    private IntentDetectionMode _mode = IntentDetectionMode.Heuristic;
+    private string? _apiKey;
+    private string _llmModel = "gpt-4o-mini";
+    private double _llmConfidenceThreshold = 0.7;
+    private int _rateLimitMs = 2000;
+    private int _bufferMaxChars = 800;
+    private bool _triggerOnQuestionMark = true;
+    private bool _triggerOnPause = true;
+    private int _triggerTimeoutMs = 3000;
+    private bool _enablePreprocessing = true;
+    private bool _enableDeduplication = true;
+    private int _deduplicationWindowMs = 30000;
+    private double _heuristicMinConfidence = 0.4;
+
+    public IntentDetectionOptionsBuilder WithEnabled(bool enabled)
+    {
+        _enabled = enabled;
+        return this;
+    }
+
+    public IntentDetectionOptionsBuilder WithMode(IntentDetectionMode mode)
+    {
+        _mode = mode;
+        return this;
+    }
+
+    public IntentDetectionOptionsBuilder WithApiKey(string? apiKey)
+    {
+        _apiKey = apiKey;
+        return this;
+    }
+
+    public IntentDetectionOptionsBuilder WithLlmModel(string model)
+    {
+        _llmModel = model;
+        return this;
+    }
+
+    public IntentDetectionOptionsBuilder WithLlmConfidenceThreshold(double threshold)
+    {
+        _llmConfidenceThreshold = threshold;
+        return this;
+    }
+
+    public IntentDetectionOptionsBuilder WithRateLimitMs(int ms)
+    {
+        _rateLimitMs = ms;
+        return this;
+    }
+
+    public IntentDetectionOptionsBuilder WithBufferMaxChars(int chars)
+    {
+        _bufferMaxChars = chars;
+        return this;
+    }
+
+    public IntentDetectionOptionsBuilder WithTriggerOnQuestionMark(bool enabled)
+    {
+        _triggerOnQuestionMark = enabled;
+        return this;
+    }
+
+    public IntentDetectionOptionsBuilder WithTriggerOnPause(bool enabled)
+    {
+        _triggerOnPause = enabled;
+        return this;
+    }
+
+    public IntentDetectionOptionsBuilder WithTriggerTimeoutMs(int ms)
+    {
+        _triggerTimeoutMs = ms;
+        return this;
+    }
+
+    public IntentDetectionOptionsBuilder WithPreprocessing(bool enabled)
+    {
+        _enablePreprocessing = enabled;
+        return this;
+    }
+
+    public IntentDetectionOptionsBuilder WithDeduplication(bool enabled, int windowMs = 30000)
+    {
+        _enableDeduplication = enabled;
+        _deduplicationWindowMs = windowMs;
+        return this;
+    }
+
+    public IntentDetectionOptionsBuilder WithHeuristicMinConfidence(double confidence)
+    {
+        _heuristicMinConfidence = confidence;
+        return this;
+    }
+
+    internal IntentDetectionOptions Build()
+    {
+        return new IntentDetectionOptions
+        {
+            Enabled = _enabled,
+            Mode = _mode,
+            Heuristic = new HeuristicDetectionOptions
+            {
+                MinConfidence = _heuristicMinConfidence
+            },
+            Llm = new LlmDetectionOptions
+            {
+                ApiKey = _apiKey,
+                Model = _llmModel,
+                ConfidenceThreshold = _llmConfidenceThreshold,
+                RateLimitMs = _rateLimitMs,
+                BufferMaxChars = _bufferMaxChars,
+                TriggerOnQuestionMark = _triggerOnQuestionMark,
+                TriggerOnPause = _triggerOnPause,
+                TriggerTimeoutMs = _triggerTimeoutMs,
+                EnablePreprocessing = _enablePreprocessing,
+                EnableDeduplication = _enableDeduplication,
+                DeduplicationWindowMs = _deduplicationWindowMs
+            }
         };
     }
 }

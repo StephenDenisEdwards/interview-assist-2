@@ -57,6 +57,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "todo-done", "todo-done", "{
 		documentation\docs\IMPROVEMENT-PLAN-0003.md = documentation\docs\IMPROVEMENT-PLAN-0003.md
 		documentation\docs\IMPROVEMENT-PLAN-0005.md = documentation\docs\IMPROVEMENT-PLAN-0005.md
 		documentation\docs\IMPROVEMENT-PLAN-0006.md = documentation\docs\IMPROVEMENT-PLAN-0006.md
+		documentation\docs\IMPROVEMENT-PLAN-0008-record-playback.md = documentation\docs\IMPROVEMENT-PLAN-0008-record-playback.md
+		documentation\docs\todo\IMPROVEMENT-PLAN-0009-question-detection.md = documentation\docs\todo\IMPROVEMENT-PLAN-0009-question-detection.md
+		documentation\docs\todo\IMPROVEMENT-PLAN-0010-llm-intent-detection.md = documentation\docs\todo\IMPROVEMENT-PLAN-0010-llm-intent-detection.md
 		documentation\docs\RATE_LIMITING.md = documentation\docs\RATE_LIMITING.md
 	EndProjectSection
 EndProject
