@@ -62,13 +62,18 @@ public partial class Program
             Diarize = diarizeEnabled
         };
 
+        // Load UI settings
+        var uiConfig = configuration.GetSection("UI");
+        var backgroundColorHex = uiConfig["BackgroundColor"] ?? "#1E1E1E";
+        var intentColorHex = uiConfig["IntentColor"] ?? "#FFFF00";
+
         // Initialize Terminal.Gui
         Application.Init();
 
         try
         {
             // Create the main UI and run
-            var app = new TranscriptionApp(source, sampleRate, deepgramOptions, diarizeEnabled, intentDetectionEnabled);
+            var app = new TranscriptionApp(source, sampleRate, deepgramOptions, diarizeEnabled, intentDetectionEnabled, backgroundColorHex, intentColorHex);
             await app.RunAsync();
         }
         finally
@@ -100,42 +105,75 @@ public class TranscriptionApp
     private readonly DeepgramOptions _deepgramOptions;
     private readonly bool _diarizeEnabled;
     private readonly bool _intentDetectionEnabled;
+    private readonly string _backgroundColorHex;
+    private readonly string _intentColorHex;
 
     // UI elements
     private TextView _transcriptView = null!;
-    private TextView _rightPanelView = null!;
+    private Label _intentLabel = null!;
     private TextView _debugView = null!;
 
     // State
     private readonly List<string> _debugLines = new();
+    private readonly List<string> _intentLines = new();
     private int? _currentSpeaker;
     private CancellationTokenSource? _cts;
     private DeepgramTranscriptionService? _deepgramService;
     private UtteranceIntentPipeline? _intentPipeline;
+    private ColorScheme? _intentColorScheme;
 
     public TranscriptionApp(
         AudioInputSource audioSource,
         int sampleRate,
         DeepgramOptions deepgramOptions,
         bool diarizeEnabled,
-        bool intentDetectionEnabled)
+        bool intentDetectionEnabled,
+        string backgroundColorHex,
+        string intentColorHex)
     {
         _audioSource = audioSource;
         _sampleRate = sampleRate;
         _deepgramOptions = deepgramOptions;
         _diarizeEnabled = diarizeEnabled;
         _intentDetectionEnabled = intentDetectionEnabled;
+        _backgroundColorHex = backgroundColorHex;
+        _intentColorHex = intentColorHex;
     }
 
     public async Task RunAsync()
     {
+        // Parse background color and create color scheme
+        var backgroundColor = ParseHexColor(_backgroundColorHex);
+        var foregroundColor = Color.White;
+
+        var colorScheme = new ColorScheme
+        {
+            Normal = Terminal.Gui.Attribute.Make(foregroundColor, backgroundColor),
+            Focus = Terminal.Gui.Attribute.Make(foregroundColor, backgroundColor),
+            HotNormal = Terminal.Gui.Attribute.Make(Color.BrightYellow, backgroundColor),
+            HotFocus = Terminal.Gui.Attribute.Make(Color.BrightYellow, backgroundColor),
+            Disabled = Terminal.Gui.Attribute.Make(Color.Gray, backgroundColor)
+        };
+
+        // Parse intent color and create intent color scheme
+        var intentColor = ParseHexColor(_intentColorHex);
+        _intentColorScheme = new ColorScheme
+        {
+            Normal = Terminal.Gui.Attribute.Make(intentColor, backgroundColor),
+            Focus = Terminal.Gui.Attribute.Make(intentColor, backgroundColor),
+            HotNormal = Terminal.Gui.Attribute.Make(intentColor, backgroundColor),
+            HotFocus = Terminal.Gui.Attribute.Make(intentColor, backgroundColor),
+            Disabled = Terminal.Gui.Attribute.Make(intentColor, backgroundColor)
+        };
+
         // Create the main window
         var mainWindow = new Window("Interview Assist - Transcription & Detection")
         {
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
-            Height = Dim.Fill()
+            Height = Dim.Fill(),
+            ColorScheme = colorScheme
         };
 
         // Calculate layout: Top section 70% height, bottom 30%
@@ -150,13 +188,13 @@ public class TranscriptionApp
             Height = Dim.Percent(70)
         };
 
-        // Left panel - Transcript
-        var leftFrame = new FrameView("Transcript")
+        // Top panel - Transcript
+        var transcriptFrame = new FrameView("Transcript")
         {
             X = 0,
             Y = 0,
-            Width = Dim.Percent(60),
-            Height = Dim.Fill()
+            Width = Dim.Fill(),
+            Height = Dim.Percent(70)
         };
 
         _transcriptView = new TextView()
@@ -168,30 +206,29 @@ public class TranscriptionApp
             ReadOnly = true,
             WordWrap = true
         };
-        leftFrame.Add(_transcriptView);
+        transcriptFrame.Add(_transcriptView);
 
-        // Right panel - Reserved
-        var rightFrame = new FrameView("(Reserved)")
+        // Intent panel - Below transcript
+        var intentFrame = new FrameView("Detected Intents")
         {
-            X = Pos.Right(leftFrame),
-            Y = 0,
+            X = 0,
+            Y = Pos.Bottom(transcriptFrame),
             Width = Dim.Fill(),
             Height = Dim.Fill()
         };
 
-        _rightPanelView = new TextView()
+        _intentLabel = new Label()
         {
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
             Height = Dim.Fill(),
-            ReadOnly = true,
-            WordWrap = true,
-            Text = "This panel is reserved for future use.\n\nPossible uses:\n- Question queue\n- Suggested answers\n- Context/notes"
+            ColorScheme = _intentColorScheme,
+            Text = ""
         };
-        rightFrame.Add(_rightPanelView);
+        intentFrame.Add(_intentLabel);
 
-        topContainer.Add(leftFrame, rightFrame);
+        topContainer.Add(transcriptFrame, intentFrame);
 
         // Bottom panel - Debug output
         var bottomFrame = new FrameView("Debug")
@@ -357,7 +394,7 @@ public class TranscriptionApp
             {
                 AddDebug($"[Intent.final] {evt.Intent.Type}/{evt.Intent.Subtype} conf={evt.Intent.Confidence:F2}");
 
-                // Display detected questions prominently in transcript
+                // Display detected questions in the intent list
                 if (evt.Intent.Type == IntentType.Question)
                 {
                     var subtypeLabel = evt.Intent.Subtype switch
@@ -368,7 +405,16 @@ public class TranscriptionApp
                         IntentSubtype.Troubleshoot => "Troubleshoot",
                         _ => "Question"
                     };
-                    AddTranscript($"\n  >> [{subtypeLabel}] {evt.Intent.SourceText}\n");
+
+                    // Include speaker if available
+                    var speakerPrefix = _currentSpeaker.HasValue
+                        ? $"Speaker {_currentSpeaker.Value} "
+                        : "";
+
+                    var intentMarker = $"[{speakerPrefix}{subtypeLabel}]";
+
+                    // Add to intent list
+                    AddIntent($"{intentMarker} {evt.Intent.SourceText}");
                 }
             });
         };
@@ -400,6 +446,13 @@ public class TranscriptionApp
         _transcriptView.MoveEnd();
     }
 
+    private void AddIntent(string intent)
+    {
+        _intentLines.Add(intent);
+
+        _intentLabel.Text = string.Join("\n", _intentLines);
+    }
+
     private void AddDebug(string message)
     {
         var timestamp = DateTime.Now.ToString("HH:mm:ss.fff");
@@ -424,5 +477,38 @@ public class TranscriptionApp
         if (string.IsNullOrEmpty(text) || text.Length <= maxLength)
             return text;
         return text[..maxLength] + "...";
+    }
+
+    private static Color ParseHexColor(string hex)
+    {
+        // Remove # prefix if present
+        hex = hex.TrimStart('#');
+
+        if (hex.Length != 6)
+            return Color.Black;
+
+        try
+        {
+            var r = Convert.ToInt32(hex[..2], 16);
+            var g = Convert.ToInt32(hex[2..4], 16);
+            var b = Convert.ToInt32(hex[4..6], 16);
+
+            // Terminal.Gui 1.x uses Color enum - map RGB to nearest color
+            // For very dark colors (like #1E1E1E = 30,30,30), use Black
+            // This is the best approximation in 16-color mode
+            var brightness = (r + g + b) / 3;
+
+            if (brightness < 50)
+                return Color.Black;
+            if (brightness < 100)
+                return Color.DarkGray;
+            if (brightness < 160)
+                return Color.Gray;
+            return Color.White;
+        }
+        catch
+        {
+            return Color.Black;
+        }
     }
 }
