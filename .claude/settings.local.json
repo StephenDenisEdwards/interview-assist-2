@@ -38,7 +38,10 @@
       "Bash(cmd /c copy:*)",
       "Bash(cmd /c del \"C:\\\\Users\\\\steph\\\\source\\\\repos\\\\interview-assist-2\\\\documentation\\\\docs\\\\todo\\\\IMPROVEMENT-PLAN-record-playback.md\")",
       "Bash(Remove-Item \"C:\\\\Users\\\\steph\\\\source\\\\repos\\\\interview-assist-2\\\\documentation\\\\docs\\\\todo\\\\IMPROVEMENT-PLAN-record-playback.md\")",
-      "Bash(__NEW_LINE_9c7b9800ee3fb555__ echo \"\")"
+      "Bash(__NEW_LINE_9c7b9800ee3fb555__ echo \"\")",
+      "Bash(tree:*)",
+      "Bash(git rm:*)",
+      "Bash(wc:*)"
     ]
   }
 }

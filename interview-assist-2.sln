@@ -58,12 +58,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "plans", "plans", "{3B4C5D6E-F7A8-9012-CDEF-234567890ABC}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "in-progress", "in-progress", "{4C5D6E7F-A8B9-0123-DEF0-345678901BCD}"
-	ProjectSection(SolutionItems) = preProject
-		documentation\docs\plans\in-progress\IMPROVEMENT-PLAN-0004.md = documentation\docs\plans\in-progress\IMPROVEMENT-PLAN-0004.md
-		documentation\docs\plans\in-progress\IMPROVEMENT-PLAN-0007.md = documentation\docs\plans\in-progress\IMPROVEMENT-PLAN-0007.md
-		documentation\docs\plans\in-progress\IMPROVEMENT-PLAN-0009-question-detection.md = documentation\docs\plans\in-progress\IMPROVEMENT-PLAN-0009-question-detection.md
-		documentation\docs\plans\in-progress\IMPROVEMENT-PLAN-0010-llm-intent-detection.md = documentation\docs\plans\in-progress\IMPROVEMENT-PLAN-0010-llm-intent-detection.md
-	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "completed", "completed", "{5D6E7F8A-B9C0-1234-EF01-456789012CDE}"
 	ProjectSection(SolutionItems) = preProject
@@ -74,16 +68,24 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "completed", "completed", "{
 		documentation\docs\plans\completed\IMPROVEMENT-PLAN-0005.md = documentation\docs\plans\completed\IMPROVEMENT-PLAN-0005.md
 		documentation\docs\plans\completed\IMPROVEMENT-PLAN-0006.md = documentation\docs\plans\completed\IMPROVEMENT-PLAN-0006.md
 		documentation\docs\plans\completed\IMPROVEMENT-PLAN-0008-record-playback.md = documentation\docs\plans\completed\IMPROVEMENT-PLAN-0008-record-playback.md
+		documentation\docs\plans\in-progress\IMPROVEMENT-PLAN-0009-question-detection.md = documentation\docs\plans\in-progress\IMPROVEMENT-PLAN-0009-question-detection.md
+		documentation\docs\plans\in-progress\IMPROVEMENT-PLAN-0010-llm-intent-detection.md = documentation\docs\plans\in-progress\IMPROVEMENT-PLAN-0010-llm-intent-detection.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "domain", "domain", "{DAE56BC8-6701-48C6-BB0E-11AEA66F8D9A}"
 	ProjectSection(SolutionItems) = preProject
 		documentation\docs\domain\Deepgram-overview.md = documentation\docs\domain\Deepgram-overview.md
-		documentation\docs\domain\HEURISTIC_QUESTION_DETECTOR.md = documentation\docs\domain\HEURISTIC_QUESTION_DETECTOR.md
 		documentation\docs\Detecting Questions and Imperative Sentences in English.pdf = documentation\docs\Detecting Questions and Imperative Sentences in English.pdf
+		documentation\docs\domain\HEURISTIC_QUESTION_DETECTOR.md = documentation\docs\domain\HEURISTIC_QUESTION_DETECTOR.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interview-assist-transcription-detection-console", "Interview-assist-transcription-detection-console\Interview-assist-transcription-detection-console.csproj", "{9A0A441F-CAC7-4665-972E-F299C443D00F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dropped", "dropped", "{75C3B321-7AA5-4F14-8F3E-D41B866363C7}"
+	ProjectSection(SolutionItems) = preProject
+		documentation\docs\plans\in-progress\IMPROVEMENT-PLAN-0004.md = documentation\docs\plans\in-progress\IMPROVEMENT-PLAN-0004.md
+		documentation\docs\plans\in-progress\IMPROVEMENT-PLAN-0007.md = documentation\docs\plans\in-progress\IMPROVEMENT-PLAN-0007.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -202,10 +204,11 @@ Global
 		{B2C3D4E5-F6A7-8901-BCDE-F12345678901} = {A1B2C3D4-E5F6-7890-ABCD-EF1234567890}
 		{2A0CA0AD-8899-41B6-A42E-9861D2EB1C36} = {78751797-6A9E-46A0-95BA-6D7B066ADF83}
 		{62F3D4C7-6860-46B6-B20C-CFEB323E97DE} = {78751797-6A9E-46A0-95BA-6D7B066ADF83}
-		{DAE56BC8-6701-48C6-BB0E-11AEA66F8D9A} = {78751797-6A9E-46A0-95BA-6D7B066ADF83}
 		{3B4C5D6E-F7A8-9012-CDEF-234567890ABC} = {78751797-6A9E-46A0-95BA-6D7B066ADF83}
 		{4C5D6E7F-A8B9-0123-DEF0-345678901BCD} = {3B4C5D6E-F7A8-9012-CDEF-234567890ABC}
 		{5D6E7F8A-B9C0-1234-EF01-456789012CDE} = {3B4C5D6E-F7A8-9012-CDEF-234567890ABC}
+		{DAE56BC8-6701-48C6-BB0E-11AEA66F8D9A} = {78751797-6A9E-46A0-95BA-6D7B066ADF83}
+		{75C3B321-7AA5-4F14-8F3E-D41B866363C7} = {3B4C5D6E-F7A8-9012-CDEF-234567890ABC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0AE175CC-351C-46DC-9AF6-60FDF2E57587}
