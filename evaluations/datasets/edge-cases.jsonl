@@ -1,0 +1,15 @@
+{"text": "Tell me about your experience with distributed systems.", "type": "Question", "subtype": "Definition", "notes": "Imperative form question"}
+{"text": "Explain how you would design a caching layer.", "type": "Question", "subtype": "HowTo", "notes": "Imperative form question"}
+{"text": "I was wondering if you could clarify the requirements.", "type": "Question", "subtype": "Clarification", "notes": "Indirect question"}
+{"text": "Do you know whether the API supports pagination", "type": "Question", "subtype": "YesNo", "notes": "No question mark"}
+{"text": "I'm curious about how you handle error logging.", "type": "Question", "subtype": "HowTo", "notes": "Indirect question"}
+{"text": "Why would anyone use that pattern, honestly.", "type": "Question", "subtype": "Rhetorical", "notes": "Rhetorical question"}
+{"text": "Who even writes code like that?", "type": "Question", "subtype": "Rhetorical", "notes": "Rhetorical question"}
+{"text": "Can you", "type": "Statement", "notes": "Incomplete fragment"}
+{"text": "What about the", "type": "Statement", "notes": "Incomplete fragment"}
+{"text": "So if we were to implement caching, where would you start?", "type": "Question", "subtype": "HowTo", "notes": "Embedded question"}
+{"text": "The question is whether we need to scale horizontally.", "type": "Question", "subtype": "YesNo", "notes": "Embedded indirect question"}
+{"text": "Let me know if you have any questions.", "type": "Statement", "notes": "Not a question despite 'questions'"}
+{"text": "That's a good question to ask the team.", "type": "Statement", "notes": "Meta-reference to question"}
+{"text": "Show me how the logging works.", "type": "Command", "subtype": "ShowCode", "notes": "Command form"}
+{"text": "Run the tests and let me know the results.", "type": "Command", "notes": "Command form"}

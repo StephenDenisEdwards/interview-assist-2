@@ -70,6 +70,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "completed", "completed", "{
 		documentation\docs\plans\completed\IMPROVEMENT-PLAN-0008-record-playback.md = documentation\docs\plans\completed\IMPROVEMENT-PLAN-0008-record-playback.md
 		documentation\docs\plans\in-progress\IMPROVEMENT-PLAN-0009-question-detection.md = documentation\docs\plans\in-progress\IMPROVEMENT-PLAN-0009-question-detection.md
 		documentation\docs\plans\in-progress\IMPROVEMENT-PLAN-0010-llm-intent-detection.md = documentation\docs\plans\in-progress\IMPROVEMENT-PLAN-0010-llm-intent-detection.md
+		documentation\docs\plans\completed\IMPROVEMENT-PLAN-0011-evaluation-mode.md = documentation\docs\plans\completed\IMPROVEMENT-PLAN-0011-evaluation-mode.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "domain", "domain", "{DAE56BC8-6701-48C6-BB0E-11AEA66F8D9A}"
@@ -85,6 +86,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dropped", "dropped", "{75C3
 	ProjectSection(SolutionItems) = preProject
 		documentation\docs\plans\in-progress\IMPROVEMENT-PLAN-0004.md = documentation\docs\plans\in-progress\IMPROVEMENT-PLAN-0004.md
 		documentation\docs\plans\in-progress\IMPROVEMENT-PLAN-0007.md = documentation\docs\plans\in-progress\IMPROVEMENT-PLAN-0007.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "instructions", "instructions", "{1A6FC9A8-C914-449B-BE9A-B3DA4BB7D8CC}"
+	ProjectSection(SolutionItems) = preProject
+		documentation\docs\instructions\EvaluationInstructions.md = documentation\docs\instructions\EvaluationInstructions.md
 	EndProjectSection
 EndProject
 Global
@@ -209,6 +215,7 @@ Global
 		{5D6E7F8A-B9C0-1234-EF01-456789012CDE} = {3B4C5D6E-F7A8-9012-CDEF-234567890ABC}
 		{DAE56BC8-6701-48C6-BB0E-11AEA66F8D9A} = {78751797-6A9E-46A0-95BA-6D7B066ADF83}
 		{75C3B321-7AA5-4F14-8F3E-D41B866363C7} = {3B4C5D6E-F7A8-9012-CDEF-234567890ABC}
+		{1A6FC9A8-C914-449B-BE9A-B3DA4BB7D8CC} = {78751797-6A9E-46A0-95BA-6D7B066ADF83}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0AE175CC-351C-46DC-9AF6-60FDF2E57587}

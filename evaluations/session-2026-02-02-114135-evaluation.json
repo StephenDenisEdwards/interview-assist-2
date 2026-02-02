@@ -1,0 +1,1392 @@
+{
+  "GeneratedAt": "2026-02-02T13:19:46.9082212Z",
+  "SessionFile": "session-2026-02-02-114135.jsonl",
+  "TranscriptLength": 86950,
+  "Metrics": {
+    "TruePositives": 30,
+    "FalsePositives": 81,
+    "FalseNegatives": 13,
+    "Precision": 0.2702702702702703,
+    "Recall": 0.6976744186046512,
+    "F1Score": 0.38961038961038963
+  },
+  "GroundTruth": [
+    {
+      "Text": "How could you as a law enforcement officer read that and not say we have to take further action?",
+      "Subtype": "Rhetorical",
+      "Confidence": 0.9
+    },
+    {
+      "Text": "What about this?",
+      "Subtype": "Clarification",
+      "Confidence": 0.8
+    },
+    {
+      "Text": "Do you see this heading towards investigations?",
+      "Subtype": "Clarification",
+      "Confidence": 0.95
+    },
+    {
+      "Text": "Do you see the president of The United States being investigated and along with other high profile names?",
+      "Subtype": "Clarification",
+      "Confidence": 0.95
+    },
+    {
+      "Text": "How do you think these allegations against Donald Trump will affect his presidency?",
+      "Subtype": "Clarification",
+      "Confidence": 0.95
+    },
+    {
+      "Text": "Do you see these files being the demise of him as a president?",
+      "Subtype": "Clarification",
+      "Confidence": 0.95
+    },
+    {
+      "Text": "How do you think Trump and his White House will respond to this going forward?",
+      "Subtype": "Clarification",
+      "Confidence": 0.95
+    },
+    {
+      "Text": "Do you think the DOJ did enough to protect the Epstein victims?",
+      "Subtype": "Clarification",
+      "Confidence": 0.95
+    },
+    {
+      "Text": "What reason is there to not let congress in closed door meetings see all of the files completely unredacted?",
+      "Subtype": "Rhetorical",
+      "Confidence": 0.9
+    },
+    {
+      "Text": "Maybe for the last time?",
+      "Subtype": "Rhetorical",
+      "Confidence": 0.8
+    },
+    {
+      "Text": "What is it that appears to have done it this time?",
+      "Subtype": "Clarification",
+      "Confidence": 0.9
+    },
+    {
+      "Text": "What is the purpose of Span of Tea?",
+      "Subtype": "Definition",
+      "Confidence": 0.95
+    },
+    {
+      "Text": "How do you create a custom attribute in C Sharp?",
+      "Subtype": "HowTo",
+      "Confidence": 0.95
+    },
+    {
+      "Text": "What\u0027s the difference between a struct and a class?",
+      "Subtype": "Compare",
+      "Confidence": 0.95
+    },
+    {
+      "Text": "Explain async await.",
+      "Subtype": "Definition",
+      "Confidence": 0.95
+    },
+    {
+      "Text": "What\u0027s a record in C sharp?",
+      "Subtype": "Definition",
+      "Confidence": 0.95
+    },
+    {
+      "Text": "What does lock do in c sharp?",
+      "Subtype": "Definition",
+      "Confidence": 0.95
+    },
+    {
+      "Text": "What is dependency injection?",
+      "Subtype": "Definition",
+      "Confidence": 0.95
+    },
+    {
+      "Text": "What\u0027s the difference between I enumerable and Iquarable?",
+      "Subtype": "Compare",
+      "Confidence": 0.95
+    },
+    {
+      "Text": "What is a task in dot net?",
+      "Subtype": "Definition",
+      "Confidence": 0.95
+    },
+    {
+      "Text": "How does garbage collection work?",
+      "Subtype": "Definition",
+      "Confidence": 0.95
+    },
+    {
+      "Text": "What\u0027s a deadlock in multithreading?",
+      "Subtype": "Definition",
+      "Confidence": 0.95
+    },
+    {
+      "Text": "What is a memory leak in dot net?",
+      "Subtype": "Definition",
+      "Confidence": 0.95
+    },
+    {
+      "Text": "What\u0027s an extension method?",
+      "Subtype": "Definition",
+      "Confidence": 0.95
+    },
+    {
+      "Text": "How do you implement iComparable?",
+      "Subtype": "HowTo",
+      "Confidence": 0.95
+    },
+    {
+      "Text": "What is a sealed class?",
+      "Subtype": "Definition",
+      "Confidence": 0.95
+    },
+    {
+      "Text": "What kind of scenario are we talking?",
+      "Subtype": "Clarification",
+      "Confidence": 0.8
+    },
+    {
+      "Text": "What\u0027s your approach for efficient networking?",
+      "Subtype": "HowTo",
+      "Confidence": 0.9
+    },
+    {
+      "Text": "How would you design state synchronization?",
+      "Subtype": "HowTo",
+      "Confidence": 0.9
+    },
+    {
+      "Text": "How do you keep the server scalable when sudden spikes of players log in?",
+      "Subtype": "HowTo",
+      "Confidence": 0.9
+    },
+    {
+      "Text": "What\u0027s your strategy for keeping data consistent across multiple services?",
+      "Subtype": "HowTo",
+      "Confidence": 0.9
+    },
+    {
+      "Text": "How would you approach fault tolerance and recovery if a critical component fails mid trade?",
+      "Subtype": "HowTo",
+      "Confidence": 0.9
+    },
+    {
+      "Text": "How do you prevent race conditions in that scenario?",
+      "Subtype": "HowTo",
+      "Confidence": 0.9
+    },
+    {
+      "Text": "How do you handle service discovery and inter service communication across clouds?",
+      "Subtype": "HowTo",
+      "Confidence": 0.9
+    },
+    {
+      "Text": "How do you design a custom dot net middleware that inspects requests and throttles based on user quotas?",
+      "Subtype": "HowTo",
+      "Confidence": 0.9
+    },
+    {
+      "Text": "What\u0027s your approach to managing millions of device connections in real time?",
+      "Subtype": "HowTo",
+      "Confidence": 0.9
+    },
+    {
+      "Text": "What profiling tools and strategies do you use?",
+      "Subtype": "HowTo",
+      "Confidence": 0.9
+    },
+    {
+      "Text": "How do you isolate tenant data and ensure security between tenants?",
+      "Subtype": "HowTo",
+      "Confidence": 0.9
+    },
+    {
+      "Text": "How do you load and isolate third party plugins at runtime?",
+      "Subtype": "HowTo",
+      "Confidence": 0.9
+    },
+    {
+      "Text": "What\u0027s your step by step plan to break it down?",
+      "Subtype": "HowTo",
+      "Confidence": 0.9
+    },
+    {
+      "Text": "How do you ensure scalability under sudden spikes in users?",
+      "Subtype": "HowTo",
+      "Confidence": 0.9
+    },
+    {
+      "Text": "How do you handle authentication, authorization, and data encryption end to end?",
+      "Subtype": "HowTo",
+      "Confidence": 0.9
+    },
+    {
+      "Text": "How do you manage complex game loops and ensure smooth rendering while keeping logic organized?",
+      "Subtype": "HowTo",
+      "Confidence": 0.9
+    }
+  ],
+  "DetectedQuestions": [
+    {
+      "SourceText": "suites. And I said, you know, what about this?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0068"
+    },
+    {
+      "SourceText": "Which gives you a great",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0079"
+    },
+    {
+      "SourceText": "Which gives you a great indication of his",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0080"
+    },
+    {
+      "SourceText": "Which gives you a great indication of his lack of any",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0081"
+    },
+    {
+      "SourceText": "Which gives you a great indication of his lack of any moral Which gives you a great indication of his lack of any moral",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0082"
+    },
+    {
+      "SourceText": "12 and 13 year olds gambling and giving them liquor at hotel rooms and limousine rides?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0089"
+    },
+    {
+      "SourceText": "But nobody questioned what was going on. I mean, this is a serious failure",
+      "Subtype": "Troubleshoot",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0198"
+    },
+    {
+      "SourceText": "failure of law enforcement to look at what\u0027s right",
+      "Subtype": "Troubleshoot",
+      "Confidence": 0.7,
+      "UtteranceId": "utt_0200"
+    },
+    {
+      "SourceText": "failure of law enforcement to look at what\u0027s right and failure of law enforcement to look at what\u0027s right and",
+      "Subtype": "Troubleshoot",
+      "Confidence": 0.7,
+      "UtteranceId": "utt_0201"
+    },
+    {
+      "SourceText": "if you reached the age of consent and you have a sex party, there\u0027s no issue. There should",
+      "Subtype": "Troubleshoot",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0331"
+    },
+    {
+      "SourceText": "Fundamentally by law enforcement in something like that. People have sex parties in England and The US every day of the week. The issue is",
+      "Subtype": "Troubleshoot",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0341"
+    },
+    {
+      "SourceText": "Fundamentally by law enforcement in something like that. People have sex parties in England and The US every day of the week. The issue is does it Fundamentally by law enforcement in something like that. People have sex parties in England and The US every day of the week. The issue is does it",
+      "Subtype": "Troubleshoot",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0342"
+    },
+    {
+      "SourceText": "brought in by or on behalf of 13, 14 year olds?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0349"
+    },
+    {
+      "SourceText": "Well, let\u0027s get into that, professor. Do you see this heading towards investigation?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0376"
+    },
+    {
+      "SourceText": "crimes before faced his own trials. But do you see the president of The United States being investigated and along with other high profile names?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0390"
+    },
+    {
+      "SourceText": "crimes before faced his own trials. But do you see the president of The United States being investigated and along with other high profile names? crimes before faced his own trials. But do you see the president of The United States being investigated and along with other high profile names?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0390"
+    },
+    {
+      "SourceText": "When a citizen\u0027s complaint",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0403"
+    },
+    {
+      "SourceText": "When citizens complained about Trump\u0027s",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0404"
+    },
+    {
+      "SourceText": "Which tells you",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0429"
+    },
+    {
+      "SourceText": "Which tells you that they are",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0430"
+    },
+    {
+      "SourceText": "Which tells you that they are lawless. So",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0431"
+    },
+    {
+      "SourceText": "Which tells you that they are lawless. So the chance the federal",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0432"
+    },
+    {
+      "SourceText": "what the most recent indication so",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0463"
+    },
+    {
+      "SourceText": "against Donald Trump will affect his presidency?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0485"
+    },
+    {
+      "SourceText": "files being the demise of him as a president?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0489"
+    },
+    {
+      "SourceText": "When the FBI or other law enforcement",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0620"
+    },
+    {
+      "SourceText": "When the FBI or other law enforcement agencies in America",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0621"
+    },
+    {
+      "SourceText": "When the FBI or other law enforcement agencies in America execute a search",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0622"
+    },
+    {
+      "SourceText": "When the FBI or other law enforcement agencies in America execute a search warrant in When the FBI or other law enforcement agencies in America execute a search warrant in",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0623"
+    },
+    {
+      "SourceText": "child rapist? Or in fact, is he being wrongly accused and mistreated?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0695"
+    },
+    {
+      "SourceText": "the files if you have no risk here?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0700"
+    },
+    {
+      "SourceText": "in the American economy, things are going badly compared to, the",
+      "Subtype": "Compare",
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0715"
+    },
+    {
+      "SourceText": "in the American economy, things are going badly compared to, the Biden administration.",
+      "Subtype": "Compare",
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0716"
+    },
+    {
+      "SourceText": "in the American economy, things are going badly compared to, the Biden administration. in the American economy, things are going badly compared to, the Biden administration.",
+      "Subtype": "Compare",
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0717"
+    },
+    {
+      "SourceText": "Come, compare it add to it",
+      "Subtype": "Compare",
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0718"
+    },
+    {
+      "SourceText": "Come, compare it add to it the rates",
+      "Subtype": "Compare",
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0719"
+    },
+    {
+      "SourceText": "Come, compare it add to it the, raids in Minnesota",
+      "Subtype": "Compare",
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0720"
+    },
+    {
+      "SourceText": "Come, compare it add to it the, raids Come, compare it add to it the, raids",
+      "Subtype": "Compare",
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0721"
+    },
+    {
+      "SourceText": "where he got 49% of the vote",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0748"
+    },
+    {
+      "SourceText": "where he got 49% of the vote, just under half.",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0749"
+    },
+    {
+      "SourceText": "what reason is there to not let",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0876"
+    },
+    {
+      "SourceText": "what reason is there to not let congress in close",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0877"
+    },
+    {
+      "SourceText": "what reason is there to not let congress in closed door meetings",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0878"
+    },
+    {
+      "SourceText": "what reason is there to not let congress in closed door meetings what reason is there to not let congress in closed door meetings",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0879"
+    },
+    {
+      "SourceText": "see all of the files completely unredacted?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0883"
+    },
+    {
+      "SourceText": "How do you think Trump and his White House will",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0900"
+    },
+    {
+      "SourceText": "How do you think Trump and his White House will respond to this",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0901"
+    },
+    {
+      "SourceText": "Who is in Windsor. But first, let\u0027s go",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1045"
+    },
+    {
+      "SourceText": "Who is in Windsor. But first, let\u0027s go to our political correspondent, Louis",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1047"
+    },
+    {
+      "SourceText": "Who is in Windsor. But first, let\u0027s go to our Who is in Windsor. But first, let\u0027s go to our",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1048"
+    },
+    {
+      "SourceText": "maybe for the last time?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1058"
+    },
+    {
+      "SourceText": "What is the purpose",
+      "Subtype": "Definition",
+      "Confidence": 0.7,
+      "UtteranceId": "utt_1150"
+    },
+    {
+      "SourceText": "What is the purpose of Span of Tea?",
+      "Subtype": "Definition",
+      "Confidence": 1,
+      "UtteranceId": "utt_1151"
+    },
+    {
+      "SourceText": "How do you",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1160"
+    },
+    {
+      "SourceText": "How do you create a custom attribute",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1161"
+    },
+    {
+      "SourceText": "How do you create a custom attribute in C Sharp?",
+      "Subtype": null,
+      "Confidence": 0.9,
+      "UtteranceId": "utt_1162"
+    },
+    {
+      "SourceText": "What\u0027s the difference",
+      "Subtype": null,
+      "Confidence": 0.7,
+      "UtteranceId": "utt_1167"
+    },
+    {
+      "SourceText": "What\u0027s the difference between a struct and a",
+      "Subtype": "Compare",
+      "Confidence": 1,
+      "UtteranceId": "utt_1168"
+    },
+    {
+      "SourceText": "What\u0027s a record",
+      "Subtype": null,
+      "Confidence": 0.7,
+      "UtteranceId": "utt_1182"
+    },
+    {
+      "SourceText": "What\u0027s a record in C sharp?",
+      "Subtype": null,
+      "Confidence": 1,
+      "UtteranceId": "utt_1183"
+    },
+    {
+      "SourceText": "What does lock",
+      "Subtype": "Definition",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1190"
+    },
+    {
+      "SourceText": "What does lock do in c sharp?",
+      "Subtype": "Definition",
+      "Confidence": 0.9,
+      "UtteranceId": "utt_1191"
+    },
+    {
+      "SourceText": "What is dependent",
+      "Subtype": "Definition",
+      "Confidence": 0.7,
+      "UtteranceId": "utt_1196"
+    },
+    {
+      "SourceText": "What is dependency injection?",
+      "Subtype": "Definition",
+      "Confidence": 1,
+      "UtteranceId": "utt_1197"
+    },
+    {
+      "SourceText": "What\u0027s the difference between",
+      "Subtype": "Compare",
+      "Confidence": 1,
+      "UtteranceId": "utt_1205"
+    },
+    {
+      "SourceText": "What\u0027s the difference between I enumerable and Iquarable?",
+      "Subtype": "Compare",
+      "Confidence": 1,
+      "UtteranceId": "utt_1206"
+    },
+    {
+      "SourceText": "What is a tab",
+      "Subtype": "Definition",
+      "Confidence": 0.7,
+      "UtteranceId": "utt_1213"
+    },
+    {
+      "SourceText": "What is a task in dot net?",
+      "Subtype": "Definition",
+      "Confidence": 1,
+      "UtteranceId": "utt_1214"
+    },
+    {
+      "SourceText": "How does GAR",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1219"
+    },
+    {
+      "SourceText": "How does garbage collection work?",
+      "Subtype": null,
+      "Confidence": 0.9,
+      "UtteranceId": "utt_1220"
+    },
+    {
+      "SourceText": "What\u0027s a deadlock",
+      "Subtype": null,
+      "Confidence": 0.7,
+      "UtteranceId": "utt_1227"
+    },
+    {
+      "SourceText": "What\u0027s a deadlock in multithreading?",
+      "Subtype": null,
+      "Confidence": 1,
+      "UtteranceId": "utt_1228"
+    },
+    {
+      "SourceText": "What is a memory",
+      "Subtype": "Definition",
+      "Confidence": 0.7,
+      "UtteranceId": "utt_1233"
+    },
+    {
+      "SourceText": "What is a memory leak in dot net?",
+      "Subtype": "Definition",
+      "Confidence": 1,
+      "UtteranceId": "utt_1234"
+    },
+    {
+      "SourceText": "13, what\u0027s an extension method?",
+      "Subtype": null,
+      "Confidence": 0.8,
+      "UtteranceId": "utt_1241"
+    },
+    {
+      "SourceText": "How do you implement iComparable?",
+      "Subtype": null,
+      "Confidence": 0.9,
+      "UtteranceId": "utt_1248"
+    },
+    {
+      "SourceText": "You implement compare",
+      "Subtype": "Compare",
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1250"
+    },
+    {
+      "SourceText": "You implement compareToT, allow",
+      "Subtype": "Compare",
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1251"
+    },
+    {
+      "SourceText": "You implement compareToT allowing objects to be sorted.",
+      "Subtype": "Compare",
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1252"
+    },
+    {
+      "SourceText": "15, what is a sealed class?",
+      "Subtype": "Definition",
+      "Confidence": 0.8,
+      "UtteranceId": "utt_1254"
+    },
+    {
+      "SourceText": "What kind of scenario are we talking? You want something purely",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1303"
+    },
+    {
+      "SourceText": "What kind of scenario are we talking? You want something purely technical, totally",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1304"
+    },
+    {
+      "SourceText": "Totally off the wall, or maybe a blend of real world chaos with c sharp flare?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1308"
+    },
+    {
+      "SourceText": "What\u0027s your approach",
+      "Subtype": null,
+      "Confidence": 0.7,
+      "UtteranceId": "utt_1323"
+    },
+    {
+      "SourceText": "What\u0027s your approach for efficient networking?",
+      "Subtype": null,
+      "Confidence": 1,
+      "UtteranceId": "utt_1324"
+    },
+    {
+      "SourceText": "How would you design",
+      "Subtype": "HowTo",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1326"
+    },
+    {
+      "SourceText": "How would you design state synchronization",
+      "Subtype": "HowTo",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1327"
+    },
+    {
+      "SourceText": "How would you design state synchronization? And how do you keep the server",
+      "Subtype": "HowTo",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1328"
+    },
+    {
+      "SourceText": "scalable when sudden spikes of players log in?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1330"
+    },
+    {
+      "SourceText": "What\u0027s your strategy",
+      "Subtype": null,
+      "Confidence": 0.7,
+      "UtteranceId": "utt_1347"
+    },
+    {
+      "SourceText": "What\u0027s your strategy for keeping data",
+      "Subtype": null,
+      "Confidence": 0.7,
+      "UtteranceId": "utt_1348"
+    },
+    {
+      "SourceText": "What\u0027s your strategy for keeping data consistent across multiple",
+      "Subtype": null,
+      "Confidence": 0.7,
+      "UtteranceId": "utt_1349"
+    },
+    {
+      "SourceText": "Would you approach fault tolerance and recovery if a critical component fails mid trade?",
+      "Subtype": "Troubleshoot",
+      "Confidence": 1,
+      "UtteranceId": "utt_1354"
+    },
+    {
+      "SourceText": "And just for fun, how do you prevent race conditions in that scenario?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1357"
+    },
+    {
+      "SourceText": "Fault tolerance?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1367"
+    },
+    {
+      "SourceText": "could handle failures.",
+      "Subtype": "Troubleshoot",
+      "Confidence": 0.7,
+      "UtteranceId": "utt_1372"
+    },
+    {
+      "SourceText": "And race conditions?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1373"
+    },
+    {
+      "SourceText": "Do you handle service discovery and inter service communication across clouds?",
+      "Subtype": null,
+      "Confidence": 0.8,
+      "UtteranceId": "utt_1391"
+    },
+    {
+      "SourceText": "and throttles based on user quotas. How do you design it?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1398"
+    },
+    {
+      "SourceText": "What\u0027s your approach to managing millions",
+      "Subtype": null,
+      "Confidence": 0.7,
+      "UtteranceId": "utt_1404"
+    },
+    {
+      "SourceText": "What\u0027s your approach to managing millions of device connections in",
+      "Subtype": null,
+      "Confidence": 0.7,
+      "UtteranceId": "utt_1405"
+    },
+    {
+      "SourceText": "ultra low latency and financial transactions. What profiling tools and strategies do you use?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1413"
+    },
+    {
+      "SourceText": "Do you isolate tenant data and ensure security between tenants?",
+      "Subtype": null,
+      "Confidence": 0.8,
+      "UtteranceId": "utt_1420"
+    },
+    {
+      "SourceText": "How do you load and isolate third party plug",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1427"
+    },
+    {
+      "SourceText": "How do you load and isolate third party plugins at runtime?",
+      "Subtype": null,
+      "Confidence": 0.9,
+      "UtteranceId": "utt_1428"
+    },
+    {
+      "SourceText": "You need to refactor a legacy monolith to microservices in dot net what\u0027s your step by step plan to break it down?",
+      "Subtype": null,
+      "Confidence": 0.8,
+      "UtteranceId": "utt_1433"
+    },
+    {
+      "SourceText": "Do you ensure scalability under sudden spikes in users?",
+      "Subtype": null,
+      "Confidence": 0.8,
+      "UtteranceId": "utt_1440"
+    },
+    {
+      "SourceText": "How do you handle authentication, authorization, and data",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1445"
+    },
+    {
+      "SourceText": "How do you handle authentication, authorization, and data encryption end to end?",
+      "Subtype": null,
+      "Confidence": 0.9,
+      "UtteranceId": "utt_1446"
+    },
+    {
+      "SourceText": "How do you manage complex game loops and ensure smooth read",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1452"
+    },
+    {
+      "SourceText": "How do you manage complex game loops and ensure smooth rendering while keeping",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1453"
+    }
+  ],
+  "Matches": [
+    {
+      "GroundTruth": "Do you see the president of The United States being investigated and along with other high profile names?",
+      "Detected": "crimes before faced his own trials. But do you see the president of The United States being investigated and along with other high profile names?",
+      "SimilarityScore": 0.7241379310344828
+    },
+    {
+      "GroundTruth": "Do you see these files being the demise of him as a president?",
+      "Detected": "files being the demise of him as a president?",
+      "SimilarityScore": 0.7258064516129032
+    },
+    {
+      "GroundTruth": "How do you think Trump and his White House will respond to this going forward?",
+      "Detected": "How do you think Trump and his White House will respond to this",
+      "SimilarityScore": 0.8076923076923077
+    },
+    {
+      "GroundTruth": "Maybe for the last time?",
+      "Detected": "maybe for the last time?",
+      "SimilarityScore": 1
+    },
+    {
+      "GroundTruth": "What is the purpose of Span of Tea?",
+      "Detected": "What is the purpose of Span of Tea?",
+      "SimilarityScore": 1
+    },
+    {
+      "GroundTruth": "How do you create a custom attribute in C Sharp?",
+      "Detected": "How do you create a custom attribute in C Sharp?",
+      "SimilarityScore": 1
+    },
+    {
+      "GroundTruth": "What\u0027s the difference between a struct and a class?",
+      "Detected": "What\u0027s the difference between a struct and a",
+      "SimilarityScore": 0.8627450980392157
+    },
+    {
+      "GroundTruth": "What\u0027s a record in C sharp?",
+      "Detected": "What\u0027s a record in C sharp?",
+      "SimilarityScore": 1
+    },
+    {
+      "GroundTruth": "What does lock do in c sharp?",
+      "Detected": "What does lock do in c sharp?",
+      "SimilarityScore": 1
+    },
+    {
+      "GroundTruth": "What is dependency injection?",
+      "Detected": "What is dependency injection?",
+      "SimilarityScore": 1
+    },
+    {
+      "GroundTruth": "What\u0027s the difference between I enumerable and Iquarable?",
+      "Detected": "What\u0027s the difference between I enumerable and Iquarable?",
+      "SimilarityScore": 1
+    },
+    {
+      "GroundTruth": "What is a task in dot net?",
+      "Detected": "What is a task in dot net?",
+      "SimilarityScore": 1
+    },
+    {
+      "GroundTruth": "How does garbage collection work?",
+      "Detected": "How does garbage collection work?",
+      "SimilarityScore": 1
+    },
+    {
+      "GroundTruth": "What\u0027s a deadlock in multithreading?",
+      "Detected": "What\u0027s a deadlock in multithreading?",
+      "SimilarityScore": 1
+    },
+    {
+      "GroundTruth": "What is a memory leak in dot net?",
+      "Detected": "What is a memory leak in dot net?",
+      "SimilarityScore": 1
+    },
+    {
+      "GroundTruth": "What\u0027s an extension method?",
+      "Detected": "13, what\u0027s an extension method?",
+      "SimilarityScore": 0.8709677419354839
+    },
+    {
+      "GroundTruth": "How do you implement iComparable?",
+      "Detected": "How do you implement iComparable?",
+      "SimilarityScore": 1
+    },
+    {
+      "GroundTruth": "What is a sealed class?",
+      "Detected": "15, what is a sealed class?",
+      "SimilarityScore": 0.8518518518518519
+    },
+    {
+      "GroundTruth": "What\u0027s your approach for efficient networking?",
+      "Detected": "What\u0027s your approach for efficient networking?",
+      "SimilarityScore": 1
+    },
+    {
+      "GroundTruth": "How would you design state synchronization?",
+      "Detected": "How would you design state synchronization",
+      "SimilarityScore": 0.9767441860465116
+    },
+    {
+      "GroundTruth": "What\u0027s your strategy for keeping data consistent across multiple services?",
+      "Detected": "What\u0027s your strategy for keeping data consistent across multiple",
+      "SimilarityScore": 0.8648648648648649
+    },
+    {
+      "GroundTruth": "How would you approach fault tolerance and recovery if a critical component fails mid trade?",
+      "Detected": "Would you approach fault tolerance and recovery if a critical component fails mid trade?",
+      "SimilarityScore": 0.9565217391304348
+    },
+    {
+      "GroundTruth": "How do you prevent race conditions in that scenario?",
+      "Detected": "And just for fun, how do you prevent race conditions in that scenario?",
+      "SimilarityScore": 0.7428571428571429
+    },
+    {
+      "GroundTruth": "How do you handle service discovery and inter service communication across clouds?",
+      "Detected": "Do you handle service discovery and inter service communication across clouds?",
+      "SimilarityScore": 0.9512195121951219
+    },
+    {
+      "GroundTruth": "What\u0027s your approach to managing millions of device connections in real time?",
+      "Detected": "What\u0027s your approach to managing millions of device connections in",
+      "SimilarityScore": 0.8571428571428572
+    },
+    {
+      "GroundTruth": "How do you isolate tenant data and ensure security between tenants?",
+      "Detected": "Do you isolate tenant data and ensure security between tenants?",
+      "SimilarityScore": 0.9402985074626866
+    },
+    {
+      "GroundTruth": "How do you load and isolate third party plugins at runtime?",
+      "Detected": "How do you load and isolate third party plugins at runtime?",
+      "SimilarityScore": 1
+    },
+    {
+      "GroundTruth": "How do you ensure scalability under sudden spikes in users?",
+      "Detected": "Do you ensure scalability under sudden spikes in users?",
+      "SimilarityScore": 0.9322033898305084
+    },
+    {
+      "GroundTruth": "How do you handle authentication, authorization, and data encryption end to end?",
+      "Detected": "How do you handle authentication, authorization, and data encryption end to end?",
+      "SimilarityScore": 1
+    },
+    {
+      "GroundTruth": "How do you manage complex game loops and ensure smooth rendering while keeping logic organized?",
+      "Detected": "How do you manage complex game loops and ensure smooth rendering while keeping",
+      "SimilarityScore": 0.8210526315789474
+    }
+  ],
+  "Missed": [
+    "How could you as a law enforcement officer read that and not say we have to take further action?",
+    "What about this?",
+    "Do you see this heading towards investigations?",
+    "How do you think these allegations against Donald Trump will affect his presidency?",
+    "Do you think the DOJ did enough to protect the Epstein victims?",
+    "What reason is there to not let congress in closed door meetings see all of the files completely unredacted?",
+    "What is it that appears to have done it this time?",
+    "Explain async await.",
+    "What kind of scenario are we talking?",
+    "How do you keep the server scalable when sudden spikes of players log in?",
+    "How do you design a custom dot net middleware that inspects requests and throttles based on user quotas?",
+    "What profiling tools and strategies do you use?",
+    "What\u0027s your step by step plan to break it down?"
+  ],
+  "FalseAlarms": [
+    {
+      "Text": "suites. And I said, you know, what about this?",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "Which gives you a great",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "Which gives you a great indication of his",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "Which gives you a great indication of his lack of any",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "Which gives you a great indication of his lack of any moral Which gives you a great indication of his lack of any moral",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "12 and 13 year olds gambling and giving them liquor at hotel rooms and limousine rides?",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "But nobody questioned what was going on. I mean, this is a serious failure",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "failure of law enforcement to look at what\u0027s right",
+      "Confidence": 0.7
+    },
+    {
+      "Text": "failure of law enforcement to look at what\u0027s right and failure of law enforcement to look at what\u0027s right and",
+      "Confidence": 0.7
+    },
+    {
+      "Text": "if you reached the age of consent and you have a sex party, there\u0027s no issue. There should",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "Fundamentally by law enforcement in something like that. People have sex parties in England and The US every day of the week. The issue is",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "Fundamentally by law enforcement in something like that. People have sex parties in England and The US every day of the week. The issue is does it Fundamentally by law enforcement in something like that. People have sex parties in England and The US every day of the week. The issue is does it",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "brought in by or on behalf of 13, 14 year olds?",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "Well, let\u0027s get into that, professor. Do you see this heading towards investigation?",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "crimes before faced his own trials. But do you see the president of The United States being investigated and along with other high profile names? crimes before faced his own trials. But do you see the president of The United States being investigated and along with other high profile names?",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "When a citizen\u0027s complaint",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "When citizens complained about Trump\u0027s",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "Which tells you",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "Which tells you that they are",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "Which tells you that they are lawless. So",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "Which tells you that they are lawless. So the chance the federal",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "what the most recent indication so",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "against Donald Trump will affect his presidency?",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "When the FBI or other law enforcement",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "When the FBI or other law enforcement agencies in America",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "When the FBI or other law enforcement agencies in America execute a search",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "When the FBI or other law enforcement agencies in America execute a search warrant in When the FBI or other law enforcement agencies in America execute a search warrant in",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "child rapist? Or in fact, is he being wrongly accused and mistreated?",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "the files if you have no risk here?",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "in the American economy, things are going badly compared to, the",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "in the American economy, things are going badly compared to, the Biden administration.",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "in the American economy, things are going badly compared to, the Biden administration. in the American economy, things are going badly compared to, the Biden administration.",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "Come, compare it add to it",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "Come, compare it add to it the rates",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "Come, compare it add to it the, raids in Minnesota",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "Come, compare it add to it the, raids Come, compare it add to it the, raids",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "where he got 49% of the vote",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "where he got 49% of the vote, just under half.",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "what reason is there to not let",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "what reason is there to not let congress in close",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "what reason is there to not let congress in closed door meetings",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "what reason is there to not let congress in closed door meetings what reason is there to not let congress in closed door meetings",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "see all of the files completely unredacted?",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "How do you think Trump and his White House will",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "Who is in Windsor. But first, let\u0027s go",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "Who is in Windsor. But first, let\u0027s go to our political correspondent, Louis",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "Who is in Windsor. But first, let\u0027s go to our Who is in Windsor. But first, let\u0027s go to our",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "What is the purpose",
+      "Confidence": 0.7
+    },
+    {
+      "Text": "How do you",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "How do you create a custom attribute",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "What\u0027s the difference",
+      "Confidence": 0.7
+    },
+    {
+      "Text": "What\u0027s a record",
+      "Confidence": 0.7
+    },
+    {
+      "Text": "What does lock",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "What is dependent",
+      "Confidence": 0.7
+    },
+    {
+      "Text": "What\u0027s the difference between",
+      "Confidence": 1
+    },
+    {
+      "Text": "What is a tab",
+      "Confidence": 0.7
+    },
+    {
+      "Text": "How does GAR",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "What\u0027s a deadlock",
+      "Confidence": 0.7
+    },
+    {
+      "Text": "What is a memory",
+      "Confidence": 0.7
+    },
+    {
+      "Text": "You implement compare",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "You implement compareToT, allow",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "You implement compareToT allowing objects to be sorted.",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "What kind of scenario are we talking? You want something purely",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "What kind of scenario are we talking? You want something purely technical, totally",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "Totally off the wall, or maybe a blend of real world chaos with c sharp flare?",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "What\u0027s your approach",
+      "Confidence": 0.7
+    },
+    {
+      "Text": "How would you design",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "How would you design state synchronization? And how do you keep the server",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "scalable when sudden spikes of players log in?",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "What\u0027s your strategy",
+      "Confidence": 0.7
+    },
+    {
+      "Text": "What\u0027s your strategy for keeping data",
+      "Confidence": 0.7
+    },
+    {
+      "Text": "Fault tolerance?",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "could handle failures.",
+      "Confidence": 0.7
+    },
+    {
+      "Text": "And race conditions?",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "and throttles based on user quotas. How do you design it?",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "What\u0027s your approach to managing millions",
+      "Confidence": 0.7
+    },
+    {
+      "Text": "ultra low latency and financial transactions. What profiling tools and strategies do you use?",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "How do you load and isolate third party plug",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "You need to refactor a legacy monolith to microservices in dot net what\u0027s your step by step plan to break it down?",
+      "Confidence": 0.8
+    },
+    {
+      "Text": "How do you handle authentication, authorization, and data",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "How do you manage complex game loops and ensure smooth read",
+      "Confidence": 0.4
+    }
+  ],
+  "FullTranscript": "Boarded an unidentified An unidentified female friend An unidentified female friend who was forced to An unidentified female friend who was forced to perform oral sex on An unidentified female friend who was forced to perform oral sex on president Trump approximately An unidentified female friend who was forced to perform oral sex on president Trump approximately thirty five years ago in An unidentified female friend who was forced to perform oral sex on president Trump approximately thirty five years ago in New Jersey. The friend told An unidentified female friend who was forced to perform oral sex on president Trump approximately thirty five years ago in New Jersey. The friend told Alexis that she was An unidentified female friend who was forced to perform oral sex on president Trump approximately thirty five years ago in New Jersey. The friend told Alexis that she was approximately 13 to fourteen 13 to 14 years old. 13 to 14 years old when this occurred. The friend allegedly 13 to 14 years old when this occurred. The friend allegedly bit president Trump 13 to 14 years old when this occurred. The friend allegedly bit president Trump while performing this sex at, the friend 13 to 14 years old when this occurred. The friend allegedly bit president Trump while performing this sex act. The friend was allegedly hit in the 13 to 14 years old when this occurred. The friend allegedly bit president Trump while performing this sex act. The friend was allegedly hit in the 13 to 14 years old when this occurred. The friend allegedly bit president Trump while performing this sex act. The friend was allegedly hit in the face after she laughed about biting president Trump. face after she laughed about biting president Trump. The Yes. And that Yes. And that that\u0027s another Yes. And that that\u0027s another strong example Yes. And that that\u0027s another Yes. And that that\u0027s another strong example of how could you as a law enforcement officer strong example of how could you as a law enforcement officer read that and strong example of how could you as a law enforcement officer read that and not say, say we have to take further say we have to take further action, whether it\u0027s to say we have to take further action, whether it\u0027s to determine if the witness is reliable or not, which to determine if the witness is reliable or not, which would be one of the first to determine if the witness is reliable or not, which would be one of the first steps. Or to Or to move toward Or to move toward a prosecution. Or to move toward a prosecution. And you would Or to move toward a prosecution. Or to move toward a prosecution. And you would think you would pull the files on And you would think you would pull the files on other cases. And And you would think you would pull the files on other cases. And just one little related anecdote to this, And just one little related anecdote to this, about the time this And just one little related anecdote to this, about And just one little related anecdote to this, about the time this supposedly happened, the time this supposedly happened, 1989, the time this supposedly happened, 1989, actually, the time this supposedly happened, 1989, actually, actually, a year before. I was walking with Donald a year before. I was walking with Donald on the Atlantic City actually, a year before. I was walking with Donald on the Atlantic City Boardwalk, and I actually, a year before. I was walking with Donald on the Atlantic City Boardwalk and I asked him about actually, a year before. I was walking with Donald on the Atlantic City Boardwalk and I asked him about the, actually, a year before. I was walking with Donald on the Atlantic City Boardwalk and I asked him about the, adjudicated case actually, a year before. I was walking with Donald on the Atlantic City Boardwalk and I asked him about the, adjudicated cases where his actually, a year before. I was walking with Donald on the Atlantic City Boardwalk and I asked him about the, adjudicated cases where his casinos had been plying casinos had been plying thirteen four casinos had been plying a 13, 14 year old. In fact, in casinos had been plying a 13, 14 year old. In fact, in one case, a casinos had been plying a 13, 14 year old. In fact, in one case, a 12 year old, letting them 12 year old, letting them gamble in the casino. 12 year old letting them gamble in the casinos. You have to be twenty 12 year old letting them gamble in the casinos. You have to be 21, not 12 year old letting them gamble in the casinos. You have to be 21, not 12. 12. Giving them liquor, 12. Giving them liquor, limousines, 12. Giving them liquor, limousines, hotel suites. suites. And I said, suites. And I said, you know, what about this? suites. And I said, you know, what about this? And I thought suites. And I said, you know, what about this? And I thought he would say, yeah. It was a mistake or I And I thought he would say, yeah. It was a mistake or I fired the And I thought he would say, yeah. It was a mistake or I fired the, the subordinates. And Donald And Donald just coldly looked And Donald just coldly looked at me and said, yeah. I paid And Donald just coldly looked at me and said, yeah. I paid a fine. Would Which gives you a great Which gives you a great indication of his Which gives you a great indication of his lack of any Which gives you a great indication of his lack of any moral Which gives you a great indication of his lack of any moral character about things. I paid a fine. character about things. I paid a fine. 12 and 13 year 12 and 13 year olds gambling and 12 and 13 year olds gambling and giving them liquor at 12 and 13 year olds gambling and giving them liquor and hotel rooms and 12 and 13 year olds gambling and giving them liquor at hotel rooms and limousine rides? Well, these children wanna Well, his children wanna be teenagers at that Well, his children wanna be teenagers at that stage, professor. Well, his children wanna be teenagers at that stage, professor. Yeah. Just Just about. Yeah. Just about. Yeah. Yeah. And now Just about. Yeah. Yeah. Another accusation in Just about. Yeah. Yeah. Another accusation in 1987, so two years before that, in 1987, so two years before that meeting between you, in 1987, so two years before that meeting between you, caller called into the FBI on caller called into the FBI on their friend\u0027s account caller called into the FBI on their friend\u0027s account, said that caller called into the FBI on their friend\u0027s account, said that caller called into the FBI on their friend\u0027s account, said that in 1987, in 1987, a victim was out drinking in 1987, a victim was out drinking, ended up at the Trump in 1987, a victim was out drinking, ended up at Trump Plaza. Victim one saw Donald Trump water at Trump Plaza. Victim one saw Donald Trump wanted to meet him. Victim one at Trump Plaza. Victim one saw Donald Trump wanted to meet him. Victim one woke naked and saw a $300 on the bed. naked and saw a $300 on the bed. Victim one didn\u0027t remember. naked and saw her $300 on the bed. Victim one didn\u0027t remember how she got to the room. naked and saw a $300 on the bed. Victim one didn\u0027t remember how she got to the room. She remembered seeing a flash of Trump\u0027s she got to the room. She remembered seeing a flash of Trump\u0027s face. She she got to the room. She remembered seeing a flash of Trump\u0027s face. she got to the room. She remembered seeing a flash of Trump\u0027s face. She, called the person who reported this and She, called the person who reported this and told her that she thought she had She, called the person who reported this and told her that she thought she had been raped That\u0027s another That\u0027s another, allegation That\u0027s another, allegation. There\u0027s also That\u0027s another, allegation. There\u0027s also an allegation That\u0027s another, allegation. There\u0027s also an allegation, nineteen ninety five 1995, professor. Well, 1995, professor, well, a limousine 1995, professor, where a limousine driver makes a 1995, professor, where a limousine driver makes a complaint, pitch picture, Trump up to take him to Dallas Trump up to take him to Dallas Fort Worth airport Trump up to take him to Dallas Fort Worth Airport during the ride. The Trump up to take him to Dallas Fort Worth Airport during the ride. The complainant recalled some of the things recalled some of the things Trump spoke about on his cell phone that were very recalled some of the things Trump spoke about on his cell phone that were very concerning. recalled some of the things Trump spoke about on his cell phone that were very concerning. Complaintant noted that Trump repeatedly said Complaintant noted that Trump repeatedly said of the name Complaintant noted that Trump repeatedly said of the name Complaintant noted that Trump repeatedly said of the name Jeffrey. And one of the complainant\u0027s ex girlfriends told the complaint Complaintant noted that Trump repeatedly said of the name Jeffrey. And one of the complainant\u0027s ex girlfriends told the complainant that Trump had raped Complaintant noted that Trump repeatedly said of the name Jeffrey. And one of the complainant\u0027s ex girlfriends told the complainant that Trump had raped her at as Jeffrey Epstein. did Jeffrey Epstein. So I mean, those I mean, those are just two I mean, those are just two separate accounts I mean, those are just two separate accounts of allegation I mean, those are just two separate accounts of allegations of rape So so the So so the significance of this, Maddie, is that we\u0027re not talking So so the significance of this, Maddie, is that we\u0027re not talking about a one off. I mean, talking about a one off. I mean, people go talking about a one off. I mean, people go to a lawn talking about a one off. I mean, people go to law enforcement agencies. They go to reporters like to law enforcement agencies. They go to reporters like me, and they to law enforcement agencies. They go to reporters like me. And they tell you they\u0027ve committed some crime, then they And they tell you they\u0027ve committed some crime, then they haven\u0027t. People make And they tell you they\u0027ve committed some crime, then they haven\u0027t. People make stuff up. And they tell you they\u0027ve committed some crime, then they haven\u0027t. People make stuff up. Okay? Even though it sounds crazy, trust Okay? Even though it sounds crazy, trust me, I\u0027ve I\u0027ve had people Okay? Even though it sounds crazy, trust me. I\u0027ve I\u0027ve had people commit commit tell Okay? Even though it sounds crazy, trust me, I\u0027ve I\u0027ve had people commit commit tell me they committed the murder I was writing about in tell me they committed the murder I was writing about in the newspaper. tell me they committed the murder I was writing about in the newspaper. tell me they committed the murder I was writing about in the newspaper. This is multiple reports This is multiple reports, and we\u0027re you\u0027re This is multiple reports, and we\u0027re you\u0027re just talking about This is multiple reports, and we\u0027re you\u0027re just talking about the FBI reports. I mean, there is the FBI reports. I mean, there is the plain load of the FBI reports. I mean, there is the plain load of 12 and 13 year the FBI reports. I mean, there is the plain load of 12 and 13 year old girls from France who were from France who were flown from France from France who were flown from France to Epstein Island from France who were flown from France to Epstein Island and then back from France who were flown from France to Epstein Island and then back to the next day. from France who were flown from France to Epstein Island and then back the next day. And border from France who were flown from France to Epstein Island and then back from France who were flown from France to Epstein Island and then back to the next day. And border officials at both ends didn\u0027t question from France who were flown from France to Epstein Island and then back to the next day. And border officials at both ends didn\u0027t question what was going on and from France who were flown from France to Epstein Island and then back to the next day. And border officials at both ends didn\u0027t question what was going on. And presumably they were told, oh, these are here models And, presumably, they were told, oh, these are here models for a a a And presumably, they were told, oh, these are here models for a a shoot. And presumably, they were told, oh, these are here models for a a shoot. But nobody questioned what was going on. But nobody questioned what was going on. I mean, this is a serious But nobody questioned what was going on. I mean, this is a serious failure But nobody questioned what was going on. I mean, this is a serious But nobody questioned what was going on. I mean, this is a serious failure of law enforcement to look at what\u0027s right failure of law enforcement to look at what\u0027s right and failure of law enforcement to look at what\u0027s right and front of their eyes and recognize that they\u0027re gonna front of their eyes and recognize that they\u0027re getting repeated front of their eyes and recognize that they\u0027re getting repeated front of their eyes and recognize that they\u0027re getting repeated complaints, and there\u0027s a pattern here. complaints, and there\u0027s a pattern here. And if I can go complaints, and there\u0027s a pattern here. And if I can go one further, there we complaints, and there\u0027s a pattern here. And if I can go one further, they\u0027re one of the most complaints, and there\u0027s a pattern here. And if I can go one further, they\u0027re one of the most disturbing documents is disturbing documents is, involves disturbing documents is, involves Trump\u0027s, disturbing documents is, involves Trump\u0027s, golf course in suburban Los golf course in suburban Los Angeles, in Palace golf course in suburban Los Angeles, in Palos Verdes, and a golf course in suburban Los Angeles and Palos Verdes. golf course in suburban Los Angeles and Palos Verdes. And a threat to someone that if And a threat to someone that if they talked about And a threat to someone that if they talked about what was going on with 13 year old girl 13 year old girls there, that they would 13 year old girls there, that they would end up fertilizer 13 year old girls there, that they would end up fertilizer on the back nine holes of the golf course. fertilizer on the back nine holes of the golf course. fertilizer on the back nine holes of the golf course. That is in fertilizer on the back nine holes of the golf course. That fertilizer on the back nine holes of the golf course. That is important because it takes it from Epsteinyl is important because it takes it from Epstein Island, Epstein\u0027s is important because it takes it from Epstein Island, Epshte Epstein\u0027s mansion in Manhattan is important because it takes it from Epstein Island, Epshte Epstein\u0027s mansion in Manhattan, is important because it takes it from Epstein Island, Epshte Epstein\u0027s mansion in Manhattan, Mar a Lago is important because it takes it from Epstein Island, Epshte Epstein\u0027s mansion in Manhattan, Mar A Lago in Florida, is important because it takes it from Epstein Island, Epshte Epstein\u0027s mansion in Manhattan, Mar A Lago in Florida, to all the way across the country in Los Angeles, to all the way across the country in Los Angeles and suggest to all the way across the country in Los Angeles and suggest a much broad to all the way across the country in Los Angeles and suggests to all the way across the country in Los Angeles and suggests a much brighter and broader pattern of sexual a much brighter and broader pattern of a much brighter and broader pattern of sexual abuse of little girls than sexual abuse of little girls than sexual abuse of little girls than, we had known sexual abuse of little girls than we had known before these documents were we had known before these documents were released. And And and and just And and and just reiterating the And and and just reiterating the fact that Trump has done And and and just reiterating the fact that Trump has denied any knowledge Trump has denied any knowledge of Absolutely. Trump has denied any knowledge of Absolutely. Trump has denied any knowledge of Absolutely. Ring. And I just wanna reemphasize Ring. And I just wanna reemphasize that because some of Ring. And I just wanna reemphasize that because some of, the claims in Ring. And I just wanna reemphasize that because some of Ring. And I just wanna reemphasize that because some of the claims in these files, David, the claims in these files, David, one the claims in these files, David, one talks about one talks about, prostitution one talks about, prostitution related parties one talks about, prostitution related party that took place in Mar A Lago. One party that took place in Mar A Lago. One person wanted to go to party that took place in Mar A Lago. One person wanted to to go to the party, and a to go to the party, and at one point, it said, no. to go to the party, and at one to go to the party, and at one point said, no. These are just for prostitutes. Between to go to the party, and at one point said, no. These are just for prostitutes. Between 20 2004 and 2005, Trump reported Trump reportedly, Trump reportedly, a caller claimed he Trump reportedly, a caller claimed he was Trump reportedly, a caller claimed he was Trump reportedly, a caller claimed he was present at a, sex trafficking present at a, sex trafficking party, present at a, sex trafficking party hosted by Epstein said, did that present at a, sex trafficking party hosted by Epstein said in 2009, two thousand and present at a, sex trafficking party hosted by Epstein Epstein, said in 2009, 2005. So Ivan present at a, sex trafficking party hosted by Epstein Epstein in 2009, 2005. So Ivan Willsick hosted present at a, sex trafficking party hosted by Epstein Epstein, said in 2009, 2005. So Ivan Willsy hosted a party where Epstein present at a, sex trafficking party hosted by Epstein Epstein, said in 2009, 2005. So Ivan Willsey hosted a party where Epstein, Sammy Soza, and Donald present at a, sex trafficking party hosted by Epstein Epstein, said in 2009, 2005. So Ivan Willsey hosted a party where Epstein, Sammy Sozo, and Donald Trump were in attendance. present at a, sex trafficking party hosted by Epstein Epstein, said in 2009, 2005. So Ivan Willsey hosted a party where Epstein, Sammy Soze, and Donald Trump were in attendance. Several women will be present at a, sex trafficking party hosted by Epstein Epstein, said in 2009, 2005. So Ivan Willsey hosted a party where Epstein, Sammy Soze, and Donald Trump were in attendance. Several women were being auctioned off. present at a, sex trafficking party hosted by Epstein Epstein, said in 2009, 2005. So Ivan Willsey hosted a party where Epstein, Sammy Soze, and Donald Trump were in attendance. Several women were being auctioned off. present at a, sex trafficking party hosted by Epstein Epstein, said in 2009, 2005. So Ivan Willsey hosted a party where Epstein, Sammy Soze, and Donald Trump were in attendance. Several women were being auctioned off. I mean, I mean, this is just a bizarre. And then it\u0027s bizarre. And then Epstein\u0027s assistant now bizarre. And then Epstein\u0027s assistant names Trump as a part bizarre. And then Epstein\u0027s assistant names Trump as a party guest. Along with Along with Bill Clinton in Along with Bill Clinton in 1986. Along with Bill Clinton in 1986 until nineteen ninety Along with Bill Clinton in 1986 until 1991, and then 9092. 9092 that he was present. 1992 that he was present. And then another 1992 that he was present. And then another says that there was big orgy parties says that there was big orgy parties A caller claimed his attendance to the f A caller claimed his attendance to the FBI saying caller name A caller claimed his attendance to the FBI saying caller named other individuals involved A caller claimed his attendance to the FBI saying caller named other individuals involved in big orgy parties A caller claimed his attendance to the FBI saying caller named other individuals involved in big orgy parties with her other young A caller claimed his attendance to the FBI saying caller named other individuals involved in big orgy parties with her other young girls. Older Victoria Older Victoria\u0027s Secret models including Older Victoria\u0027s Secret models including Bill Clinton and Older Victoria\u0027s Secret models including Bill Clinton and Donald Trump. So I mean, there is not there is not only this there is not only this wild allegation there is not only these wild allegations of there is not only these wild allegations of sexual assault sexual assault, professor, but sexual assault, professor, but just sexual assault, professor, but just even seeing him present at these prostitution parties, he\u0027s even seeing him present at these prostitution parties, these orgy parties, Well, Well, the first Well, the first of all, Well, the first of all, if you reach the Well, the first of all, if you reached the age of consent and you have a sex party, there\u0027s if you reached the age of consent and you have a sex party, there\u0027s no issue. There should if you reached the age of consent and you have a sex party, there\u0027s no issue. There should be no interest. Fundamentally, by law, Fundamentally by law enforcement in Fundamentally by law enforcement in something like that. People Fundamentally by law enforcement in something like that. People have sex parties in Fundamentally by law enforcement in something like that. People have sex parties in England and The US every day of the week. Fundamentally by law enforcement in something like that. People have sex parties in England and The US every day of the week. Fundamentally by law enforcement in something like that. People have sex parties in England and The US every day of the week. Fundamentally by law enforcement in something like that. People have sex parties in England and The US every day of the week. Fundamentally by law enforcement in something like that. People have sex parties in England and The US every day of the week. The issue is Fundamentally by law enforcement in something like that. People have sex parties in England and The US every day of the week. The issue is does it Fundamentally by law enforcement in something like that. People have sex parties in England and The US every day of the week. The issue is does it tell you something about the credibility tell you something about the credibility of the complaints tell you something about the credibility of the complaints, tell you something about the credibility of the complaints brought in brought in by or on brought in by or on behalf of brought in by or on behalf of 13, 14 year olds? And I think And I think that\u0027s the significant And I think that\u0027s the significance of those. They And I think that\u0027s the significance of those, that, if you And I think that\u0027s the significance of those, that if you have these other events going on, if you have these other events going on, then if you have these other events going on, then does that add if you have these other events going on, then does that add some credibility? And would it some credibility? And would it should it prompt some credibility? And would it should it prompt a some credibility? And would it should it prompt a thorough investigation a thorough investigation, of the a thorough investigation, of the complaints a thorough investigation, of the complaints that were made by or on behalf that were made by or on behalf of thirteen fourteen that were made by or on behalf of 13, 14 year old girl. that were made by or on behalf of 13, 14 year old girls. that were made by or on behalf of 13, 14 year old girls. I I think that\u0027s the significance I I think that\u0027s the significance of this, not those I I think that\u0027s the significance of this, not those acts per se. I I think that\u0027s the significance of this, not those acts per se. Let\u0027s get into that Well, let\u0027s get into that, professor. Do Well, let\u0027s get into that, professor. Do you see this heading Well, let\u0027s get into that, professor. Do you see this heading towards investigation? Well, let\u0027s get into that, professor. Do you see this heading towards investigations? Criminal pro you Criminal prosecutions, potential Criminal prosecutions, potential? I mean, we\u0027ve all Criminal prosecutions, potential? I mean, we\u0027ve obviously seen Donald Trump Criminal prosecutions, potential? I mean, we\u0027ve obviously seen Donald Trump charged with crimes before face to crimes before faced his own trials. But crimes before, faced his own trials. But do you see the president crimes crimes before faced his own trials. But do you see the president of The United States being investigated? And along with crimes before faced his own trials. But do you see the president of The United States being crimes before faced his own trials. But do you see the president of The United States being investigated and along with other high profile names? No. crimes before faced his own trials. But do you see the president of The United States being investigated and along with other high profile names? crimes before faced his own trials. But do you see the president of The United States being investigated and along with other high profile names? There\u0027s absolutely no chance that the US There\u0027s absolutely no chance that the US justice department will There\u0027s absolutely no chance that the US justice department will do anything because There\u0027s absolutely no chance that the US justice department will do anything because There\u0027s absolutely no chance that the US justice department will do anything because Trump\u0027s attorney general, Pam Bondy, Trump\u0027s attorney general, Pam Bondy, was Trump\u0027s attorney general, Pam Bondy, was the attorney Trump\u0027s attorney general, Pam Bondy, was the attorney general of Florida. I\u0027ve Trump\u0027s attorney general, Pam Bondy, was the attorney general of Florida. I\u0027ve called her the utter Trump\u0027s attorney general, Pam Bondy, was the attorney general of Florida. I\u0027ve called her the utterly corrupt Trump\u0027s attorney general, Pam Bondy, was the attorney general of Florida. I\u0027ve called her the utterly corrupt Pam Bondy. Trump\u0027s attorney general, Pam Bondy, was the attorney general of Florida. I\u0027ve called her the utterly corrupt Pam Bondy. When a citizen\u0027s complaint When citizens complained about Trump\u0027s When citizens complained about Trump\u0027s scam When citizens complained about Trump\u0027s scam university, Trump University, which he scam university, Trump University, which he eventually had to admit scam university, Trump University, which he eventually had to admit was a scam university, Trump University, which he eventually had to admit was a fraud and refund some money to fraud and refund some money to people. fraud and refund some money to people. She shut fraud and refund some money to people, she shut down the and it illegal twenty twenty five thousand dollar illegal $25,000 campaign contribution. illegal $25,000 campaign contribution from Trump\u0027s illegal $25,000 campaign contribution from Trump\u0027s charitable foundation. illegal $25,000 campaign contribution from Trump\u0027s charitable foundation. illegal $25,000 campaign contribution from Trump\u0027s charitable foundation. Charitable foundations are not allowed to give money Charitable foundations are not allowed to give money to campaigns, Charitable foundations are not allowed to give money to campaigns. She took the Charitable foundations are not allowed to give money to campaigns, she took the money, and her staff defended she took the money, and her staff defended taking them on she took the money, and her staff defended taking the money. Which tells you Which tells you that they are Which tells you that they are lawless. So Which tells you that they are lawless. So the chance the federal Which tells you that they are lawless. So the chance, the federal government in this administration will do federal government in this administration will do anything is zero and none. federal government in this administration will do anything is zero and none. But, also, federal government in this administration will do anything is zero and none. But, also, Jeffrey Epstein died Jeffrey Epstein died six years ago. Jeffrey Epstein died six years ago. The statute of limitations for any crime I\u0027ve been able The statute of limitations for any crime I\u0027ve been able to imagine an IT The statute of limitations for any crime I\u0027ve been able to imagine, and I teach law, The statute of limitations for any crime I\u0027ve been able to imagine, and I teach law, The statute of limitations for any crime I\u0027ve been able to imagine, and I teach law, out of these The statute of limitations for any crime I\u0027ve been able to imagine, and I teach law, out of these events is The statute of limitations for any crime I\u0027ve been able to imagine, and I teach law, out of these events is more than five year The statute of limitations for any crime I\u0027ve been able to imagine, and I teach law, out of these events is more than five years ago. The statute of limitations The statute of limitations period. So The statute of limitations period. So I don\u0027t see the The statute of limitations period. So I don\u0027t see the prospect of any criminal charges. What I do see the prospect of any criminal charges. What I do see is the prospect of see the prospect of any criminal charges. What I do see is the prospect of see the prospect of any criminal charges. What I do see is the prospect of serious civil litigation serious civil litigation, and there serious civil litigation, and there are lawyers representing it appears it appears to be a couple hun it appears to be a couple 100 of it appears to be a couple 100 of what the it appears to be a couple 100 of what the most recent indication so what the most recent indication so in what the most recent indication so she indications are more than a thousand indications are more than a 13, fourteen indications are more than a 13, 14, 15 year old indications are more than a 13, 14, 15 year olds who were sexually indications are more than a 13, 14, 15 year olds who were sexually assaulted. indications are more than a 13, 14, 15 year olds who were sexually assaulted. indications are more than a 13, 14, 15 year olds who were sexually assaulted. So I think you\u0027re going to see the So I think you\u0027re going to see civil litigation, and So I think you\u0027re going to see civil litigation. Of course, Trump administration So I think you\u0027re going to see civil litigation. Of course, Trump administration will try and So I think you\u0027re going to see civil litigation. Of course, Trump administration will try and stop all of that litigation. stop all of that litigation, as they they stop all of that litigation, as they\u0027ve they\u0027ve been doing for as stop all of that litigation, as they\u0027ve they\u0027ve been doing for as long as it\u0027s been filed. been filed. Well, how do you think been filed. Well, how do you think this these Alec been filed. Well, how do you think this these allegations against Donald against Donald Trump will affect against Donald Trump will affect his presidency? against Donald Trump will affect his presidency? Do you see these against Donald Trump will affect his presidency? Do you see these against Donald Trump will affect his presidency? Do you see these files being the demise of him as a files being the demise of him as a president? files being the demise of him as a president? files being the demise of him as a president? Not these files. Not these files. I don\u0027t Not these files. I don\u0027t think there\u0027s anywhere near I don\u0027t think there\u0027s anywhere near enough here I don\u0027t think there\u0027s anywhere near enough here. A lot I don\u0027t think there\u0027s anywhere near enough here a lot of smoke. I mean, a lot of smoke. I mean, just billows of smoke a lot of smoke. I mean, just billows of smoke coming out of the basement a lot of smoke. I mean, just billows of smoke coming out of the basement of Trump Tower. But in But in Mar A Lago, but I I don\u0027t think this is an But in Mar A Lago. But I I don\u0027t think this is enough. I think what But in Mar A Lago, but I I don\u0027t think this is enough. I think what But in Mar A Lago, but I I don\u0027t think this is enough. I think what potentially could force potentially could force Trump out potentially could force Trump out or be forced out potentially could force Trump out or be forced out by his cabinet under the or be forced out by his cabinet under the twenty fifth amendment, or be forced out by his cabinet under the or be forced out by his cabinet under the twenty fifth amendment of the American constitution is if twenty fifth amendment of the American constitution is irrefutable photo twenty fifth amendment of the American constitution is irrefutable photographic or video evidence or video evidence of Donald Trump or video evidence of Donald Trump assaulting a third or video evidence of Donald Trump assaulting a 13 or 14 year old there is There is court testimony There is court testimony under oath There is court testimony under oath, written testimony There is court testimony under oath written testimony, but under oath that Donald Trump written testimony, but under oath that Donald Trump did exactly that and written testimony, but under oath that Donald Trump did exact that and that there is such evidence, photo that and that there is such evidence, photographs and video tape that and that there is such evidence, photographs, and videotapes. That\u0027s why it\u0027s important that there\u0027ve got that there\u0027ve got three million that they\u0027ve got 3,000,000 more paid that there\u0027ve got 3,000,000 more pages or individual that there\u0027ve got 3,000,000 more pages or individual documents that there\u0027ve got 3,000,000 more pages or individual documents that they have not, released that they have not, released, and they say they\u0027re not that they have not, released, and they say they\u0027re not going to release that they have not, released, and they say they\u0027re not going to release. that they have not, released, and they say they\u0027re not going to release. Now I will also tell you in America, on Now I will also tell you in America, American Now I will also tell you in America, American radio and podcast Now I will also tell you in America, American radio and podcasts and TV shows, I\u0027ve had podcasts and TV shows, I\u0027ve had people push back podcasts and TV shows, I\u0027ve had people push back and tell me that they don\u0027t care because and tell me that they don\u0027t care because Trump isn\u0027t doing and tell me that they don\u0027t care because Trump isn\u0027t doing that now. He did that in the past. And if that the past. And if that\u0027s true, then the past. And if that\u0027s true, that says something the past. And if that\u0027s true, that says something absolutely horrible the past. And if that\u0027s true, that says something absolutely horrible in my view about about, morality in about, morality in America in the about, morality in America in the twenty first century. about, morality in America in the twenty first century. Yeah. The Yeah. You mentioned these videos Yeah. You mentioned these videos, so I\u0027m just gonna read Yeah. You mentioned these videos. So I\u0027m just gonna read off the off the Yeah. You mentioned these videos. So I\u0027m just gonna read off the of of the documents. It says claims it says the victim report it says the victim reporting you about criminal activity it says the victim reportedly knew about criminal activity that occurred in multiple it says the victim reportedly knew about criminal activity that occurred in multiple states on airplanes and told occurred in multiple states on airplanes and told complainants that there were occurred in multiple states on airplanes and told complainants that there were films of prominent men such as Epstein, as Epstein, Clinton, and Trump as Epstein, Clinton, and Trump, and that Ghislaine Mac as Epstein, Clinton, and Trump, and that Ghislaine Maxwell is in these video as Epstein, Clinton, and Trump, and that Ghislaine Maxwell is in these videos as well. So if So if these videos come So if these videos come to light, I\u0027m you know, So if these videos come to light and, you know, the chances of So if these videos come to light and, you know, the chances of So if these videos come to light and, you know, the chances of very slim, professor. But if they very slim, professor. But if they do come to light, very slim, professor, but if they do come to light, that would kind of force very slim, professor. But if they do come to light, that would kind of force Trump to resign. Well, I mean, Well, I don\u0027t know if it would force him to resign. Well, I don\u0027t know if it would force him to resign. I have a hard time knowing Well, I don\u0027t know if it would force him to resign. I have a hard time knowing Donald Trump as they have for Well, I don\u0027t know if it would force him to resign. I have a hard time knowing Donald as they have for almost Well, I don\u0027t know if it would force him to resign. I have a hard time knowing Donald as they have for almost forty years resigning, but being forced forty years resigning, but being forced out is another forty years resigning, but being forced out is another matter. I mean, it would forty years resigning, but being forced out is another matter. Mean, it would be a real test of the how Mean, it would be a real test of the house would impeach him, Mean, it would be a real test of the house would impeach him even with the current Mean, it would be a real test of the house would impeach him even with the current Republican majority if that happened, I suspect. Republican majority if that happened, I suspect. But Republican majority if that happened, I suspect. But with the senate Republican majority if that happened, I suspect. But with the senate give the two third Republican majority if that happened, I suspect. But with the senate give the two thirds votes? The senate is Republican majority if that happened, I suspect. But with the senate give the two thirds votes? The senate is essentially fifth Republican majority if that happened, I suspect. But with the senate give the two thirds votes? The senate is essentially fifty fifty right now. Republican majority if that happened, I suspect. But with the senate give the two thirds votes? The senate is essentially fifty fifty right now. Republican majority if that happened, I suspect. But with the senate give the two thirds votes? The senate is essentially fifty fifty right now. You need 67 votes to You need 67 votes to convict. And You need 67 votes to convict. And, I don\u0027t know. You need 67 votes to convict. And I don\u0027t know. That would be a very revealing I don\u0027t know. That would be very revealing. But Trump is Trump, it will be most Trump, it will be mostly vulnerable if Trump, it will be mostly vulnerable if that sort of evidence comes Trump, it will be mostly vulnerable if that sort of evidence comes out Trump, it will be mostly vulnerable if that sort of evidence comes out By the way, there\u0027s another way to get at this By the way, there\u0027s another way to get at this evidence that gets very By the way, there\u0027s another way to get at this evidence that gets very little attention. By the way, there\u0027s another way to get at this evidence that gets very little attention. When the FBI or other law enforcement When the FBI or other law enforcement agencies in America When the FBI or other law enforcement agencies in America execute a search When the FBI or other law enforcement agencies in America execute a search warrant in When the FBI or other law enforcement agencies in America execute a search warrant in take your property, whether it\u0027s your take your property, whether it\u0027s your computer or cell phone or take your property, whether it\u0027s your computer or cell phone or anything else, take your property, whether it\u0027s your computer or cell phone or anything else, take your property, whether it\u0027s your computer or cell phone or anything else, They leave you, first of all, a they leave you, first of all, a detailed they leave you, first of all, a detailed inventory. And when they And when they no longer need the And when they no longer need the materials, there\u0027s And when they no longer need the materials, they\u0027re supposed to return very return them to you or provide you with verified copy return them to you or provide you with verified copies. Now return them to you or provide you with verified copies. Now Todd Blan, Now Todd Blanche, the number two Now Todd Blanche, the number two justice department Now Todd Blanche, the number two justice department official who was Now Todd Blanche, the number two justice department official who was Donald Trump\u0027s criminal lawyer Now Todd Blanche, the number two justice department official who was Donald Trump\u0027s criminal lawyer at the case where he was Now Todd Blanche, the number two justice department official who was Donald Trump\u0027s criminal lawyer at the case where he was convicted of 34 felonies. Todd Boehm convicted of 34 felonies. Todd Blanche, convicted of 34 felonies. Todd convicted of 34 felonies. Todd Blanche has indicated that they haven\u0027t released the chair convicted of 34 felonies. Todd Blanche has indicated that they haven\u0027t released material they regard as convicted of 34 felonies. Todd Blanche has indicated that they haven\u0027t released material they regard as child pornography, the mere child pornography, the mere possession of which is a crime. child pornography, the mere possession of which is a crime. child pornography, the mere possession of which is a crime. Just looking at it as a crime. Now Well, when I describe Well, what I described as the evidence Well, what I described as the evidence that would Well, what I described as the evidence that would I believe, lead to people I believe, lead to people pushing Donald Trump out of I believe, lead to people pushing Donald Trump out of office I believe, lead to people pushing Donald Trump out of office is by definition child porn is by definition child pornography. So they\u0027ve basic is by definition child pornography. So they\u0027ve basically signaled that is by definition child pornography. So they base basically signaled that if we have pictures like this basically signaled that if we have pictures like this or video of basically signaled that if we have pictures like this or video of Donald Trump, not gonna let you see not gonna let you see them because they would be not gonna let you see them because they would be pornographic by nature because they involve not gonna let you see them because they would be pornographic by nature because they involve not gonna let you see them because they would be pornographic by nature because they involve a serious a serious, offense against a serious, offense against a child, sex a serious, offense against a child, sex offense against a child. child. But the child. But the estate should have child. But the estate should have copies of all of these. child. But the estate should have copies of all of these. And I suspect if the Democrats copies of all of these. And I suspect if the Democrats gain control of the house, copies of all of these. And I suspect if the Democrats gain control of the house, that in 2027, they\u0027re going that in 2027, they\u0027re going to subpoena that in 2027, they\u0027re going to subpoena the estate that in 2027, they\u0027re going to subpoena the estate that in 2027, they\u0027re going to subpoena the estate for the records. And for the records. And then we would have a much for the records. And then we would have a much better chance of finding out, is there photographic chance of finding out, is there photographic evidence? The chance of finding out, is there photographic evidence that Donald Trump is a repeat child child rapist? Or in fact, is he being wrong child rapist? Or in fact, is he being wrongly accused of child rapist? Or in fact, is he being wrongly accused and mistreated? And if he\u0027s being And if he\u0027s being wrongly accused, the And if he\u0027s being wrongly accused, the obvious question to ask is, And if he\u0027s being wrongly accused, the obvious question to ask is why are you not releasing all And if he\u0027s being wrongly accused, the obvious question to ask is why are you not releasing all the files if you have no risk here? the files if you have no risk here? the files if you have no risk here? So the these the files if you have no risk here? So the these files being made public professor, it just professor, it just shows how high the professor, it just shows how high the stakes are now for professor, it just shows how high the stakes are now for the midterm elections. professor, it just shows how high the stakes are now for the midterm elections. Yes. I and I Yes. I and I I think you can Yes. I and I I think you combine that with Yes. I and I I think you combine that with what\u0027s happening in the Yes. I and I I think you combine that with what\u0027s happened in the American economy, things are going badly in the American economy, things are going badly compared to, the in the American economy, things are going badly compared to, the Biden administration. in the American economy, things are going badly compared to, the Biden administration. in the American economy, things are going badly compared to, the Biden administration. Come, compare it add to it Come, compare it add to it the rates Come, compare it add to it the, raids in Minnesota Come, compare it add to it the, raids Come, compare it add to it the, raids in Minnesota and elsewhere, in Minnesota and elsewhere, by the in Minnesota and elsewhere, by these masks in Minnesota and elsewhere, by these masks agents with no badges on agents with no badges on who, you know, are seeing agents with no badges on who, you know, are seen in numerous video agents with no badges on who, you know, are seen in numerous video tapes agents with no badges on who, you know, are seen in numerous video tapes saying things like, if you speak to me just saying things like, if you speak to me disrespectfully, I\u0027m going to saying things like, if you speak to me disrespectfully, I\u0027m going to erase you. saying things like, if you speak to me disrespectfully, I\u0027m going to erase you. And I I\u0027m an American And I\u0027m an American citizen. We don\u0027t And I\u0027m an American citizen. We don\u0027t care, and they throw you And I\u0027m an American citizen. We don\u0027t care, and they throw you in the back of a car. They care, and they throw you in the back of a car. That is hurting Trump care, and they throw you in the back of a car. That is hurting very badly. He\u0027s down to a very badly. He\u0027s down to roughly very badly. He\u0027s down to, roughly a one third very badly. He\u0027s down to, roughly a one third approval rating. That\u0027s a big That\u0027s a big drop from his That\u0027s a big drop from his election where he got That\u0027s a big drop from his elect where he got 49% of the vote where he got 49% of the vote, just under half. Professor, do you think the DOJ did Professor, do you think the DOJ did enough to protect the Professor, do you think the DOJ did enough to protect the the Epstein Vic because I wanna read because I wanna read out this joint bank because I wanna read out this joint statement where they condemned because I wanna read out this joint statement where they condemned the incomplete because I wanna read out this joint statement where they condemned the incomplete Epstein file release. So Epstein file release. So they said that the Epstein file release. So they said that the files being Epstein file release. So they said that the files being released were Epstein file release. So they said that the files being released were sold as transparency, but what it actually sold as transparency, but what it actually does is expose sold as transparency, but what it actually does is expose survivors. Once again, survivor Once again, survivors are having their name. Once again, survivors are having their names and identifying Once again, survivors are having their names and identifying information exposed Once again, survivors are having their names and identifying information exposed Once again, survivors are having their names and identifying information exposed while the men who abused us remain hidden and protected. That is while the men who abused us remain hidden and protected. That is outrageous as while the men who abused us remain hidden and protected. That is outrageous. As survivors, we while the men who abused us remain hidden and protected. That is outrageous. As survivors, we should never be the ones named scrutinized should never be the ones named scrutinized. Reach should never be the ones named, scrutinized, retraumatized while Epstein should never be the ones named, scrutinized, retraumatized while at enablers continue to benefit from secrecy, enables continue to benefit from secrecy. This is a betrayal enablers continue to benefit from secrecy. This is a betrayal of the very people that the enablers continue to benefit from secrecy. This is a betrayal of the very people that the process is so supposed to serve. supposed to serve. Well, Well, Well, I I Well, I I agree. I don\u0027t see an Well, I I agree. I don\u0027t see any reason to release an see any reason to release and unredact the see any reason to release and unredact the names of see any reason to release and unredact the names of the now grown women, but the now grown women, but who were thirteen the now grown women, but who were 13, 14 year old the now grown women, but who were 13, 14 year old girls at the time. But there But they\u0027re also clearly holding But they\u0027re also clearly holding back the names of But they\u0027re also clearly holding back the names of Trump\u0027s friends But they\u0027re also clearly holding back the names of Tom\u0027s friends But they\u0027re also clearly holding back the names of Tom\u0027s friends And Trump has publicly said, well, I\u0027m concerned And Trump has publicly said, well, I\u0027m concerned here that my friend And Trump has publicly said, well, I\u0027m concerned here that my friends will be hurt And Trump has publicly said, well, I\u0027m concerned here that my friends will be hurt And Trump has publicly said, well, I\u0027m concerned here that my friends will be hurt The law is very specific. They are not The law is very specific. They are not to protect The law is very specific. They are not to protect reputations The law is very specific. They are not to protect reputations in making redactions redaction decisions. redaction decisions. Significant redaction decisions. Significantly, the new redaction decisions. Significantly, the new document dump includes document dump includes document dump includes, Howard Lutnick document dump includes, Howard Lutnick Trump\u0027s document dump includes, Howard Lutnick Trump\u0027s commerce secretary who document dump includes, Howard Lutnick Trump\u0027s commerce secretary who owned the document dump includes, Howard Lutnick Trump\u0027s commerce secretary who owned the townhouse next document dump includes, Howard Lutnick Trump\u0027s commerce secretary who owned the townhouse next door to Jeffrey document dump includes, Howard Lutnick Trump\u0027s commerce secretary who owned the townhouse next door to Jeffrey document dump includes, Howard Lutnick Trump\u0027s commerce secretary who owned the townhouse next door to Jeffrey document dump includes, Howard Lutnick Trump\u0027s commerce secretary who owned the townhouse next door to Jeffrey document dump includes, Howard Lutnick Trump\u0027s commerce secretary who owned the townhouse next door to Jeffrey Manhattan, Manhattan. And Manhattan and who has said that Manhattan and who has said that Epstein was running Manhattan and who has said that Epstein was running an extortion racket, by getting comp racket, by getting compromising photos racket, by getting compromising photos of men with racket, by getting compromising photos of men with underage girls. I mean, say this fully of men with underage girls. I mean, say this fully as I did, but it\u0027s very of men with underage girls. I mean, say this fully as I did, but it\u0027s very clear from his remark of men with underage girls. I mean, say this fully as I did, but it\u0027s very clear from his remark That\u0027s what he\u0027s saying. Turns out, That\u0027s what he\u0027s saying. Turns out he\u0027s in the files. That\u0027s what he\u0027s saying. Turns out he\u0027s in the files. That\u0027s what he\u0027s saying. Turns out he\u0027s in the files. A lot of other A lot of other people are in the file. A lot of other people are in the files. A lot of other people are in the files. Nothing A lot of other people are in the files. Nothing about it suggests Nothing about it suggests Lutnick did anything Nothing about it suggests Lutnick did anything improper. We\u0027d be very clear about that. But We\u0027d be very clear about that. But it the way We\u0027d be very clear about that. But it the way they have redacted these files, I think, does the way they have redacted these files, I think, does leave the justice the way they have redacted these files, I think, does leave the justice Department open the way they have redacted these files, I think, does leave the justice department open to accusations the way they have redacted these files, I think, does leave the justice department open to accusations of partisan the way they have redacted these files, I think, does leave the justice department open to accusations of partisanship. the way they have redacted these files, I think, does leave the justice department open to accusations of partisanship. And And putting And putting Lutnick\u0027s name out there And putting Lutnick\u0027s name out there would be one of the few places they\u0027d say, no. No. There\u0027s no would be one of the few places they\u0027d say, no. No. There\u0027s no partisanship. Look. We would be one of the few places they\u0027d say, no. No. There\u0027s no partisanship. Look. We put Lutnick\u0027s name in there. But a lot of their But a lot of the redactions appear to But a lot of the redactions appear to be politically But a lot of the redactions appear to be politically motivated. But a lot of the redactions appear to be politically motivated. We\u0027re not gonna be able to find out about that We\u0027re not gonna be able to find out about that unless the two We\u0027re not gonna be able to find out about that unless the two congressmen, the one We\u0027re not gonna be able to find out about that unless the two congressmen, the one Republican, one Democrat, We\u0027re not gonna be able to find out about that unless the two congressmen, the one Republican, one Democrat who are behind the We\u0027re not gonna be able to find out about that unless the two congressmen, the one Republican, one Democrat who are behind the Epstein Disclosure We\u0027re not gonna be able to find out about that unless the two congressmen, the one republican, one democrat who are behind the Epstein Disclosure Act We\u0027re not gonna be able to find out about that unless the two congressmen, the one republican, one democrat who are behind the Epstein Disclosure Act are successful in court and able are successful in court and able to get behind are successful in court and able to get behind those redactions. And by the way, are successful in court and able to get behind those redactions. And by the way, what reason is there to not let what reason is there to not let congress in close what reason is there to not let congress in closed door meetings what reason is there to not let congress in closed door meetings what reason is there to not let congress in closed door meetings see all of the files see all of the files completely unredacted see all of the files completely unredacted? I can predict see all of the files completely unredacted? I can predict to you what the Trump administration would I can predict to you what the Trump administration would say. Well, we can\u0027t show you I can predict to you what the Trump administration would say. Well, we can\u0027t show you any of the child pornography. I can predict to you what the Trump administration would say. Well, we can\u0027t show you any of the child pornography. You can\u0027t You can\u0027t see that. Even though you Even though you couldn\u0027t prosecute for Even though you couldn\u0027t prosecute for that crime, if you Even though you couldn\u0027t prosecute for that crime, if you were a prosecutor, Even though you couldn\u0027t prosecute for that crime if you were a prosecutor without seeing it. I mean, it\u0027s it\u0027s a It\u0027s it\u0027s a catch 22. I mean, it\u0027s it\u0027s a catch 22. Just a final I mean, it\u0027s it\u0027s a catch 22. Just a final question. How do you I mean, it\u0027s it\u0027s a catch 22. Just a final question. How do you think Trump and his White House will How do you think Trump and his White House will respond to this Question. How do you think Trump and his White House will respond to this going forward? We seen that when Trump is seen that when Trump is really in hot water, seen that when Trump is really in hot water, he throws out some seen that when Trump is really in hot water, he throws out something else as a seen that when Trump is really in hot water, he throws out something else as a distract seen that when Trump is really in hot water, he throws out something else as a distract So I wonder if you think that he So I wonder if you think that he might strike Iran. So I wonder if you think that he might strike Iran or, you So I wonder if you think that he might strike Iran or, you know, provide more aid to So I wonder if you think that he might strike Iran or, you know, provide more aid to Ukraine out of no So I wonder if you think that he might strike Iran or, you know, provide more aid to Ukraine out of nowhere just to kind of So I wonder if you think that he might strike Iran or, you know, provide more aid to Ukraine out of nowhere just So I wonder if you think that he might strike Iran or, you know, provide more aid to Ukraine out of nowhere just to kind of get the heat off him. Yeah. Don\u0027t don\u0027t Yeah. Donald, when Yeah. Donald, when cornered, is Yeah. Donald, when cornered, is very feral, and he Yeah. Donald, when cornered, is very feral, and he\u0027s in Yeah. Donald, when cornered, is very feral, and he\u0027s in feral mode mode right now. feral mode mode right now, mostly because feral mode mode right now, mostly because of the killing of the two citizens killing of the two citizens in Minneapolis. So killing of the two citizens in Minneapolis. There have been three murders this killing of the two citizens in Minneapolis. There have been three murders this year in Minneapolis two of them by killing of the two citizens in Minneapolis. There have been three murders this year in Minneapolis two of them by Donald Trump\u0027s killing of the two citizens in Minneapolis. There have been three murders this year in Minneapolis two of them by Donald Trump\u0027s ice squads. killing of the two citizens in Minneapolis. There have been three murders this year in Minneapolis two of them by Donald Trump\u0027s ice squads. In killing of the two citizens in Minneapolis. There have been three murders this year in Minneapolis two of them by Donald Trump\u0027s ICE squads. He will do anything that will get people He will do anything that will get people off of this. So He will do anything that will get people off of this. So his threat He will do anything that will get people off of this. So his threats to invade Cuba, So his threats to invade Cuba, to So his threats to invade Cuba, to So his threats to invade Cuba, to engage in some kind of military serious engage in some kind of military serious military action against engage in some kind of military serious military action against Iran, which has a engage in some kind of military serious military action against Iran, which has a million soldiers. engage in some kind of military serious military action against Iran, which has a million soldiers, engage in some kind of military serious military action against Iran, which has a million soldiers, seizing green engage in some kind of military serious military action against Iran, which has a million soldiers, seizing Greenland, all sorts engage in some kind of military serious military action against Iran, which has a million soldiers, seizing Greenland, all sorts engage in some kind of military serious military action against Iran, which has a million soldiers, seizing Greenland, all sorts of things he\u0027s going to do to try and divert of things he\u0027s going to do to try and divert attention away of things he\u0027s going to do to try and divert attention away, because one of the things Donald of things he\u0027s going to do to try and divert attention away, because one of the things Donald understands is news news tends to focus on news tends to focus on a few things news tends to focus on a few things at a time. news tends to focus on a few things at a time. news tends to focus on a few things at a time. You can\u0027t follow all of this, and You can\u0027t follow all of this. And so here You can\u0027t follow all of this. And so he his interest will You can\u0027t follow all of this. And so he his interest will be in marginal little his interest will be in marginal little references to the his interest will be in marginal little references to the Epstein files and then doing something and then doing something big to have everybody and then doing something big to have everybody concentrate on it and then doing something big to have everybody concentrate on it, and then doing something big to have everybody concentrate on it and ignore the other things that are going and ignore the other things that are going on. So we\u0027re gonna see and ignore the other things that are going on. So we\u0027re gonna see more distractions and ignore the other things that are going on. So we\u0027re gonna see more distractions more of his bellicosity more of his bellicosity even though he ran for more of his bellicosity even though he ran for office saying no more more of his bellicosity even though he ran for office saying no more foreign wars, more of his bellicosity even though he ran for office saying no more foreign wars, but he\u0027s proposing all over the place but he\u0027s proposing all over the place invasions and but he\u0027s proposing all over the place invasions and seizures and but he\u0027s proposing all over the place invasions and seizures and taking over other taking over other people, other taking over other people, other nations, some taking over other people, other nations, sovereignty. The We\u0027re gonna be following this story for the next And we\u0027re gonna be following this story for the next, week on The Trump And we\u0027re gonna be following this story for the next, week on the Trump report. There\u0027s obviously And we\u0027re gonna be following this story for the next, week on the Trump report. There\u0027s obviously so much And we\u0027re gonna be following this story for the next, week on the Trump report. There\u0027s obviously so much that\u0027s gonna come out of this, as we mentioned, three that\u0027s gonna come out of this. As we mentioned, three and a half million that\u0027s gonna come out of this. As we mentioned, three and a half that\u0027s gonna come out of this. As we mentioned, three and a half million documents in this drop. that\u0027s gonna come out of this. As we mentioned, three and a half million documents in this drop. Potentially more that\u0027s gonna come out of this. As we mentioned, three and a half million documents in this drop, potentially more. I would imagine not from potentially more. I would imagine not from what you\u0027re you and I potentially more. I would imagine not from your you and I\u0027s conversation. But to kick off to kick off this, to kick off this, analyst of what to kick off this, analyst of what\u0027s happened, to kick off this, analyst of what\u0027s happened, professor David k Johnson, thank you to kick off this, analyst of what\u0027s happened, professor David k Johnson, thank you so much for joining the Trump report. Thank you, Maddie. Thank you, Maddie. Thank you, Maddie. Thank you, Maddie. Thank you, Maddie. Lord Peterman Lord Peter Lord Peter Mandelsohn has resigned from the Labour Party. Lord Peter Mandelsohn has resigned from the Labour Party. Lord Peter Mandelsohn has resigned from the Labour Party. He says he wants to avoid causing further He says he wants to avoid causing further embarrassment He says he wants to avoid causing further embarrassment after He says he wants to avoid causing further embarrassment after documents appear after documents appeared to show that he after documents appeared to show that he received after documents appeared to show that he received after documents appeared to show that he received $75,000 from the convicted PTO $75,000 from the convicted $75,000 from the convicted pedophile Jeffrey app Epstein, and those were the documents which were $75,000 from the convicted pedophile Jeffrey app Epstein, and those were the documents which were published over the $75,000 from the convicted pedophile Jeffrey app Epstein, and those were the documents which were published over the weekend. $75,000 from the convicted pedophile Jeffrey app Epstein, and those were the documents which were published over the weekend. Lord Mandelson maintains he has no record Lord Mandelson maintains he has no record or recollection of Lord Mandelson maintains he has no record or recollection of those transactions. Lord Mandelson maintains he has no record or recollection of those transactions. But faced court But faced calls for him to be But faced calls for him to be suspended. And But faced calls for him to be suspended, and there\u0027s growing pressure on But faced calls for him to be suspended, and there\u0027s growing on Andrew Mountbatten with the two this morning pressure on Andrew Mountbatten wins the two this morning after new on Andrew Mountbatten with the two this morning after new photographs show the four pressure on Andrew Mountbatten Windsor two this morning after new photographs show the former Duke crouched over pressure on Andrew Mountbatten Windsor two this morning after new photographs show the former Duke crouched over an unnamed woman. pressure on Andrew Mountbatten Windsor two this morning after new photographs show the former Duke crouched over an unnamed woman. And they were pressure on Andrew Mountbatten Windsor two this morning after new photographs show the former Duke crouched over an unnamed woman, and they were made public at the pressure on Andrew Mountbatten Windsor two this morning after new photographs show the former Duke crouched over an unnamed woman, and they were made public at the the weekend. In a moment, we\u0027ll speak to our at the the weekend. In a moment, we\u0027ll speak to our senior correspondent, Johnson at the mid at the weekend. At the moment, we\u0027ll speak to our senior correspondent, Johnson Swain. at the mid at the weekend. At the moment, we\u0027ll speak to our senior correspondent, Johnson Swain. Who is in Windsor. But first, let\u0027s go Who is in Windsor. But first, let\u0027s go to our Who is in Windsor. But first, let\u0027s go to our political correspondent, Louis Who is in Windsor. But first, let\u0027s go to our Who is in Windsor. But first, let\u0027s go to our political correspondent, Louisa James in political correspondent, Louisa James in Westminster. Louisa, political correspondent, Louisa James in Westminster. Louisa, A whole raft of new A whole raft of new documents. Once again, A whole raft of new documents. Once again, Peter Madlissen has resigned. My A whole raft of new documents. Once again, Peter Manlinson has resigned. Might have to say, the A whole raft of new documents. Once again, Peter Madlissen has resigned, might have to say, for the first time. A whole raft of new documents. Once again, Peter Manlinson has resigned. Might have to say for the first time, but A whole raft of new documents. Once again, Peter Manlinson has resigned. Might have to say for the first time, but maybe for the last time. maybe for the last time? maybe for the last time? Yeah. I mean, you\u0027re right. maybe for the last time? Yeah. You\u0027re right. This is a man who has come back again in You\u0027re right. This is a man who has come back again and again. And, you know, You\u0027re right. This is a man who has come back again and again. And I make it that this is the fourth time that he\u0027s either resigned I make it that this is the fourth time that he\u0027s either resigned or been sacked. But I make it that this is the fourth time that he\u0027s either resigned or been sacked. But it does appear to be it does appear to be finally the end it does appear to be finally the end of a very long it does appear to be finally the end of a very long political career for lord madder long political career for lord Maydle\u0027s and even longer long political career for lord Maydle\u0027s and even longer association with the Labour Party, a party that he association with the Labour Party, a party that he loves. And what is it that appears to have done it this time well And what is it that appears to have done it this time well in this latest And what is it that appears to have done it this time well in this late And what is it that appears to have done it this time well in this late release of files relating to Jeff release of files relating to Jeffrey Epstein, there is this release of files relating to Jeffrey Epstein, there is this photograph of Peter Mandelson standing in a photograph of Peter Mandelson standing in a a T shirt photograph of Peter Mandelson standing in a a T shirt photograph of Peter Mandelson standing in a a T shirt and his underwear. There are, allegations or and his underwear. There are, allegations or suggestions that he and his underwear. There are, allegations or suggestions that he and his underwear. There are, allegations or suggestions that he received received \u00A375,000 from Jeffrey Epstein. There received \u00A375,000 from Jeffrey Epstein. There are also received \u00A375,000 from Jeffrey Epstein. There are also emails which appear to show emails which appear to show, that emails which appear to show, that he told emails which appear to show, that he told Epstein he would lobby ministers told Epstein he would lobby ministers at the time about attacks told Epstein he would lobby ministers at the time about attacks on bankers\u0027 bonuses. So on banker\u0027s bonuses. So at the end, Hey. Hey. I\u0027m right here. Hey. I\u0027m right here, loud and clear. Hey. I\u0027m right here. Loud and clear. If you\u0027ve got more on your mind or just wanna Loud and clear. If you\u0027ve got more on your mind or just wanna keep the momentum, Loud and clear. If you\u0027ve got more on your mind or just wanna keep the momentum, fire away. I\u0027d love to keep I\u0027d love to keep going, but thirty I\u0027d love to keep going, but 30 more q and a in a single breath would be but 30 more q and a in a single breath would be like drinking from All good. All good. I\u0027m right here whenever All good. I\u0027m right here whenever you need more whether it I\u0027m not going anywhere. I\u0027m not going anywhere. If you wanna shift I\u0027m not going anywhere. If you wanna shift gears or keep exploring, whatever whatever direction you wanna go, whatever direction you wanna go, I\u0027m here for it. whatever direction you wanna go, I\u0027m here for it. If you\u0027re ready to dive into something else or just If you\u0027re ready to dive into something else or just bask in the victory If you\u0027re ready to dive into something else or just bask in the victory of tough questions answered, I\u0027m all ears. You\u0027ve got at Absolutely. We\u0027re Absolutely. Whether we\u0027re tackling c Absolutely. Whether we\u0027re tackling c sharp puzzles or Absolutely. Whether we\u0027re tackling c sharp puzzles or any other topic, I\u0027m ready when you are. puzzles or any other topic, I\u0027m ready when you are. Let\u0027s keep the curiosity puzzles or any other topic, I\u0027m ready when you are. Let\u0027s keep the curiosity flowing. Alright. Alright. Let\u0027s dive in. Alright. Let\u0027s dive in. I\u0027ll give you a mix Alright. Let\u0027s dive in. I\u0027ll give you a mix of c sharp dot net Alright. Let\u0027s dive in. I\u0027ll give you a mix csharp.net brain teasers and insightful answers. csharp.net brainteasers and insightful answers. Buckle up. No worries. No worries. I\u0027ll hold off until you No worries. I\u0027ll hold off until you\u0027re ready. Whenever you Perfect. Let\u0027s Perfect. Let\u0027s roll. I\u0027ll ask Perfect. Let\u0027s roll. I\u0027ll ask each question and answer right after so you I\u0027ll ask each question and answer right after so you can follow along. What is the purpose What is the purpose of Span of Tea? What is the purpose of span of tea? It provides a type It provides a type safe, memory safe It provides a type safe, memory safe view over contiguity It provides a type safe, memory safe view over contiguous memory, It provides a type safe, memory safe view over contiguous memory, like arrays or native buffers without copying. like arrays or native buffers without copying. How do you How do you create a custom attribute How do you create a custom attribute in C Sharp? In Define a class inheriting from attribute You define a class inheriting from attribute and then decorate code elements You define a class inheriting from attribute and then decorate code elements with it. What\u0027s the difference What\u0027s the difference between a struct and a What\u0027s the difference between a struct and a class? Struct is a value A struct is a value type stored on the stack A struct is a value type stored on the stack, while a class is a reference A struct is a value type stored on the stack, while a class is a reference type stored on the heap. Explain Explain async await. Lets you write async Lets you write asynchronous code in a synchronous Lets you write asynchronous code in a synchronous style, but Lets you write asynchronous code in a synchronous style, pausing and await until Lets you write asynchronous code in a synchronous style, pausing it away until a task Lets you write asynchronous code in a synchronous style, pausing it away until a task completes without blocking threads. What\u0027s a record What\u0027s a record in C sharp? A record is a A record is a reference type A record is a reference type primarily used for A record is a reference type primarily used for immutable data models A record is a reference type primarily used for immutable data models providing built in value based equality. What does lock What does lock do in c sharp? It ensures that It ensures that only one thread can It ensures that only one thread can enter a critical section It ensures that only one thread can enter a critical section of code at a time. What is dependent What is dependency injection? That It\u0027s a design pattern where dependencies are It\u0027s a design pattern where dependencies are provided from outside It\u0027s a design pattern where dependencies are provided from outside a class, improve It\u0027s a design pattern where dependencies are provided from outside a class improving testability and decoupling. What\u0027s the difference What\u0027s the difference between What\u0027s the difference between I enumerable and Iquarable? I enumerable I enumerable works in memory. I I enumerable works in memory. Iquerable builds I enumerable works in memory. Iquerable builds expressions for out of memory IEnumerable works in memory. IQuarable builds expressions for out of memory queries, IEnumerable works in memory. IQuarable builds expressions for out of memory queries, e. G. Linked to SQL. What is a tab What is a task in dot net? It represents an It represents an asynchronous operation It represents an asynchronous operation often returning a It represents an asynchronous operation often returning a result used in the TPL. How does GAR How does garbage collection work? It reclaims memory It reclaims memory from objects no It reclaims memory from objects no longer referenced, It reclaims memory from objects no longer referenced using generations It reclaims memory from objects no longer referenced using generation stopped It reclaims memory from objects no longer referenced using generation stopped collection frequency. What\u0027s a deadlock What\u0027s a deadlock in multithreading? It occurs when two It occurs when two or more threads are It occurs when two or more threads are stuck waiting for each other\u0027s It occurs when two or more threads are stuck waiting for each other\u0027s locked resources causing a permanent stall. What is a memory What is a memory leak in dot net? It happens when It happens when references to unused It happens when references to unused objects persist, per It happens when references to unused objects persist, preventing garbage collection. It happens when references to unused objects persist, preventing garbage collection. 13, 13, what\u0027s an extension method? It\u0027s a static method It\u0027s a static method that adds functionality It\u0027s a static method that adds functionality to existing types It\u0027s a static method that adds functionality to existing types called as if it were an It\u0027s a static method that adds functionality to existing types called as if it were an instance method. How do you How do you implement iComparable? How do you implement iComparable? You implement compare You implement compareToT, allow You implement compareToT allowing objects to be sorted. 15. 15, what is a sealed class? 15. What is a sealed class? It 15. What is a sealed class? It cannot be inherited 15. What is a sealed class? It cannot be inherited preventing further subclassing. And that\u0027s 15. Me know if you wanna unpack Me know if you wanna unpack any of those further. Got it. If you Got it. If you want them in a specific nowhere no worries. I\u0027ll keep things no worries. I\u0027ll keep things concise and direct. no worries. I\u0027ll keep things concise and direct. If you want any particular structure or focus for next time, If you want any particular structure or focus for next time, just let me know. If you want any particular structure or focus for next time, just let me know. I\u0027m always ready to tailor it your way. I see. I see. You want the question I see. You want the questions to flow naturally I see. You want the questions to flow naturally from the previous answers I see. You want the questions to flow naturally from the I see. You want the questions to flow naturally from the previous answers like a continuous conversation. Next time we dive in, previous answers like a continuous conversation. Next time we dive in, I\u0027ll make sure each question built off the last thought. I\u0027ll make sure each question builds off the last thought. Keep it dynamic. Keep it dynamic. Exactly. Exactly. I\u0027ll set up a scenario Exactly. I\u0027ll set up a scenario or premise first and then ask a question I\u0027ll set up a scenario or premise first, and then ask a question that naturally follow. I\u0027ll set up a scenario or premise first, and then ask a question that naturally follows. You\u0027re ready to jump You\u0027re ready to jump back in, we\u0027ll roll with that style. Ever you\u0027re ready to jump back in, we\u0027ll roll with that style. I have some Absolutely. Whether Absolutely. Whether it\u0027s tricky tech or Absolutely. Whether it\u0027s tricky tech or something totally random, Absolutely. Whether it\u0027s tricky tech or something totally random, I\u0027m here for it. Just let it. Just let me know what else you\u0027re in the mood it. Just let me know what else you\u0027re in the mood for, and we\u0027ll keep the it. Just let me know what else you\u0027re in the mood for, and we\u0027ll keep the momentum rolling. You got it. You got it. Paint me a picture. You got it. Paint me a picture. What kind of scenario You got it. Paint me a picture. What kind of scenario are we talking? You want something purely What kind of scenario are we talking? You want something purely technical, totally What kind of scenario are we talking? You want something purely technical? Totally off the wall, or maybe a blend of real Totally off the wall, or maybe a blend of real world chaos with Totally off the wall, or maybe a blend of real world chaos with c sharp flare? Totally off the wall, or maybe a blend of real world chaos with c sharp flare? Our Alright. Let\u0027s imagine Alright. Let\u0027s imagine you\u0027re building a real Alright. Let\u0027s imagine you\u0027re building a real time Alright. Let\u0027s imagine you\u0027re building a real time multiplayer game server in c multiplayer game server in c sharp. Players are connecting, Players are connecting, actions must be Players are connecting, actions must be synchronized, and you\u0027ve Players are connecting, actions must be synchronized, and you\u0027ve got to handle thousands Players are connecting, actions must be synchronized, and you\u0027ve gotta handle thousands of concurrent users with minimal latency. thousands of concurrent users with minimal latency. What\u0027s your approach What\u0027s your approach for efficient networking? What\u0027s your approach for efficient networking? How would you design How would you design state synchronization How would you design state synchronization? And how do you keep the server How would you design state synchronization? And how do you keep the server scalable when sudden spikes of players log in? Boom. Scenario Boom. Scenario set? Go. I I love it. No more I love it. No more I love it. No more scenarios. Straight to the point. If you\u0027ve got more questions, you\u0027ve got it. Picture this, you\u0027re Picture this, you\u0027re working on a financial Picture this. You\u0027re working on a financial trading platform in c sharp. Needs to process Needs to process thousands of trades per Needs to process thousands of trades per second and share transactional Needs to process thousands of trades per second, ensure transactional integrity, Needs to process thousands of trades per second, ensure transactional integrity, and handle real time data feeds without and handle real time data feeds without missing a beat. What\u0027s your strategy What\u0027s your strategy for keeping data What\u0027s your strategy for keeping data consistent across multiple What\u0027s your strategy for keeping data consistent across multiple services? Would you approach fault Would you approach fault tolerance and recovery Would you approach fault tolerance and recovery if a critical component Would you approach fault tolerance and recovery if a critical component fails mid trade? And just for fun, how And just for fun, how do you prevent race And just for fun, how do you prevent race conditions in that scenario? And just for fun, how do you prevent race conditions in that scenario? Alright. Alright. Let\u0027s dig in. Alright. Let\u0027s dig in. Alright. Let\u0027s dig in. First, for data consistency, you\u0027d probably First, for data consistency, you\u0027d probably go for a distributed First, for data consistency, you\u0027d probably go for a distributed transaction strategy First, for data consistency, you\u0027d probably go for a distributed transaction strategy or something like event sourcing. Fault tolerance? Fault tolerance? Fault tolerance? Redundancy with Fault tolerance? Redundancy with replication and a robust Fault tolerance? Redundancy with replication and a robust message queue Fault tolerance? Redundancy with replication and a robust message queue could handle failures. And race conditions? And race conditions? Locking critical sections And race conditions? Locking critical sections or using concurrent And race conditions? Locking critical sections or using concurrent collections would save the day. And race conditions? Locking critical sections or using concurrent collections would save the day. Feel free to poke holes Feel free to poke holes or add layers. You got You got it. Let\u0027s keep the scenario You got it. Let\u0027s keep the scenarios flowing. You got it. Let\u0027s keep the scenarios flowing. You\u0027re designing a cloud agnostic You\u0027re designing a cloud agnostic microservices arch You\u0027re designing a cloud agnostic microservices architecture in dot net. You\u0027re designing a cloud agnostic microservices architecture in dot net. Do you handle service Do you handle service discovery and inter Do you handle service discovery and inter service communication Do you handle service discovery and inter service communication across clouds? You need to implement You need to implement a custom dot You need to implement a custom dot net middleware that in You need to implement a custom dot net middleware that inspects requests sent You need to implement a custom dot net middleware that inspects requests and throttles based on user quotas. How do and throttles based on user quotas. How do you design it? Imagine you Imagine you have a large scale Imagine you have a large scale IoT system built Imagine you have a large scale IoT system built with dot net. What\u0027s your approach to What\u0027s your approach to managing millions What\u0027s your approach to managing millions of device connections in What\u0027s your approach to managing millions of device connections in real time? Your task You\u0027re tasked with optimizing a dot You\u0027re tasked with optimizing a dot net app for ult You\u0027re tasked with optimizing a dot net app for ultra low latency in You\u0027re tasked with optimizing a dot net app for all You\u0027re tasked with optimizing a dot net app for all ultra low latency in financial transactions. What profiling tools ultra low latency and financial transactions. What profiling tools and strategies do you use? You\u0027re building a multi You\u0027re building a multi tenant SaaS platform You\u0027re building a multi tenant SaaS platform in ASP dot NET You\u0027re building a multi tenant SaaS platform in ASP dot NET Core. Do you isolate tenant Do you isolate tenant data and ensure Do you isolate tenant data and ensure security between tenants? Do you isolate tenant data and ensure security between tenants? You\u0027re asked to You\u0027re asked to design a plugin You\u0027re asked to design a plugin system for a dot net You\u0027re asked to design a plugin system for a dot net desktop app. You\u0027re asked to design a plugin system for a dot net desktop app. How do you load and isolate third party plug How do you load and isolate third party plugins at runtime? You need to You need to refactor a legacy You need to refactor a legacy monolith to microservice You need to refactor a legacy monolith to microservices in dot net. What\u0027s You need to refactor a legacy monolith to microservices in dot net what\u0027s your step by step plan to break it down? Your architecture You\u0027re architecting a real time You\u0027re architecting a real time chat app using You\u0027re architecting a real time chat app using SignalR. Do you ensure scale Do you ensure scalability under sudden Do you ensure scalability under sudden spikes in users? You\u0027re responsible You\u0027re responsible for securing a dot You\u0027re responsible for securing a dot net API. How You\u0027re responsible for securing a dot net API. How do you handle authentication, authorization, and data How do you handle authentication, authorization, and data encryption end to end? How do you handle authentication, authorization, and data encryption end to end? Finally, Finally, you\u0027re designing a game Finally, you\u0027re designing a game engine in dot net. Finally, you\u0027re designing a game engine in dot net. How do you manage complex game loops and ensure smooth read How do you manage complex game loops and ensure smooth rendering while keeping How do you manage complex game loops and ensure smooth rendering while keeping logic organized? There you go. There you go. 10 more scenarios There you go. 10 more scenarios ready to tackle. There you go. 10 more scenarios ready to tackle."
+}

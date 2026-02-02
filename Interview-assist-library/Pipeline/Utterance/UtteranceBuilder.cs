@@ -86,10 +86,11 @@ public sealed class UtteranceBuilder : IUtteranceBuilder
             return;
         }
 
-        // Terminal punctuation + pause
-        if (_current.HasTerminalPunctuation)
+        // Terminal punctuation + pause (check both flag and value due to potential race condition)
+        var punctuationTime = _current.TerminalPunctuationTime;
+        if (_current.HasTerminalPunctuation && punctuationTime.HasValue)
         {
-            var pauseSincePunctuation = now - _current.TerminalPunctuationTime!.Value;
+            var pauseSincePunctuation = now - punctuationTime.Value;
             if (pauseSincePunctuation > _options.PunctuationPauseThreshold)
             {
                 CloseUtterance(UtteranceCloseReason.TerminalPunctuation);

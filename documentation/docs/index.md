@@ -17,6 +17,9 @@
 - [Configuration](operations/appsettings.md)
 - [Rate Limiting](operations/RATE_LIMITING.md)
 
+## Instructions
+- [Evaluation & Testing](instructions/EvaluationInstructions.md)
+
 ## Development
 - [In-Progress Plans](plans/in-progress/)
 - [Completed Plans](plans/completed/)

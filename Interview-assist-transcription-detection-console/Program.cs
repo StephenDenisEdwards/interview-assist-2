@@ -1,6 +1,7 @@
 using InterviewAssist.Audio.Windows;
 using InterviewAssist.Library.Audio;
 using InterviewAssist.Library.Pipeline.Detection;
+using InterviewAssist.Library.Pipeline.Evaluation;
 using InterviewAssist.Library.Pipeline.Recording;
 using InterviewAssist.Library.Pipeline.Utterance;
 using InterviewAssist.Library.Transcription;
@@ -15,6 +16,22 @@ public partial class Program
     {
         // Parse command-line arguments
         string? playbackFile = null;
+        string? playbackMode = null;
+        string? evaluateFile = null;
+        string? evaluateOutput = null;
+        string? evaluateModel = null;
+        string? analyzeErrorsFile = null;
+        string? tuneThresholdFile = null;
+        string? optimizeTarget = null;
+        string? compareFile = null;
+        string? regressionBaseline = null;
+        string? regressionData = null;
+        string? createBaselineOutput = null;
+        string? baselineVersion = null;
+        string? datasetFile = null;
+        string? generateTestsFile = null;
+        string? generateTestsOutput = null;
+
         for (int i = 0; i < args.Length; i++)
         {
             if (args[i] == "--playback" && i + 1 < args.Length)
@@ -22,17 +39,109 @@ public partial class Program
                 playbackFile = args[i + 1];
                 i++;
             }
+            else if (args[i] == "--mode" && i + 1 < args.Length)
+            {
+                playbackMode = args[i + 1];
+                i++;
+            }
+            else if (args[i] == "--evaluate" && i + 1 < args.Length)
+            {
+                evaluateFile = args[i + 1];
+                i++;
+            }
+            else if (args[i] == "--output" && i + 1 < args.Length)
+            {
+                evaluateOutput = args[i + 1];
+                i++;
+            }
+            else if (args[i] == "--model" && i + 1 < args.Length)
+            {
+                evaluateModel = args[i + 1];
+                i++;
+            }
+            else if (args[i] == "--analyze-errors" && i + 1 < args.Length)
+            {
+                analyzeErrorsFile = args[i + 1];
+                i++;
+            }
+            else if (args[i] == "--tune-threshold" && i + 1 < args.Length)
+            {
+                tuneThresholdFile = args[i + 1];
+                i++;
+            }
+            else if (args[i] == "--optimize" && i + 1 < args.Length)
+            {
+                optimizeTarget = args[i + 1];
+                i++;
+            }
+            else if (args[i] == "--compare" && i + 1 < args.Length)
+            {
+                compareFile = args[i + 1];
+                i++;
+            }
+            else if (args[i] == "--regression" && i + 1 < args.Length)
+            {
+                regressionBaseline = args[i + 1];
+                i++;
+            }
+            else if (args[i] == "--data" && i + 1 < args.Length)
+            {
+                regressionData = args[i + 1];
+                i++;
+            }
+            else if (args[i] == "--create-baseline" && i + 1 < args.Length)
+            {
+                createBaselineOutput = args[i + 1];
+                i++;
+            }
+            else if (args[i] == "--version" && i + 1 < args.Length)
+            {
+                baselineVersion = args[i + 1];
+                i++;
+            }
+            else if (args[i] == "--dataset" && i + 1 < args.Length)
+            {
+                datasetFile = args[i + 1];
+                i++;
+            }
+            else if (args[i] == "--generate-tests" && i + 1 < args.Length)
+            {
+                generateTestsFile = args[i + 1];
+                i++;
+            }
             else if (args[i] == "--help" || args[i] == "-h")
             {
                 Console.WriteLine("Interview Assist - Transcription & Detection Console");
                 Console.WriteLine();
                 Console.WriteLine("Usage:");
-                Console.WriteLine("  dotnet run                         Normal mode (live audio)");
-                Console.WriteLine("  dotnet run -- --playback <file>    Playback mode (from recorded session)");
+                Console.WriteLine("  dotnet run                                Normal mode (live audio)");
+                Console.WriteLine("  dotnet run -- --playback <file>           Playback mode (from recorded session)");
+                Console.WriteLine("  dotnet run -- --evaluate <file>           Evaluate question detection accuracy");
+                Console.WriteLine("  dotnet run -- --compare <file>            Compare all detection strategies");
+                Console.WriteLine("  dotnet run -- --tune-threshold <file>     Find optimal confidence threshold");
+                Console.WriteLine("  dotnet run -- --regression <baseline>     Test for quality regressions");
+                Console.WriteLine("  dotnet run -- --create-baseline <file>    Create baseline from session data");
+                Console.WriteLine("  dotnet run -- --dataset <file>            Evaluate against curated dataset");
+                Console.WriteLine("  dotnet run -- --generate-tests <seed>     Generate synthetic test cases");
+                Console.WriteLine("  dotnet run -- --analyze-errors <file>     Analyze error patterns from report");
                 Console.WriteLine();
                 Console.WriteLine("Options:");
-                Console.WriteLine("  --playback <file>    Play back a recorded session file (.jsonl)");
-                Console.WriteLine("  --help, -h           Show this help message");
+                Console.WriteLine("  --playback <file>       Play back a recorded session file (.jsonl)");
+                Console.WriteLine("  --mode <mode>           Override detection mode for playback (Heuristic, Llm, Parallel)");
+                Console.WriteLine("  --evaluate <file>       Evaluate detection against LLM-extracted ground truth");
+                Console.WriteLine("  --compare <file>        Compare Heuristic, LLM, and Parallel strategies");
+                Console.WriteLine("  --tune-threshold <file> Find optimal confidence threshold for detection");
+                Console.WriteLine("  --optimize <target>     Optimization target: f1, precision, recall (default: f1)");
+                Console.WriteLine("  --regression <baseline> Test against baseline for regressions");
+                Console.WriteLine("  --data <file>           Session data file for regression test");
+                Console.WriteLine("  --create-baseline <out> Create new baseline file");
+                Console.WriteLine("  --version <ver>         Version string for baseline (default: 1.0)");
+                Console.WriteLine("  --dataset <file>        Evaluate detection against curated dataset");
+                Console.WriteLine("  --generate-tests <seed> Generate synthetic tests from seed file");
+                Console.WriteLine("  --model <model>         Model for ground truth extraction (default: gpt-4o)");
+                Console.WriteLine("  --output <file>         Output file for evaluation report (.json)");
+                Console.WriteLine("  --analyze-errors <file> Analyze false positive patterns from evaluation report");
+                Console.WriteLine("  --help, -h              Show this help message");
                 Console.WriteLine();
                 Console.WriteLine("Keyboard shortcuts in normal mode:");
                 Console.WriteLine("  Ctrl+S    Stop transcription");
@@ -40,6 +149,65 @@ public partial class Program
                 Console.WriteLine("  Ctrl+Q    Quit");
                 return 0;
             }
+        }
+
+        // Handle evaluate mode (non-interactive)
+        if (evaluateFile != null)
+        {
+            return await RunEvaluationModeAsync(evaluateFile, evaluateOutput, evaluateModel);
+        }
+
+        // Handle analyze-errors mode (non-interactive)
+        if (analyzeErrorsFile != null)
+        {
+            return await RunAnalyzeErrorsModeAsync(analyzeErrorsFile);
+        }
+
+        // Handle tune-threshold mode (non-interactive)
+        if (tuneThresholdFile != null)
+        {
+            return await RunTuneThresholdModeAsync(tuneThresholdFile, optimizeTarget);
+        }
+
+        // Handle compare mode (non-interactive)
+        if (compareFile != null)
+        {
+            return await RunCompareModeAsync(compareFile, evaluateOutput);
+        }
+
+        // Handle regression test mode (non-interactive)
+        if (regressionBaseline != null)
+        {
+            if (string.IsNullOrEmpty(regressionData))
+            {
+                Console.WriteLine("Error: --data <file> is required with --regression");
+                return 1;
+            }
+            return await RunRegressionTestModeAsync(regressionBaseline, regressionData);
+        }
+
+        // Handle create-baseline mode (non-interactive)
+        if (createBaselineOutput != null)
+        {
+            if (string.IsNullOrEmpty(regressionData))
+            {
+                Console.WriteLine("Error: --data <file> is required with --create-baseline");
+                return 1;
+            }
+            return await RunCreateBaselineModeAsync(regressionData, createBaselineOutput, baselineVersion ?? "1.0");
+        }
+
+        // Handle dataset evaluation mode (non-interactive)
+        if (datasetFile != null)
+        {
+            return await RunDatasetEvaluationModeAsync(datasetFile, playbackMode);
+        }
+
+        // Handle generate-tests mode (non-interactive)
+        if (generateTestsFile != null)
+        {
+            var output = evaluateOutput ?? Path.ChangeExtension(generateTestsFile, ".generated.jsonl");
+            return await RunGenerateTestsModeAsync(generateTestsFile, output);
         }
 
         // Build configuration
@@ -135,7 +303,7 @@ public partial class Program
             // Create the main UI and run
             var app = new TranscriptionApp(
                 source, sampleRate, deepgramOptions, diarizeEnabled, intentDetectionEnabled,
-                intentDetectionOptions, backgroundColorHex, intentColorHex, recordingOptions, playbackFile);
+                intentDetectionOptions, backgroundColorHex, intentColorHex, recordingOptions, playbackFile, playbackMode);
             await app.RunAsync();
         }
         finally
@@ -172,15 +340,11 @@ public partial class Program
         var heuristicConfig = intentConfig.GetSection("Heuristic");
         var llmConfig = intentConfig.GetSection("Llm");
 
-        // Get OpenAI API key for LLM modes
-        string? openAiApiKey = null;
-        if (mode != IntentDetectionMode.Heuristic)
-        {
-            openAiApiKey = GetFirstNonEmpty(
-                llmConfig["ApiKey"],
-                rootConfig["OpenAI:ApiKey"],
-                Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
-        }
+        // Always load OpenAI API key (needed for LLM modes and playback of recordings made with LLM/Parallel)
+        var openAiApiKey = GetFirstNonEmpty(
+            llmConfig["ApiKey"],
+            rootConfig["OpenAI:ApiKey"],
+            Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
 
         return new IntentDetectionOptions
         {
@@ -206,6 +370,312 @@ public partial class Program
             }
         };
     }
+
+    private static async Task<int> RunAnalyzeErrorsModeAsync(string reportFile)
+    {
+        var options = new EvaluationOptions();
+        var runner = new EvaluationRunner(options);
+        return await runner.AnalyzeErrorsAsync(reportFile);
+    }
+
+    private static async Task<int> RunTuneThresholdModeAsync(string sessionFile, string? targetStr)
+    {
+        // Build configuration
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+            .AddEnvironmentVariables()
+            .AddUserSecrets<Program>(optional: true)
+            .Build();
+
+        // Get OpenAI API key
+        var evaluationConfig = configuration.GetSection("Evaluation");
+        var apiKey = GetFirstNonEmpty(
+            evaluationConfig["ApiKey"],
+            configuration["OpenAI:ApiKey"],
+            Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
+
+        var options = new EvaluationOptions
+        {
+            ApiKey = apiKey,
+            Model = evaluationConfig["Model"] ?? "gpt-4o",
+            MatchThreshold = evaluationConfig.GetValue("MatchThreshold", 0.7),
+            DeduplicationThreshold = evaluationConfig.GetValue("DeduplicationThreshold", 0.8)
+        };
+
+        var target = targetStr?.ToLowerInvariant() switch
+        {
+            "precision" => OptimizationTarget.Precision,
+            "recall" => OptimizationTarget.Recall,
+            "balanced" => OptimizationTarget.Balanced,
+            _ => OptimizationTarget.F1
+        };
+
+        var runner = new EvaluationRunner(options);
+        return await runner.TuneThresholdAsync(sessionFile, target);
+    }
+
+    private static async Task<int> RunCompareModeAsync(string sessionFile, string? outputFile)
+    {
+        // Build configuration
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+            .AddEnvironmentVariables()
+            .AddUserSecrets<Program>(optional: true)
+            .Build();
+
+        // Get OpenAI API key
+        var evaluationConfig = configuration.GetSection("Evaluation");
+        var apiKey = GetFirstNonEmpty(
+            evaluationConfig["ApiKey"],
+            configuration["OpenAI:ApiKey"],
+            Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
+
+        var options = new EvaluationOptions
+        {
+            ApiKey = apiKey,
+            Model = evaluationConfig["Model"] ?? "gpt-4o",
+            MatchThreshold = evaluationConfig.GetValue("MatchThreshold", 0.7),
+            DeduplicationThreshold = evaluationConfig.GetValue("DeduplicationThreshold", 0.8)
+        };
+
+        // Load intent detection options for strategies
+        var intentConfig = configuration.GetSection("Transcription:IntentDetection");
+        var heuristicConfig = intentConfig.GetSection("Heuristic");
+        var llmConfig = intentConfig.GetSection("Llm");
+
+        var heuristicOptions = new HeuristicDetectionOptions
+        {
+            MinConfidence = heuristicConfig.GetValue("MinConfidence", 0.4)
+        };
+
+        var llmApiKey = GetFirstNonEmpty(
+            llmConfig["ApiKey"],
+            configuration["OpenAI:ApiKey"],
+            Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
+
+        var llmOptions = new LlmDetectionOptions
+        {
+            ApiKey = llmApiKey,
+            Model = llmConfig["Model"] ?? "gpt-4o-mini",
+            ConfidenceThreshold = llmConfig.GetValue("ConfidenceThreshold", 0.7),
+            RateLimitMs = llmConfig.GetValue("RateLimitMs", 2000),
+            BufferMaxChars = llmConfig.GetValue("BufferMaxChars", 800),
+            TriggerOnQuestionMark = llmConfig.GetValue("TriggerOnQuestionMark", true),
+            TriggerOnPause = llmConfig.GetValue("TriggerOnPause", true),
+            TriggerTimeoutMs = llmConfig.GetValue("TriggerTimeoutMs", 3000),
+            EnablePreprocessing = llmConfig.GetValue("EnablePreprocessing", true),
+            EnableDeduplication = llmConfig.GetValue("EnableDeduplication", true),
+            DeduplicationWindowMs = llmConfig.GetValue("DeduplicationWindowMs", 30000)
+        };
+
+        var runner = new EvaluationRunner(options);
+        return await runner.CompareStrategiesAsync(sessionFile, outputFile, heuristicOptions, llmOptions);
+    }
+
+    private static async Task<int> RunEvaluationModeAsync(string evaluateFile, string? outputFile, string? model)
+    {
+        // Build configuration
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+            .AddEnvironmentVariables()
+            .AddUserSecrets<Program>(optional: true)
+            .Build();
+
+        // Get OpenAI API key
+        var evaluationConfig = configuration.GetSection("Evaluation");
+        var apiKey = GetFirstNonEmpty(
+            evaluationConfig["ApiKey"],
+            configuration["OpenAI:ApiKey"],
+            Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
+
+        var options = new EvaluationOptions
+        {
+            ApiKey = apiKey,
+            Model = model ?? evaluationConfig["Model"] ?? "gpt-4o",
+            MatchThreshold = evaluationConfig.GetValue("MatchThreshold", 0.7),
+            DeduplicationThreshold = evaluationConfig.GetValue("DeduplicationThreshold", 0.8),
+            OutputFolder = evaluationConfig["OutputFolder"] ?? "evaluations"
+        };
+
+        // Default output file if not specified
+        if (string.IsNullOrWhiteSpace(outputFile))
+        {
+            var baseName = Path.GetFileNameWithoutExtension(evaluateFile);
+            outputFile = Path.Combine(options.OutputFolder, $"{baseName}-evaluation.json");
+        }
+
+        var runner = new EvaluationRunner(options);
+        return await runner.RunAsync(evaluateFile, outputFile);
+    }
+
+    private static async Task<int> RunRegressionTestModeAsync(string baselineFile, string sessionFile)
+    {
+        // Build configuration
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+            .AddEnvironmentVariables()
+            .AddUserSecrets<Program>(optional: true)
+            .Build();
+
+        // Get OpenAI API key
+        var evaluationConfig = configuration.GetSection("Evaluation");
+        var apiKey = GetFirstNonEmpty(
+            evaluationConfig["ApiKey"],
+            configuration["OpenAI:ApiKey"],
+            Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
+
+        var options = new EvaluationOptions
+        {
+            ApiKey = apiKey,
+            Model = evaluationConfig["Model"] ?? "gpt-4o",
+            MatchThreshold = evaluationConfig.GetValue("MatchThreshold", 0.7),
+            DeduplicationThreshold = evaluationConfig.GetValue("DeduplicationThreshold", 0.8)
+        };
+
+        var runner = new EvaluationRunner(options);
+        return await runner.RunRegressionTestAsync(baselineFile, sessionFile);
+    }
+
+    private static async Task<int> RunCreateBaselineModeAsync(string sessionFile, string outputFile, string version)
+    {
+        // Build configuration
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+            .AddEnvironmentVariables()
+            .AddUserSecrets<Program>(optional: true)
+            .Build();
+
+        // Get OpenAI API key
+        var evaluationConfig = configuration.GetSection("Evaluation");
+        var apiKey = GetFirstNonEmpty(
+            evaluationConfig["ApiKey"],
+            configuration["OpenAI:ApiKey"],
+            Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
+
+        var options = new EvaluationOptions
+        {
+            ApiKey = apiKey,
+            Model = evaluationConfig["Model"] ?? "gpt-4o",
+            MatchThreshold = evaluationConfig.GetValue("MatchThreshold", 0.7),
+            DeduplicationThreshold = evaluationConfig.GetValue("DeduplicationThreshold", 0.8)
+        };
+
+        var runner = new EvaluationRunner(options);
+        return await runner.CreateBaselineAsync(sessionFile, outputFile, version);
+    }
+
+    private static async Task<int> RunDatasetEvaluationModeAsync(string datasetFile, string? modeOverride)
+    {
+        Console.WriteLine("=== Dataset Evaluation ===");
+        Console.WriteLine($"Dataset: {Path.GetFileName(datasetFile)}");
+        Console.WriteLine();
+
+        // Load dataset
+        Console.WriteLine("Loading dataset...");
+        var dataset = await DatasetLoader.LoadAsync(datasetFile);
+        Console.WriteLine($"  Total items: {dataset.Items.Count}");
+        Console.WriteLine($"  Questions: {dataset.QuestionCount}");
+        Console.WriteLine($"  Statements: {dataset.StatementCount}");
+        Console.WriteLine($"  Commands: {dataset.CommandCount}");
+        Console.WriteLine();
+
+        // Validate
+        var validation = DatasetLoader.Validate(dataset);
+        if (!validation.IsValid)
+        {
+            Console.WriteLine("Validation issues:");
+            foreach (var issue in validation.Issues.Take(5))
+            {
+                Console.WriteLine($"  - {issue}");
+            }
+            Console.WriteLine();
+        }
+
+        // Build configuration
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+            .AddEnvironmentVariables()
+            .AddUserSecrets<Program>(optional: true)
+            .Build();
+
+        // Create strategy
+        var intentConfig = configuration.GetSection("Transcription:IntentDetection");
+        var heuristicConfig = intentConfig.GetSection("Heuristic");
+
+        var heuristicOptions = new HeuristicDetectionOptions
+        {
+            MinConfidence = heuristicConfig.GetValue("MinConfidence", 0.4)
+        };
+
+        var strategy = new HeuristicIntentStrategy(heuristicOptions);
+
+        Console.WriteLine("Evaluating with Heuristic strategy...");
+        var evaluator = new DatasetEvaluator();
+        var result = await evaluator.EvaluateAsync(dataset, strategy);
+
+        // Print results
+        Console.WriteLine();
+        Console.WriteLine("=== Results ===");
+        Console.WriteLine($"Type Accuracy:     {result.TypeAccuracy:P1} ({result.CorrectType}/{result.TotalItems})");
+        Console.WriteLine($"Question F1:       {result.QuestionF1:P1}");
+        Console.WriteLine($"  Precision:       {result.QuestionPrecision:P1}");
+        Console.WriteLine($"  Recall:          {result.QuestionRecall:P1}");
+        Console.WriteLine($"Subtype Accuracy:  {result.SubtypeAccuracy:P1}");
+        Console.WriteLine();
+
+        Console.WriteLine("Confusion Matrix:");
+        Console.WriteLine(result.ConfusionMatrix.ToFormattedString());
+
+        // Show misclassifications
+        var errors = result.ItemResults.Where(r => !r.TypeCorrect).Take(10).ToList();
+        if (errors.Count > 0)
+        {
+            Console.WriteLine();
+            Console.WriteLine($"Sample Misclassifications ({errors.Count} shown):");
+            foreach (var err in errors)
+            {
+                Console.WriteLine($"  Expected: {err.ActualType}, Got: {err.PredictedType}");
+                Console.WriteLine($"    \"{err.Text[..Math.Min(50, err.Text.Length)]}...\"");
+            }
+        }
+
+        return 0;
+    }
+
+    private static async Task<int> RunGenerateTestsModeAsync(string seedFile, string outputFile)
+    {
+        Console.WriteLine("=== Generate Synthetic Tests ===");
+        Console.WriteLine($"Seed file: {Path.GetFileName(seedFile)}");
+        Console.WriteLine($"Output: {outputFile}");
+        Console.WriteLine();
+
+        var generator = new SyntheticTestGenerator();
+
+        Console.WriteLine("Generating test variations...");
+        var testCases = await generator.GenerateFromSeedFileAsync(seedFile, includeNegatives: true);
+
+        Console.WriteLine($"  Generated: {testCases.Count} test cases");
+
+        var byVariation = testCases.GroupBy(t => t.Variation).ToDictionary(g => g.Key, g => g.Count());
+        foreach (var (variation, count) in byVariation.OrderByDescending(kvp => kvp.Value))
+        {
+            Console.WriteLine($"    {variation}: {count}");
+        }
+
+        Console.WriteLine();
+        Console.WriteLine("Saving to file...");
+        await SyntheticTestGenerator.SaveToFileAsync(outputFile, testCases);
+
+        Console.WriteLine($"Saved {testCases.Count} test cases to {outputFile}");
+
+        return 0;
+    }
 }
 
 /// <summary>
@@ -223,6 +693,7 @@ public class TranscriptionApp
     private readonly string _intentColorHex;
     private readonly RecordingOptions _recordingOptions;
     private readonly string? _playbackFile;
+    private readonly string? _playbackModeOverride;
 
     // UI elements
     private TextView _transcriptView = null!;
@@ -254,7 +725,8 @@ public class TranscriptionApp
         string backgroundColorHex,
         string intentColorHex,
         RecordingOptions recordingOptions,
-        string? playbackFile)
+        string? playbackFile,
+        string? playbackModeOverride = null)
     {
         _audioSource = audioSource;
         _sampleRate = sampleRate;
@@ -266,6 +738,7 @@ public class TranscriptionApp
         _intentColorHex = intentColorHex;
         _recordingOptions = recordingOptions;
         _playbackFile = playbackFile;
+        _playbackModeOverride = playbackModeOverride;
     }
 
     public async Task RunAsync()
@@ -506,14 +979,32 @@ public class TranscriptionApp
 
             await _player.LoadAsync(_playbackFile!, ct);
 
-            // Create intent pipeline with detection strategy
-            var strategy = CreateDetectionStrategy();
+            // Use command-line override, then recorded mode, then fall back to current settings
+            var recordedMode = _player.SessionConfig?.IntentDetectionMode;
+            var effectiveMode = _playbackModeOverride ?? recordedMode;
+
+            // Check if API key is available for LLM/Parallel modes
+            var requiresApiKey = effectiveMode?.ToLowerInvariant() is "llm" or "parallel";
+            var hasApiKey = !string.IsNullOrWhiteSpace(_intentDetectionOptions.Llm.ApiKey);
+
+            if (requiresApiKey && !hasApiKey)
+            {
+                AddDebug($"WARNING: {effectiveMode} mode requires OpenAI API key. Falling back to Heuristic mode.");
+                AddDebug("Set OPENAI_API_KEY environment variable to use LLM/Parallel detection during playback.");
+                effectiveMode = "Heuristic";
+            }
+
+            var strategy = CreateDetectionStrategyForMode(effectiveMode);
             _intentPipeline = new UtteranceIntentPipeline(detectionStrategy: strategy);
             WireIntentPipelineEvents();
 
             var modeName = _intentPipeline.DetectionModeName;
             Application.MainLoop?.Invoke(() => _detectionModeStatusItem.Title = $"Mode: {modeName}");
-            AddDebug($"Detection mode: {modeName}");
+
+            if (_playbackModeOverride != null)
+                AddDebug($"Detection mode: {modeName} (override from --mode, recorded: {recordedMode ?? "not specified"})");
+            else
+                AddDebug($"Detection mode: {modeName} (from recording: {recordedMode ?? "not specified"})");
 
             // Wire playback events for transcript display
             _player.OnEventPlayed += evt =>
@@ -822,6 +1313,26 @@ public class TranscriptionApp
             return null;
 
         return _intentDetectionOptions.Mode switch
+        {
+            IntentDetectionMode.Heuristic => new HeuristicIntentStrategy(_intentDetectionOptions.Heuristic),
+            IntentDetectionMode.Llm => CreateLlmStrategy(),
+            IntentDetectionMode.Parallel => CreateParallelStrategy(),
+            _ => new HeuristicIntentStrategy(_intentDetectionOptions.Heuristic)
+        };
+    }
+
+    private IIntentDetectionStrategy? CreateDetectionStrategyForMode(string? recordedMode)
+    {
+        // Parse the recorded mode string, fall back to current settings if not specified
+        var mode = recordedMode?.ToLowerInvariant() switch
+        {
+            "heuristic" => IntentDetectionMode.Heuristic,
+            "llm" => IntentDetectionMode.Llm,
+            "parallel" => IntentDetectionMode.Parallel,
+            _ => _intentDetectionOptions.Mode // Fall back to current settings
+        };
+
+        return mode switch
         {
             IntentDetectionMode.Heuristic => new HeuristicIntentStrategy(_intentDetectionOptions.Heuristic),
             IntentDetectionMode.Llm => CreateLlmStrategy(),

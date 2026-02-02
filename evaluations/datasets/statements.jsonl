@@ -1,0 +1,15 @@
+{"text": "I think we should refactor this code.", "type": "Statement", "notes": "Opinion statement"}
+{"text": "So that's how the authentication flow works.", "type": "Statement", "notes": "Summary statement"}
+{"text": "The database connection is configured in the startup class.", "type": "Statement", "notes": "Factual statement"}
+{"text": "I've been working with C# for about five years.", "type": "Statement", "notes": "Personal statement"}
+{"text": "Which gives you a great indication of the performance.", "type": "Statement", "notes": "Relative clause fragment"}
+{"text": "And then the request gets routed to the controller.", "type": "Statement", "notes": "Continuation statement"}
+{"text": "You know what I mean, right.", "type": "Statement", "notes": "Filler phrase"}
+{"text": "Basically, the service handles all the business logic.", "type": "Statement", "notes": "Explanatory statement"}
+{"text": "I believe the implementation is correct.", "type": "Statement", "notes": "Opinion statement"}
+{"text": "First, we need to set up the environment variables.", "type": "Statement", "notes": "Instructional statement"}
+{"text": "The framework automatically handles dependency injection.", "type": "Statement", "notes": "Technical statement"}
+{"text": "That makes sense, actually.", "type": "Statement", "notes": "Acknowledgment"}
+{"text": "Like, the whole architecture is event-driven.", "type": "Statement", "notes": "Casual explanation"}
+{"text": "I mean, we could also use a different approach.", "type": "Statement", "notes": "Alternative suggestion"}
+{"text": "The tests should run in about two minutes.", "type": "Statement", "notes": "Time estimate"}

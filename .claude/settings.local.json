@@ -41,7 +41,8 @@
       "Bash(__NEW_LINE_9c7b9800ee3fb555__ echo \"\")",
       "Bash(tree:*)",
       "Bash(git rm:*)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(powershell -Command:*)"
     ]
   }
 }

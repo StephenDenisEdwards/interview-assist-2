@@ -1,0 +1,1222 @@
+{
+  "GeneratedAt": "2026-02-02T13:17:44.9349391Z",
+  "SessionFile": "session-2026-02-01-163251.jsonl",
+  "TranscriptLength": 131656,
+  "Metrics": {
+    "TruePositives": 8,
+    "FalsePositives": 101,
+    "FalseNegatives": 10,
+    "Precision": 0.07339449541284404,
+    "Recall": 0.4444444444444444,
+    "F1Score": 0.12598425196850396
+  },
+  "GroundTruth": [
+    {
+      "Text": "Who\u0027s winning?",
+      "Subtype": null,
+      "Confidence": 1
+    },
+    {
+      "Text": "Would you say it\u0027s a set of companies in China or the set of companies in The United States?",
+      "Subtype": "Compare",
+      "Confidence": 1
+    },
+    {
+      "Text": "So, Sebastian, who do you think is winning?",
+      "Subtype": null,
+      "Confidence": 1
+    },
+    {
+      "Text": "Nathan, what do you think?",
+      "Subtype": null,
+      "Confidence": 1
+    },
+    {
+      "Text": "What model do you think won 2025, and what model do you think is gonna win \u002726?",
+      "Subtype": "Compare",
+      "Confidence": 1
+    },
+    {
+      "Text": "Are you willing to bet on Gemini over TatchiPT?",
+      "Subtype": "Compare",
+      "Confidence": 1
+    },
+    {
+      "Text": "Who\u0027s gonna win?",
+      "Subtype": null,
+      "Confidence": 1
+    },
+    {
+      "Text": "How long do you think, the Chinese companies keep releasing open white models?",
+      "Subtype": "Clarification",
+      "Confidence": 1
+    },
+    {
+      "Text": "What do you think about 2026?",
+      "Subtype": null,
+      "Confidence": 1
+    },
+    {
+      "Text": "Do people actually want intelligence to broad public, or do they want speed?",
+      "Subtype": "Clarification",
+      "Confidence": 1
+    },
+    {
+      "Text": "How do you live with that?",
+      "Subtype": "Rhetorical",
+      "Confidence": 1
+    },
+    {
+      "Text": "So what did you use?",
+      "Subtype": "Clarification",
+      "Confidence": 1
+    },
+    {
+      "Text": "What does that say?",
+      "Subtype": "Rhetorical",
+      "Confidence": 1
+    },
+    {
+      "Text": "Does that mean the Chinese models are not as good, or does that mean we\u0027re just very biased, and US focused?",
+      "Subtype": "Clarification",
+      "Confidence": 1
+    },
+    {
+      "Text": "What do you guys you program quite a bit, so what what do you use?",
+      "Subtype": "HowTo",
+      "Confidence": 1
+    },
+    {
+      "Text": "Which LLM models. Which are interesting ones? Which stand out to you?",
+      "Subtype": "Clarification",
+      "Confidence": 1
+    },
+    {
+      "Text": "Do you wanna see how many we can name off the top of our head?",
+      "Subtype": "Rhetorical",
+      "Confidence": 1
+    },
+    {
+      "Text": "Did you actually name lama?",
+      "Subtype": "Clarification",
+      "Confidence": 1
+    }
+  ],
+  "DetectedQuestions": [
+    {
+      "SourceText": "who also",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0028"
+    },
+    {
+      "SourceText": "who also happen to be great",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0029"
+    },
+    {
+      "SourceText": "who also happen to be great communicators, edge",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0030"
+    },
+    {
+      "SourceText": "who also happen to be great communicators, educators, writers,",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0031"
+    },
+    {
+      "SourceText": "who also happen to be great communicators, educators, writers, and who also happen to be great communicators, educators, writers, and",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0032"
+    },
+    {
+      "SourceText": "where you can also",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0083"
+    },
+    {
+      "SourceText": "where you can also find link",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0084"
+    },
+    {
+      "SourceText": "where you can also find links to contact me",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0085"
+    },
+    {
+      "SourceText": "where you can also find links to contact me, ask questions,",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0086"
+    },
+    {
+      "SourceText": "spicy questions if we can. Who\u0027s winning?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0137"
+    },
+    {
+      "SourceText": "At the international level?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0139"
+    },
+    {
+      "SourceText": "in China or the set of companies in The United States?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0144"
+    },
+    {
+      "SourceText": "So, Sebastian, who do you think is winning?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0150"
+    },
+    {
+      "SourceText": "When",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0164"
+    },
+    {
+      "SourceText": "how ChaChBT kicked off a movement in",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0303"
+    },
+    {
+      "SourceText": "how Chachi BT kicked off a movement in The US where everything",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0304"
+    },
+    {
+      "SourceText": "how Chachi BT kicked off a movement in The US where everything had a chatbot. There\u0027s",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0305"
+    },
+    {
+      "SourceText": "How long do you think, the Chinese companies keep",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0361"
+    },
+    {
+      "SourceText": "How long do you think, the Chinese companies keep releasing open wide",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0362"
+    },
+    {
+      "SourceText": "how their models work. They\u0027re still open on that front. And we should also say,",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0491"
+    },
+    {
+      "SourceText": "want to solve problems in their daily",
+      "Subtype": "Troubleshoot",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0513"
+    },
+    {
+      "SourceText": "want to solve problems in their daily lives, and that",
+      "Subtype": "Troubleshoot",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0514"
+    },
+    {
+      "SourceText": "What model do you think one twenty twenty",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0572"
+    },
+    {
+      "SourceText": "What model do you think won 2025, and what",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0573"
+    },
+    {
+      "SourceText": "What model do you think won 2025, and what model do you think is gonna",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0574"
+    },
+    {
+      "SourceText": "the things that I like out of models versus the things that are gonna",
+      "Subtype": "Compare",
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0634"
+    },
+    {
+      "SourceText": "Differentiator. What do you think about 2026?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0640"
+    },
+    {
+      "SourceText": "Differentiator. What do you think about 2026? Who\u0027s gonna win?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0642"
+    },
+    {
+      "SourceText": "model provider side. So in the infrastructure, you think GPUs give an advantage?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0689"
+    },
+    {
+      "SourceText": "what can be described as low hanging fruit in models.",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0735"
+    },
+    {
+      "SourceText": "It\u0027s like, do people actually want intelligence?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0747"
+    },
+    {
+      "SourceText": "It\u0027s like, do people actually want intelligence to broad public, or do they want speed?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0750"
+    },
+    {
+      "SourceText": "are all my references correct? Are all my thoughts correct?",
+      "Subtype": null,
+      "Confidence": 0.8,
+      "UtteranceId": "utt_0783"
+    },
+    {
+      "SourceText": "are all my references correct? Are all my thoughts correct? Did I make any formatting mistake?",
+      "Subtype": null,
+      "Confidence": 0.8,
+      "UtteranceId": "utt_0785"
+    },
+    {
+      "SourceText": "how do you how do you live with how do you live with that",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0810"
+    },
+    {
+      "SourceText": "how do you how do you live with how do you live with that? Yeah. It\u0027s like my reaction.",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0811"
+    },
+    {
+      "SourceText": "how do you how do you live with how do you live with that? Yeah. It\u0027s like my reaction. I\u0027m how do you how do you live with how do you live with that? Yeah. It\u0027s like my reaction. I\u0027m",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0813"
+    },
+    {
+      "SourceText": "propensity of errors. It\u0027s just like",
+      "Subtype": "Troubleshoot",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0822"
+    },
+    {
+      "SourceText": "propensity of errors. It\u0027s just like it has a higher likelihood of",
+      "Subtype": "Troubleshoot",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0823"
+    },
+    {
+      "SourceText": "propensity of errors. It\u0027s just like it has a higher likelihood of errors. Some of this is from",
+      "Subtype": "Troubleshoot",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0824"
+    },
+    {
+      "SourceText": "propensity of errors. It\u0027s just like it has a higher likelihood of errors. Some of this is from propensity of errors. It\u0027s just like it has a higher likelihood of errors. Some of this is from",
+      "Subtype": "Troubleshoot",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0824"
+    },
+    {
+      "SourceText": "when I\u0027m finding",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0835"
+    },
+    {
+      "SourceText": "when I\u0027m finding any sort of",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0836"
+    },
+    {
+      "SourceText": "when I\u0027m finding any sort of information query for",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0837"
+    },
+    {
+      "SourceText": "when I\u0027m finding any sort of information query for work, whether that\u0027s a",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_0838"
+    },
+    {
+      "SourceText": "terminal. But in that moment, I just needed, like, ten seconds Give me the command. This is a hilarious situation, but yeah. So what did you use?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0888"
+    },
+    {
+      "SourceText": "By the way, I don\u0027t know if there\u0027s a representative case. Why you wait in the car you have to run?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0905"
+    },
+    {
+      "SourceText": "debugging?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_0971"
+    },
+    {
+      "SourceText": "dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And",
+      "Subtype": "Troubleshoot",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1029"
+    },
+    {
+      "SourceText": "dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the l m. And I think it\u0027s the same how we",
+      "Subtype": "Troubleshoot",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1033"
+    },
+    {
+      "SourceText": "dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the l m. And I think it\u0027s the same how we use anything like our favorite tech editor, operating systems or the browser.",
+      "Subtype": "Troubleshoot",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1037"
+    },
+    {
+      "SourceText": "dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the l m. And I think it\u0027s the same how we use anything like our favorite tech editor, operating systems or the browser. I mean, there are so many browser options Safari, Firefox, Chrome, all the there are",
+      "Subtype": "Troubleshoot",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1041"
+    },
+    {
+      "SourceText": "dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the l m. And I think it\u0027s the same how we use anything like our favorite tech editor, operating systems or the browser. I mean, there are so many browser options Safari, Firefox, Chrome, all the comparatively similar, but then there are ex it\u0027s cases, maybe extensions you wanna use and then you switch. But I don\u0027t think there is any",
+      "Subtype": "Troubleshoot",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1046"
+    },
+    {
+      "SourceText": "site into different browsers and compare",
+      "Subtype": "Compare",
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1052"
+    },
+    {
+      "SourceText": "site into different browsers and compares them. You only do that when",
+      "Subtype": "Compare",
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1053"
+    },
+    {
+      "SourceText": "site into different browsers and compares them. You only do that when the website doesn\u0027t render",
+      "Subtype": "Compare",
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1054"
+    },
+    {
+      "SourceText": "site, into different browsers and compares them. You only do that when the website doesn\u0027t render, if something breaks site, into different browsers and compares them. You only do that when the website doesn\u0027t render, if something breaks",
+      "Subtype": "Compare",
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1055"
+    },
+    {
+      "SourceText": "Scores where a lot of people were like, did they just figure out some algorithmic change?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1069"
+    },
+    {
+      "SourceText": "how do I actually get to",
+      "Subtype": "HowTo",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1081"
+    },
+    {
+      "SourceText": "how do I actually get to testing this?",
+      "Subtype": "HowTo",
+      "Confidence": 0.9,
+      "UtteranceId": "utt_1082"
+    },
+    {
+      "SourceText": "What does that say",
+      "Subtype": "Definition",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1091"
+    },
+    {
+      "SourceText": "What does that say? Does that mean that",
+      "Subtype": "Definition",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1092"
+    },
+    {
+      "SourceText": "What does that say? Does that mean the Chinese models are not as",
+      "Subtype": "Definition",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1093"
+    },
+    {
+      "SourceText": "What does that say? Does that mean the Chinese models are not as good, or does that mean",
+      "Subtype": "Definition",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1094"
+    },
+    {
+      "SourceText": "And have different errors. And it\u0027s like the speed",
+      "Subtype": "Troubleshoot",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1147"
+    },
+    {
+      "SourceText": "And have different errors. And it\u0027s like speed and intelligence",
+      "Subtype": "Troubleshoot",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1148"
+    },
+    {
+      "SourceText": "And have different errors. And it\u0027s like speed and intelligence. And these things are",
+      "Subtype": "Troubleshoot",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1149"
+    },
+    {
+      "SourceText": "What do you guys",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1189"
+    },
+    {
+      "SourceText": "What do you guys you program quite a bit, so",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1190"
+    },
+    {
+      "SourceText": "What do you guys you program quite a bit, so what what do you use",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1191"
+    },
+    {
+      "SourceText": "What do you guys you program quite a bit, so what what do you use? What\u0027s the current",
+      "Subtype": null,
+      "Confidence": 0.7,
+      "UtteranceId": "utt_1192"
+    },
+    {
+      "SourceText": "vibe? So I use the codecs plugin for VSC",
+      "Subtype": "Compare",
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1195"
+    },
+    {
+      "SourceText": "vibe? So I use the codecs plugin for Versus Code. vibe? So I use the codecs plugin for Versus Code.",
+      "Subtype": "Compare",
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1197"
+    },
+    {
+      "SourceText": "which you can encursor, if that\u0027s the ID",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1238"
+    },
+    {
+      "SourceText": "which you can in cursor, if that\u0027s the ID you use.",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1239"
+    },
+    {
+      "SourceText": "Versus",
+      "Subtype": "Compare",
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1246"
+    },
+    {
+      "SourceText": "Versus just kinda like",
+      "Subtype": "Compare",
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1247"
+    },
+    {
+      "SourceText": "Versus just kinda like thinking in this",
+      "Subtype": "Compare",
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1249"
+    },
+    {
+      "SourceText": "Versus just kinda like thinking in this design space.",
+      "Subtype": "Compare",
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1250"
+    },
+    {
+      "SourceText": "You can have Versus code open, and you can select the",
+      "Subtype": "Compare",
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1272"
+    },
+    {
+      "SourceText": "You can have Versus code open, and you can select the same models on all of them.",
+      "Subtype": "Compare",
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1273"
+    },
+    {
+      "SourceText": "You can have Versus code open, and you can select the same models on all of them Mhmm. And ask questions",
+      "Subtype": "Compare",
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1274"
+    },
+    {
+      "SourceText": "You can have Versus code open, and you can select the same models on all of them Mhmm. And ask questions in a very You can have Versus code open, and you can select the same models on all of them Mhmm. And ask questions in a very",
+      "Subtype": "Compare",
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1275"
+    },
+    {
+      "SourceText": "when reading books.",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1437"
+    },
+    {
+      "SourceText": "when reading books. For me, it\u0027s just it\u0027s not",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1438"
+    },
+    {
+      "SourceText": "when reading books. For me, it\u0027s just it\u0027s not the first thing to do. It\u0027s",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1439"
+    },
+    {
+      "SourceText": "when reading books. For me, it\u0027s just it\u0027s not the first thing to do. It\u0027s like the second pass.",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1440"
+    },
+    {
+      "SourceText": "what is this world that I\u0027m now stepping in",
+      "Subtype": "Definition",
+      "Confidence": 0.7,
+      "UtteranceId": "utt_1449"
+    },
+    {
+      "SourceText": "what is this world that I\u0027m now stepping into? But I tried to",
+      "Subtype": "Definition",
+      "Confidence": 0.7,
+      "UtteranceId": "utt_1450"
+    },
+    {
+      "SourceText": "what is this world that I\u0027m now stepping into? But I tried to avoid what is this world that I\u0027m now stepping into? But I tried to avoid",
+      "Subtype": "Definition",
+      "Confidence": 0.7,
+      "UtteranceId": "utt_1451"
+    },
+    {
+      "SourceText": "Claude was just like, yeah. I\u0027ve made use of that data. No problem. And I was like,",
+      "Subtype": "Troubleshoot",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1530"
+    },
+    {
+      "SourceText": "Claude was just like, yeah. I\u0027ve made use of that data. No problem. And I was like, that would have taken me days.",
+      "Subtype": "Troubleshoot",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1531"
+    },
+    {
+      "SourceText": "where you can have an intermediary and not have to do the kind of awful",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1542"
+    },
+    {
+      "SourceText": "Which",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1557"
+    },
+    {
+      "SourceText": "LLM models. Which are interesting ones? Which stand out to you?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1559"
+    },
+    {
+      "SourceText": "LLM models. Which are interesting ones? Which stand out to you? LLM models. Which are interesting ones? Which stand out to you?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1560"
+    },
+    {
+      "SourceText": "And why. We already mentioned Deepseek. Do you wanna see how many we can name off the top of our head?",
+      "Subtype": null,
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1563"
+    },
+    {
+      "SourceText": "When I when I meant talk when I was writing",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1599"
+    },
+    {
+      "SourceText": "When I when I meant talk when I was writing about Open",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1600"
+    },
+    {
+      "SourceText": "When I when I meant talk when I was writing about OpenAI\u0027s open model release, they\u0027re",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1601"
+    },
+    {
+      "SourceText": "Stanford\u0027s Marin community project, which is kind of making it so there\u0027s a pipeline for people to open a GitHub issue and",
+      "Subtype": "Troubleshoot",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1651"
+    },
+    {
+      "SourceText": "Stanford\u0027s Marin community project, which is kind of making it so there\u0027s a pipeline for people to open a GitHub issue and implement a new idea and then have it run",
+      "Subtype": "Troubleshoot",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1653"
+    },
+    {
+      "SourceText": "Stanford\u0027s Marin community project, which is kind of making it so there\u0027s a pipeline for people to open a GitHub issue and implement a new idea and then have it run Stanford\u0027s Marin community project, which is kind of making it so there\u0027s a pipeline for people to open a GitHub issue and implement a new idea and then have it run",
+      "Subtype": "Troubleshoot",
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1653"
+    },
+    {
+      "SourceText": "people are using the Chinese versus US open models for.",
+      "Subtype": "Compare",
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1709"
+    },
+    {
+      "SourceText": "people are using the Chinese versus US open models for, which will be a",
+      "Subtype": "Compare",
+      "Confidence": 0.5,
+      "UtteranceId": "utt_1710"
+    },
+    {
+      "SourceText": "Which will be which I\u0027m personally, so it can be very",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1712"
+    },
+    {
+      "SourceText": "Which will be which I\u0027m personally, so I can be very excited to watch.",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1713"
+    },
+    {
+      "SourceText": "Which will be which I\u0027m personally, so I can be very excited to watch. Which will be which I\u0027m personally, so I can be very excited to watch.",
+      "Subtype": null,
+      "Confidence": 0.4,
+      "UtteranceId": "utt_1714"
+    },
+    {
+      "SourceText": "Did you actually name lama?",
+      "Subtype": null,
+      "Confidence": 0.8,
+      "UtteranceId": "utt_1720"
+    }
+  ],
+  "Matches": [
+    {
+      "GroundTruth": "So, Sebastian, who do you think is winning?",
+      "Detected": "So, Sebastian, who do you think is winning?",
+      "SimilarityScore": 1
+    },
+    {
+      "GroundTruth": "What model do you think won 2025, and what model do you think is gonna win \u002726?",
+      "Detected": "What model do you think won 2025, and what model do you think is gonna",
+      "SimilarityScore": 0.8860759493670887
+    },
+    {
+      "GroundTruth": "How long do you think, the Chinese companies keep releasing open white models?",
+      "Detected": "How long do you think, the Chinese companies keep releasing open wide",
+      "SimilarityScore": 0.8846153846153846
+    },
+    {
+      "GroundTruth": "Do people actually want intelligence to broad public, or do they want speed?",
+      "Detected": "It\u0027s like, do people actually want intelligence to broad public, or do they want speed?",
+      "SimilarityScore": 0.8735632183908046
+    },
+    {
+      "GroundTruth": "What does that say?",
+      "Detected": "What does that say",
+      "SimilarityScore": 0.9473684210526316
+    },
+    {
+      "GroundTruth": "What do you guys you program quite a bit, so what what do you use?",
+      "Detected": "What do you guys you program quite a bit, so what what do you use",
+      "SimilarityScore": 0.9848484848484849
+    },
+    {
+      "GroundTruth": "Which LLM models. Which are interesting ones? Which stand out to you?",
+      "Detected": "LLM models. Which are interesting ones? Which stand out to you?",
+      "SimilarityScore": 0.9130434782608696
+    },
+    {
+      "GroundTruth": "Did you actually name lama?",
+      "Detected": "Did you actually name lama?",
+      "SimilarityScore": 1
+    }
+  ],
+  "Missed": [
+    "Who\u0027s winning?",
+    "Would you say it\u0027s a set of companies in China or the set of companies in The United States?",
+    "Nathan, what do you think?",
+    "Are you willing to bet on Gemini over TatchiPT?",
+    "Who\u0027s gonna win?",
+    "What do you think about 2026?",
+    "How do you live with that?",
+    "So what did you use?",
+    "Does that mean the Chinese models are not as good, or does that mean we\u0027re just very biased, and US focused?",
+    "Do you wanna see how many we can name off the top of our head?"
+  ],
+  "FalseAlarms": [
+    {
+      "Text": "who also",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "who also happen to be great",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "who also happen to be great communicators, edge",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "who also happen to be great communicators, educators, writers,",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "who also happen to be great communicators, educators, writers, and who also happen to be great communicators, educators, writers, and",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "where you can also",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "where you can also find link",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "where you can also find links to contact me",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "where you can also find links to contact me, ask questions,",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "spicy questions if we can. Who\u0027s winning?",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "At the international level?",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "in China or the set of companies in The United States?",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "When",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "how ChaChBT kicked off a movement in",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "how Chachi BT kicked off a movement in The US where everything",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "how Chachi BT kicked off a movement in The US where everything had a chatbot. There\u0027s",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "How long do you think, the Chinese companies keep",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "how their models work. They\u0027re still open on that front. And we should also say,",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "want to solve problems in their daily",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "want to solve problems in their daily lives, and that",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "What model do you think one twenty twenty",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "What model do you think won 2025, and what",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "the things that I like out of models versus the things that are gonna",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "Differentiator. What do you think about 2026?",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "Differentiator. What do you think about 2026? Who\u0027s gonna win?",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "model provider side. So in the infrastructure, you think GPUs give an advantage?",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "what can be described as low hanging fruit in models.",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "It\u0027s like, do people actually want intelligence?",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "are all my references correct? Are all my thoughts correct?",
+      "Confidence": 0.8
+    },
+    {
+      "Text": "are all my references correct? Are all my thoughts correct? Did I make any formatting mistake?",
+      "Confidence": 0.8
+    },
+    {
+      "Text": "how do you how do you live with how do you live with that",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "how do you how do you live with how do you live with that? Yeah. It\u0027s like my reaction.",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "how do you how do you live with how do you live with that? Yeah. It\u0027s like my reaction. I\u0027m how do you how do you live with how do you live with that? Yeah. It\u0027s like my reaction. I\u0027m",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "propensity of errors. It\u0027s just like",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "propensity of errors. It\u0027s just like it has a higher likelihood of",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "propensity of errors. It\u0027s just like it has a higher likelihood of errors. Some of this is from",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "propensity of errors. It\u0027s just like it has a higher likelihood of errors. Some of this is from propensity of errors. It\u0027s just like it has a higher likelihood of errors. Some of this is from",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "when I\u0027m finding",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "when I\u0027m finding any sort of",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "when I\u0027m finding any sort of information query for",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "when I\u0027m finding any sort of information query for work, whether that\u0027s a",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "terminal. But in that moment, I just needed, like, ten seconds Give me the command. This is a hilarious situation, but yeah. So what did you use?",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "By the way, I don\u0027t know if there\u0027s a representative case. Why you wait in the car you have to run?",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "debugging?",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the l m. And I think it\u0027s the same how we",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the l m. And I think it\u0027s the same how we use anything like our favorite tech editor, operating systems or the browser.",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the l m. And I think it\u0027s the same how we use anything like our favorite tech editor, operating systems or the browser. I mean, there are so many browser options Safari, Firefox, Chrome, all the there are",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the l m. And I think it\u0027s the same how we use anything like our favorite tech editor, operating systems or the browser. I mean, there are so many browser options Safari, Firefox, Chrome, all the comparatively similar, but then there are ex it\u0027s cases, maybe extensions you wanna use and then you switch. But I don\u0027t think there is any",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "site into different browsers and compare",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "site into different browsers and compares them. You only do that when",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "site into different browsers and compares them. You only do that when the website doesn\u0027t render",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "site, into different browsers and compares them. You only do that when the website doesn\u0027t render, if something breaks site, into different browsers and compares them. You only do that when the website doesn\u0027t render, if something breaks",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "Scores where a lot of people were like, did they just figure out some algorithmic change?",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "how do I actually get to",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "how do I actually get to testing this?",
+      "Confidence": 0.9
+    },
+    {
+      "Text": "What does that say? Does that mean that",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "What does that say? Does that mean the Chinese models are not as",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "What does that say? Does that mean the Chinese models are not as good, or does that mean",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "And have different errors. And it\u0027s like the speed",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "And have different errors. And it\u0027s like speed and intelligence",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "And have different errors. And it\u0027s like speed and intelligence. And these things are",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "What do you guys",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "What do you guys you program quite a bit, so",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "What do you guys you program quite a bit, so what what do you use? What\u0027s the current",
+      "Confidence": 0.7
+    },
+    {
+      "Text": "vibe? So I use the codecs plugin for VSC",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "vibe? So I use the codecs plugin for Versus Code. vibe? So I use the codecs plugin for Versus Code.",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "which you can encursor, if that\u0027s the ID",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "which you can in cursor, if that\u0027s the ID you use.",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "Versus",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "Versus just kinda like",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "Versus just kinda like thinking in this",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "Versus just kinda like thinking in this design space.",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "You can have Versus code open, and you can select the",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "You can have Versus code open, and you can select the same models on all of them.",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "You can have Versus code open, and you can select the same models on all of them Mhmm. And ask questions",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "You can have Versus code open, and you can select the same models on all of them Mhmm. And ask questions in a very You can have Versus code open, and you can select the same models on all of them Mhmm. And ask questions in a very",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "when reading books.",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "when reading books. For me, it\u0027s just it\u0027s not",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "when reading books. For me, it\u0027s just it\u0027s not the first thing to do. It\u0027s",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "when reading books. For me, it\u0027s just it\u0027s not the first thing to do. It\u0027s like the second pass.",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "what is this world that I\u0027m now stepping in",
+      "Confidence": 0.7
+    },
+    {
+      "Text": "what is this world that I\u0027m now stepping into? But I tried to",
+      "Confidence": 0.7
+    },
+    {
+      "Text": "what is this world that I\u0027m now stepping into? But I tried to avoid what is this world that I\u0027m now stepping into? But I tried to avoid",
+      "Confidence": 0.7
+    },
+    {
+      "Text": "Claude was just like, yeah. I\u0027ve made use of that data. No problem. And I was like,",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "Claude was just like, yeah. I\u0027ve made use of that data. No problem. And I was like, that would have taken me days.",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "where you can have an intermediary and not have to do the kind of awful",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "Which",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "LLM models. Which are interesting ones? Which stand out to you? LLM models. Which are interesting ones? Which stand out to you?",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "And why. We already mentioned Deepseek. Do you wanna see how many we can name off the top of our head?",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "When I when I meant talk when I was writing",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "When I when I meant talk when I was writing about Open",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "When I when I meant talk when I was writing about OpenAI\u0027s open model release, they\u0027re",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "Stanford\u0027s Marin community project, which is kind of making it so there\u0027s a pipeline for people to open a GitHub issue and",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "Stanford\u0027s Marin community project, which is kind of making it so there\u0027s a pipeline for people to open a GitHub issue and implement a new idea and then have it run",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "Stanford\u0027s Marin community project, which is kind of making it so there\u0027s a pipeline for people to open a GitHub issue and implement a new idea and then have it run Stanford\u0027s Marin community project, which is kind of making it so there\u0027s a pipeline for people to open a GitHub issue and implement a new idea and then have it run",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "people are using the Chinese versus US open models for.",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "people are using the Chinese versus US open models for, which will be a",
+      "Confidence": 0.5
+    },
+    {
+      "Text": "Which will be which I\u0027m personally, so it can be very",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "Which will be which I\u0027m personally, so I can be very excited to watch.",
+      "Confidence": 0.4
+    },
+    {
+      "Text": "Which will be which I\u0027m personally, so I can be very excited to watch. Which will be which I\u0027m personally, so I can be very excited to watch.",
+      "Confidence": 0.4
+    }
+  ],
+  "FullTranscript": "This upcoming year, At times, it does At times, it does get super technical, super technical, but we do try super technical, but we do try to make sure that super technical, but we do try to make sure that it remains super technical, but we do try to make sure that it remains accessible super technical, but we do try to make sure that it remains accessible to folks outside the field with to folks outside the field without ever dumber to folks outside the field without ever dumbing it down. to folks outside the field without ever dumbing it down. to folks outside the field without ever dumbing it down. It is a great honor and It is a great honor and pleasure to It is a great honor and pleasure to be able to do this kind of It is a great honor and pleasure to be able to do this kind of episode two of my favorite two of my favorite people in the two of my favorite people in the AI community, two of my favorite people in the AI community, Sebastian two of my favorite people in the AI community, Sebastian Raschka and Sebastian Raschka and Nathan Sebastian Raschka and Nathan Lambert. They are both They are both widely respected They are both widely respected machine learning research They are both widely respected machine learning researchers and engineers, who also who also happen to be great who also happen to be great communicators, edge who also happen to be great communicators, educators, writers, who also happen to be great communicators, educators, writers, and who also happen to be great communicators, educators, writers, and Twitterers, x posters. Twitterers, x posters. Sebastian Twitterers, x posters. Sebastian is the author of Twitterers, x posters. Sebastian is the author of two books, a highly I highly recommend for beginners and I highly recommend for beginners and experts alike, I highly recommend for beginners and experts alike. First is I highly recommend for beginners and experts alike. First is build a large First is build a large language model First is build a large language model from scratch. First is build a large language model. From scratch and build a reasoning From scratch and build a reasoning model From scratch and build a reasoning model from scratch. Truly believe I truly believe in the I truly believe in the machine learning computer I truly believe in the machine learning computer science world, the I truly believe in the machine learning computer science world I truly believe in the machine learning computer science world the best way to learn and understand the best way to learn and understand something is to the best way to learn and understand something is to build it yourself. From scratch. From scratch. From scratch. Nate From scratch. Nathan is the post train From scratch. Nathan is the post training lead at the From scratch. Nathan is the post training lead at the Allen Institute for AI, an Allen Institute for AI and author Allen Institute for AI and author of the definitive book Allen Institute for AI and author of the definitive book on reinforcement learning from human feedback. on reinforcement learning from human feedback. Both of them Both of them have great Both of them have great x accounts, Both of them have great x accounts, great sub Both of them have great x accounts, great substacks. Sebastian has core great substacks. Sebastian has courses on YouTube, great substacks. Sebastian has courses on YouTube. Nathan has a podcast. great substacks. Sebastian has courses on YouTube. Nathan has a podcast, and everyone should great substacks. Sebastian has courses on YouTube. Nathan has a podcast, and everyone should absolutely follow great substacks. Sebastian has courses on YouTube. Nathan has a podcast, and everyone should absolutely follow all of those. great substacks. Sebastian has courses on YouTube. Nathan has a podcast, and everyone should absolutely follow all of those. This is the Let\u0027s This is the Alex Friedman Podcast. This is the Alex Friedman Podcast. To support it, please This is the Lex Friedman podcast. To support it, please check out our sponsors in the This is the Lex Friedman podcast. To support it, please check out our sponsors in the description where you can also where you can also find link where you can also find links to contact me where you can also find links to contact me, ask questions, where you can also find links to contact me ask questions, get feedback, and so on. ask questions, get feedback, and so on. And now, dear And now, dear friends, here And now, dear friends, here\u0027s Sebastian And now, dear friends, here\u0027s Sebastian Raschka, And now, dear friends, here\u0027s Sebastian Rashka, and Nathan Lambert. So I think So I think, one useful So I think, one useful lens to look So I think, one useful lens to look at all of this through So I think, one useful lens to look at all of this through is So I think, one useful lens to look at all of this through is the deep seek so called deep seek the deep seek so called deep seek moment. The the deep seek so called deep seek moment. This happened about the deep seek so called deep seek moment. This happened about a year ago in January 2020. about a year ago in January 2025 when about a year ago in January 2025 when the open weight Chinese about a year ago in January 2025 when the open weight Chinese company DeepSeq released DeepSeq about a year ago in January 2025 when the open weight Chinese company DeepSeq released DeepSeq r one. about a year ago in January 2025 when the open weight Chinese company DeepSeq released DeepSeq r one. about a year ago in January 2025 when the open weight Chinese company DeepSeq released DeepSeq r one. That, I think about a year ago in January 2025 when the open weight Chinese company DeepSeq released DeepSeq r one. That, I think it\u0027s fair to say about a year ago in January 2025 when the open weight Chinese company DeepSeq released DeepSeq r one. That, I think it\u0027s fair to say surprised everyone with about a year ago in January 2025 when the open weight Chinese company DeepSeq released DeepSeq r one. That, I think it\u0027s fair to say surprised everyone with, new about a year ago in January 2025 when the open weight Chinese company DeepSeq released DeepSeq r one. That, I think it\u0027s fair to say surprised everyone with, near or at near or at state of the art near or at state of the art performance. near or at state of the art performance with near or at state of the art performance with allegedly much less allegedly much less compute for much allegedly much less compute for much cheaper and allegedly much less compute for much cheaper And from then to today, And from then to today, the AI And from then to today, the AI competition has gotten insane. Both on the research Both on the research level and the product level. Both on the research level and the product level, it\u0027s just been accelerating. Both on the research level and the product level, it\u0027s just been accelerating. Let\u0027s discuss Both on the research level and the product level, it\u0027s just been accelerating. Let\u0027s discuss all of this today, and maybe Let\u0027s discuss all of this today, and maybe let\u0027s start with some Let\u0027s discuss all of this today, and maybe let\u0027s start with some spicy questions if we can. spicy questions if we can. Who spicy questions if we can. Who\u0027s winning? spicy questions if we can. Who\u0027s winning? At the international level? At the international level? Would you say it\u0027s a set of At the international level? Would you say it\u0027s a set of companies At the international level? Would you say it\u0027s a set of companies in China or the set of companies in China or the set of companies in The United States? in China or the set of companies in The United States? And in China or the set of companies in The United States? And, Sebastian, Nathan, And, Sebastian, Nathan, it\u0027s good to see you guys. And, Sebastian, Nathan, it\u0027s good to see you guys. So, Sebastian, who do you think is winning? So Sebastian, who do you think is winning? So winning So, Sebastian, who do you think is winning? So winning is a very broad So, Sebastian, who do you think is winning? So winning is a very broad So, Sebastian, who do you think is winning? So winning is a very broad you know, term. I you know, term. I I would say you mentioned you know, term. I I would say you mentioned the deepsegment you know, term. I I would say you mentioned the deep seek moment, and I do think deep seek is definitely winning seek moment, and I do think deep seek is definitely winning the hearts of the people. seek moment, and I do think deep seek is definitely winning the hearts of people who work on weight models because they share people who work on open weight models because they share these as open models. the people who work on open weight models because they share these as open models. When Winning, I think, Winning, I think, Winning, I think, has multiple timescales Winning, I think, has multiple timescales to it. We have Winning, I think, has multiple timescales to it. We have today. We have next year. We have today. We have next year. We have in ten years. One today. We have next year. We have in ten years. One thing I know for sure today. We have next year. We have in ten years. One thing I know for sure is today. We have next year. We have in ten years. One thing I know for sure is that, I don\u0027t think that, I don\u0027t think nowadays, two thousand that, I don\u0027t think nowadays, two thousand twenty six that, I don\u0027t think nowadays, 2026 that there will be that, I don\u0027t think nowadays, 2026 that there will be any company who that, I don\u0027t think nowadays, 2026 that there will be any company who is, let\u0027s say, that, I don\u0027t think nowadays, 2026 that there will be any company who is, let\u0027s say, having access to a that, I don\u0027t think nowadays, 2026 that there will be any company who is, let\u0027s say, having access to it that, I don\u0027t think nowadays, 2026 that there will be any company who is, let\u0027s say, having access to it technology that no technology that no other company has access to. And that is mainly because mainly because researchers of mainly because researchers are frequently mainly because researchers are frequently changing jobs, changing mainly because researchers are frequently changing jobs, changing labs, mainly because researchers are frequently changing jobs, changing labs, they, rotate it. So I don\u0027t think they, rotate it. So I don\u0027t think there will be they, rotate it. So I don\u0027t think there will be a clear winner they, rotate it. So I don\u0027t think there will be they, rotate it. So I don\u0027t think there will be a clear winner in terms of technology access. How a clear winner in terms of technology access. However, I do think a clear winner in terms of technology access. However, I do think there will be the the differentiating factor the differentiating factor will be the differentiating factor will be budget and how the differentiating factor will be budget and hardware constraints. So I don\u0027t think the idea I don\u0027t think the ideas will be I don\u0027t think the ideas will be proprietary, but I don\u0027t think the ideas will be proprietary, but the way I don\u0027t think the ideas will be proprietary, but the way or the resources that the way or the resources that are needed to the way or the resources that are needed to implement them the way or the resources that are needed to implement them And so I don\u0027t see And so I don\u0027t see currently And so I don\u0027t see currently take it all scenario And so I don\u0027t see currently take it all scenario where we\u0027re not taking it all, I can\u0027t see it all. I can\u0027t see that at the moment. Nathan, what do you Nathan, what do you think? Yeah. Nathan, what do you think? You see the Nathan, what do you think? You see the labs put different Nathan, what do you think? You see the lab put different energy into what they\u0027re trying to do, and put different energy into what they\u0027re trying to do, and I think to demarcate the point put different energy into what they\u0027re trying to do, and I think to demarcate the point in time when we\u0027re recording this, to demarcate the point in time when we\u0027re recording this, the hype over anthroplics to demarcate the point in time when we\u0027re recording this, the hype over anthroplics cloud OPUS 4.5 model has cloud OPUS 4.5 model has been absolutely insane, which is just cloud OPUS 4.5 model has been absolutely insane, which is just I mean, I\u0027ve used it and built stuff in the last I mean, I\u0027ve used it and built stuff in the last few weeks, and it\u0027s I mean, I\u0027ve used it and built stuff in the last few weeks, and it\u0027s it\u0027s almost I mean, I\u0027ve used it and built stuff in the last few weeks, and it\u0027s it\u0027s almost gotten to the point where it feels like a bit of a meme it\u0027s almost gotten to the point where it feels like a bit of a meme in terms of the hype. it\u0027s almost gotten to the point where it feels like a bit of a meme in terms of the hype. And it\u0027s it\u0027s almost gotten to the point where it feels like a bit of a meme in terms of the hype. And it\u0027s kind of funny because this is kind of funny because this is very organic. kind of funny because this is very organic. And then if we go back kind of funny because this is very organic. And then if we go back a few months ago, we can get the release date in And then if we go back a few months ago, we can get the release date in the notes as Gemini And then if we go back a few months ago, we can get the release date in the notes as Gemini three from Google got released. And it seems three from Google got released. And it seemed like the three from Google got released. And it seemed like the marketing and just, like, wow marketing and just, like, wow factor of that release marketing and just, like, wow factor of that release was super high. marketing and just, like, wow factor of that release was super high. But then at the end of But then at the November, Claude Opus But then at the November, Claude Opus 4.5 was released, But then at the November, Claude Opus 4.5 was released, and the hype has been But then at the November, Claude Opus 4.5 was released and the hype has been growing. But Gemini three But Gemini three was before this, and But Gemini three was before this, and it kind of feels like people But Gemini three was before this, and it kind of feels like people don\u0027t really talk about it as much even though when it came out, everybody talk about it as much even though when it came out, everybody was like, this is talk about it as much even though when it came out, everybody was like, this is Gemini\u0027s moment to retake kind of Gemini\u0027s moment to retake kind of Google\u0027s structural Gemini\u0027s moment to retake kind of Google\u0027s struck example of advantages in AI. And Gemini three is a fantastic model, and I still use advantages in AI. And Gemini three is a fantastic model, and I still use it. It\u0027s just kind of advantages in AI. And Gemini three is a fantastic model, and I still use it. It\u0027s just kind of differentiation is lower. differentiation is lower. And agree with I agree with Sebastian what you\u0027re saying with I agree with Sebastian what you\u0027re saying with all these, like, I agree with Sebastian what you\u0027re saying with all these, like, the idea space is I agree with Sebastian what you\u0027re saying with all these, like, the idea space is I agree with Sebastian what you\u0027re saying with all these, like, the idea space is very fluid, but, cold very fluid, but, culturally anthropic with very fluid, but, culturally anthropic one has been known for betting very very fluid, but, culturally anthropic would is known for betting very hard on code, which is cloud code thing. is known for betting very hard on code, which is cloud code thing is working is known for betting very hard on code, which is cloud code thing. Is working out for them right now. So I think that even if the Is working out for them right now. So I think that even if the ideas flow pretty Is working out for them right now. So I think that even if the ideas flow pretty freely, Is working out for them right now. So I think that even if the ideas flow pretty freely, so much of this is bottlenecked by human effort so much of this is bottlenecked by human effort and kind of cold so much of this is bottlenecked by human effort and kind of culture of organizations. so much of this is bottlenecked by human effort and kind of culture of organizations where philanthropic seems to at least be seems to at least be presenting seems to at least be presenting as the least chaotic. seems to at least be presenting as the least chaotic. It\u0027s it\u0027s it\u0027s a bit of seems to at least be presenting as the least chaotic. It\u0027s was is a bit of an advantage, and they can keep doing that for they can keep doing that for a while. But they can keep doing that for a while. But on the other side of they can keep doing that for a while. But on the other side of things, there\u0027s a lot of they can keep doing that for a while. But on the other side of things, there\u0027s a lot of ominous they can keep doing that for a while. But on the other side of things, there\u0027s a lot of ominous technology from China where they\u0027re technology from China where there\u0027s way many more technology from China where there\u0027s way, many more labs than deep sea technology from China where there\u0027s way, many more labs than deep sea. So technology from China where there\u0027s way, many more labs than deep sea. So DeepSeq kicked off a movement with DeepSeq kicked off a movement within China, I say, DeepSeq kicked off a movement within China, I say, kind of similar to DeepSeq kicked off a movement within China, I say, kind of similar to DeepSeq kicked off a movement within China, I say, kind of similar to how ChaChBT kicked off a movement in how Chachi BT kicked off a movement in The US where everything how Chachi BT kicked off a movement in The US where everything had a chatbot. There\u0027s how Chachi BT kicked off a movement in The US where everything had a chatbot. There\u0027s now tons of tech tons of tech companies in China that are tons of tech companies in China that are releasing very strong tons of tech companies in China that are releasing very strong frontier open weight models to the point where I would say that frontier open weight models to the point where I would say that DeepSeq has kind of frontier open weight models to the point where I would say that deep Sea is kind of losing its crown as the preeminent open model Sea is kind of losing its crown as the preeminent open model maker in China. And Seek is kind of losing its crown as the preeminent open model maker in China, and the likes of CDW c dot ai\u0027s with their c dot ai\u0027s with their GLM models c dot ai\u0027s with their GLM models, Mini Max\u0027s models, c dot ai\u0027s with their GLM models, Mini Max\u0027s models, c dot ai\u0027s with their GLM models, Mini Max\u0027s models, Kimmy Moonshot, especially Kimmy Moonshot, especially in the last few months, Kimmy Moonshot, especially in the last few months, have shown Kimmy Moonshot, especially in the last few months, have shown more brightly. The new deep seek models shown more brightly. The new deep seek models are still very strong. shown more brightly. The new deep seek models are still very strong, but that\u0027s kind of a it could look but that\u0027s kind of a it could look back as a big narrative but that\u0027s kind of a it could look back as a big narrative point where in 2025, Deepsead came and then point where in 2025 Deepseid came, and then all and it kind of point where in 2025 Deepseid came, and then all and it kind of provided this platform for way more Chinese companies that are platform for way more Chinese companies that are releasing these fantastically platform for way more Chinese companies that are releasing these fantastic models to kind of platform for way more Chinese companies that are releasing these fantastic models to kind of have this new type of operation. type of operation. So these models type of operation. So these models from these Chinese companies type of operation. So these models from these Chinese companies are open weights, and type of operation. So these models from these Chinese companies are open weights and type of operation. So these models from these Chinese companies are open weights and depending on this trajectory of the depending on this trajectory of business models that these depending on this trajectory of business models that these American companies are doing, depending on this trajectory of business models that these American companies are doing, could be at risk. But currently, lot of people are paying lot of people are paying for AI software. lot of people are paying for AI software in The US. lot of people are paying for AI software in The US and historically in lot of people are paying for AI software in The US and historically in China. lot of people are paying for AI software in The US and historically in China. And other parts of the world, people don\u0027t pay a And other parts of the world, people don\u0027t pay a lot for software. And other parts of the world, people don\u0027t pay a lot for software. So some of these models And other parts of the world, people don\u0027t pay a lot for software. So some of these models like DeepSeq have have the love of the people have the love of the people because they are open wide. have the love of the people because they are open white. How long do you think, the Chinese companies keep How long do you think, the Chinese companies keep releasing open wide How long do you think, the Chinese companies keep releasing open white models? I would say for I would say for a few years. I I would say for a few years. I think that I would say for a few years. I think that, like in The US, there\u0027s I would say for a few years. I think that, like in The US, there\u0027s not a clear I would say for a few years. I think that, like in The US, there\u0027s not a clear business model for it. I business model for it. I have been writing about business model for it. I have been writing about open models for a while. business model for it. I have been writing about open models for a while and these Chinese companies have realized it. So I get inbound Chinese companies have realized it, so I get inbound from some of them. Chinese companies have realized it. So I get inbound from some of them. And they\u0027re smart and realize Chinese companies have realized it, so I get inbound from some of them. They\u0027re smart and realize the same constraints, which is that a lot of US And they\u0027re smart and realize the same constraints, which is that a lot of US company tech companies And they\u0027re smart and realize the same constraints, which is that a lot of US tech companies and other IT companies And they\u0027re smart and realize the same constraints, which is that a lot of US tech companies and other IT companies won\u0027t pay for And they\u0027re smart and realize the same constraints, which is that a lot of US tech companies and other IT companies won\u0027t pay for API sub And they\u0027re smart and realize the same constraints, which is that a lot of US tech companies and other IT companies won\u0027t pay for API subscription to And they\u0027re smart and realize the same constraints, which is that a lot of US tech companies and other IT companies won\u0027t pay for API subscription to Chinese companies for security concerns. This has Chinese companies for security concerns. This has been a long standing Chinese companies for security concerns. This has been a long standing habit in tech. And habit in tech, and the people at these companies habit in tech, and the people at these companies then see habit in tech, and the people at these companies then see open open weight models as an ability to influence and take part open weight models as an ability to influence and take part of a huge growing open weight models as an ability to influence and take part of a huge growing AI open weight models as an ability to influence and take part of a huge growing AI expenditure market in The US. And they\u0027re very expenditure market in The US. And they\u0027re very realistic about this. expenditure market in The US. And they\u0027re very realistic about this, and it\u0027s working expenditure market in The US. And they\u0027re very realistic about this. And it\u0027s working for them, and I think that the government And it\u0027s working for them, and I think that the government will see that that And it\u0027s working for them, and I think that the government will see that that is And it\u0027s working for them, and I think that the government will see that that is building a lot of influence inter building a lot of influence internationally in terms building a lot of influence internationally in terms of uptake of the technology. building a lot of influence internationally in terms of uptake of the technology. So building a lot of influence internationally in terms of uptake of the technology. So there\u0027s gonna be a lot of incentives to keep it going. there\u0027s gonna be a lot of incentives to keep it going. But there\u0027s gonna be a lot of incentives to keep it going, but building these models there\u0027s gonna be a lot of incentives to keep it going. But building these models and doing the research is very expensive. So building these models and doing the research is very expensive. So at some point, I expect building these models and doing the research is very expensive. So at some point, I expect consolidation, but consolidation, but I don\u0027t expect that to be consolidation, but I don\u0027t expect that to be a story of twenty twenty consolidation, but I don\u0027t expect that to be a story of 2026 where there will be more open more open model builders throughout twenty more open model builders throughout 2026 than there were more open model builders throughout 2026 than there were in 2025. more open model builders throughout 2026 than there were in 2025. And a lot of the notable more open model builders throughout 2026 than there were in 2025, and a lot of the notable ones will be in China. more open model builders throughout 2026 than there were in 2025, and a lot of the notable ones will be in China. more open model builders throughout 2026 than there were in 2025, and a lot of the notable ones will be in China. You wanna say something? Oh, more open model builders throughout 2026 than there were in 2025, and a lot of the notable ones will be in China. You wanna say something? Yes. more open model builders throughout 2026 than there were in 2025, and a lot of the notable ones will be in China. You wanna say something? Yes. You mentioned Deepseak losing its You mentioned DeepSeq losing its crown. I You mentioned DeepSeq losing its crown. I do think to some extent, to some extent, yes. But also have to consider also have to consider though there are still also have to consider though there are still, I would say, also have to consider though they are still, I would say, slightly ahead and also have to consider though there are still, I would say, slightly ahead. And the other ones, it\u0027s not that slightly ahead. And the other ones, it\u0027s not that deep sea got worse. It\u0027s slightly ahead. And the other ones, it\u0027s not that deep sea got worse. It\u0027s just like the other ones are using the ideas just like the other ones are using the ideas from deep Deepseak, for example, just like the other ones are using the ideas from deep deepseak. For example, you mentioned Kimmy. just like the other ones are using the ideas from deep deepseak. For example, you mentioned Kimmy. Same architecture just like the other ones are using the ideas from deep deepseak. For example, you mentioned Kimmy. The same architecture. They\u0027re training it just like the other ones are using the ideas from deep deepseak. For example, you mentioned Kimmy. Same architecture. They\u0027re training it. And then again, we have just like the other ones are using the ideas from deep deepseak. For example, you mentioned Kimmy. Same architecture. They\u0027re training it. And then again, we have this leapfrogging where just like the other ones are using the ideas from deep deepseak. For example, you mentioned Kimmy. Same architecture. They\u0027re training it. And then again, we have this leapfrogging where just like the other ones are using the ideas from deep deepseak. For example, you mentioned Kimmy. Same architecture. They\u0027re training it. And then again, we have this leapfrogging where they might be at some point in time a bit better they might be at some point in time a bit better because they have the more they might be at some point in time a bit better because they have the more recent model. And they might be at some point in time a bit better because they have the more recent model. And I think this comes back to, And I think this comes back to, the the fact that they want And I think this comes back to, the the fact that they want be a clear winner. It\u0027s will it will just be like like that. be a clear winner. It\u0027s will it will just be like like that, one per be a clear winner. It\u0027s will it will just be like like that. One person releases something, the be a clear winner. It\u0027s will it will just be like like that. One person releases something, the other one comes in and be a clear winner. It\u0027s will it will just be like like that. One person releases something, the other one comes in. And the the reason more be a clear winner. It\u0027s will it will just be like like that. One person releases something, the other one comes in. And the the reason the most recent model be a clear winner. It\u0027s will it will just be like like that. One person releases something, the other one comes in. And the the reason the most recent model probably always the best model. Yeah. We\u0027ll also see probably always the best model. Yeah. We\u0027ll also see the Chinese probably always the best model. Yeah. We\u0027ll also see that Chinese companies have different probably always the best model. Yeah. We\u0027ll also see that Chinese companies have different incentives. So, like, probably always the best model. Yeah. We\u0027ll also see that Chinese companies have different incentives. So, like, DeepSeq is very secretive. DeepSeq is very secretive, where some of these startups DeepSeq is very secretive, where some of these startups are DeepSeq is very secretive, where some of these startups are, like, the mini maxes and z dot ai are, like, the mini maxes and z dot AIs of the world. Those two are, like, the mini maxes and z dot AIs of the world. Those two literally have filed are, like, the mini maxes and z dot AIs of the world. Those two literally have filed IPO paperwork and they\u0027re trying to get wet they\u0027re trying to get Western Mindshare and do they\u0027re trying to get Western Mindshare and do a lot of outreach there. they\u0027re trying to get Western Mindshare and do a lot of outreach there. So I don\u0027t know if these insights they\u0027re trying to get Western Mindshare and do a lot of outreach there. So I don\u0027t know if these incentives will kind of change the model development, know if these incentives will kind of change the model development because Deepseek, famous know if these incentives will kind of change the model development because Deepseek famously is built by a hedge know if these incentives will kind of change the model development because Deepseek famously is built by a hedge fund, a high flyer know if these incentives will kind of change the model development because Deepseek famously is built by a hedge fund, High Flyer Capital. And we don\u0027t know if these incentives will kind of change the model development because Deepseek famously is built by a hedge fund, High Flyer Capital. And we don\u0027t know exactly what they we don\u0027t know what they use And we don\u0027t know exactly what they we don\u0027t know what they use the models for or And we don\u0027t know exactly what we don\u0027t know what they use the models for or if they care about this. Their secret Their secret in terms of communication then They\u0027re secret in terms of communication. They\u0027re not secret in terms of They\u0027re secret in terms of communication. They\u0027re not secret in terms of the technical reports They\u0027re secret in terms of communication. They\u0027re not secret in terms of the technical reports that describe They\u0027re secret in terms of communication. They\u0027re not secret in terms of the technical reports that describe their models work. They\u0027re still open on that front. their models work. They\u0027re still open on that front. And we should also how their models work. They\u0027re still open on that front. And we should also say, how their models work. They\u0027re still open on that front. And we should also say, on the Opus four five hype on the Opus four five hype, there\u0027s on the Opus four five hype, there\u0027s the layer of, something there\u0027s the layer of, something being the darling there\u0027s the layer of, something being the darling of the being the darling of the x being the darling of the x echo chamber. being the darling of the x echo chamber. On Twitter, echo chamber, and the at On Twitter, echo chamber, and the actual Amaz On Twitter, echo chamber, and the actual amount of people that are using the model. I think, is I think it\u0027s probably fair to say that I think it\u0027s probably fair to say that Cha Jupyter and Jack I think it\u0027s probably fair to say that Xi Jinping and Gemini are focused I think it\u0027s probably fair to say that Cha are focused on the broad user I think it\u0027s probably fair to say that Cha are focused on the broad user base that I think it\u0027s probably fair to say that Cha are focused on the broad user base that just one I think it\u0027s probably fair to say that Cha are focused on the broad user base that just want to solve problems in their daily want to solve problems in their daily lives, and that user base is gigantic. So the user base is gigantic. So the hype about decoding user base is gigantic. So the hype about decoding may not be representative of the actual use may not be representative of the actual use. I would say also may not be representative of the actual use. I would say also, a lot may not be representative of the actual use. I would say also, a lot of the usage patterns are like, of the usage patterns are, like you said, name recognition, of the usage patterns are, like you said, name recognition, brand of the usage patterns are, like you said, name recognition, brand and and stuff, but also muscle and and stuff, but also muscle memory almost where and and stuff, but also muscle memory almost where, you know, like, has been around has been around for a long time. People has been around for a long time. People just got used to using JPG has been around for a long time. People just got used to using it, and it\u0027s kind of like almost JPG has been around for a long time. People just got used to using it, and it\u0027s kind of like almost like a flywheel. They recommend it to other kind of like almost like a flywheel. They recommend it to other users and that stuff. kind of like almost like a flywheel. They recommend it to other users and that stuff. One interesting point is also the customer One interesting point is also the customization of One interesting point is also the customization of, LMS. For example, ChachiPTi has a For example, Chatuchapiti has a memory feature. Right? And For example, ChachiPTi has a memory feature. Right? And so you may For example, Chatuchapiti has a memory feature. Right? And so you may have a subscription and you so you may have a subscription and you use it for personal so you may have a subscription and you use it for personal stuff. But I don\u0027t know if you want to use that same thing as to use that same thing at work, you know, because to use that same thing at work, you know, because that\u0027s a boundary to use that same thing at work, you know, because that\u0027s the boundary between private and work to use that same thing at work, you know, because that\u0027s the boundary between and work. If you\u0027re working at a company, they might not allow that. private and work. If you\u0027re working at a company, they might not allow that, or you may not and work. If you\u0027re working at a company, they might not allow that, or you may not want that. and work. If you\u0027re working at a company, they might not allow that, or you may not want that. And I think that\u0027s also an interesting point where And I think that\u0027s also an interesting point where you might have multiple And I think that\u0027s also an interesting point where you might have multiple subscriptions. One one is And I think that\u0027s also an interesting point where you might have multiple subscriptions. One one is just clean code. It keeps has nothing of your just clean code. It keeps has nothing of your personal images just clean code. It keeps has nothing of your personal images that you just clean code. It keeps has nothing of your personal images that you or hobby projects in there. It\u0027s just like the work or hobby projects in there. It\u0027s just like the work thing. And then the other one or hobby projects in there. It\u0027s just like the work thing. And then the other one is your personal thing or hobby projects in there. It\u0027s just like the work thing. And then the other one is your personal thing. or hobby projects in there. It\u0027s just like the work thing. And then the other one is your personal thing. So I think that\u0027s also something where So I think that\u0027s also something where two different use cases and So I think that\u0027s also something where two different use cases, and it doesn\u0027t mean you So I think that\u0027s also something where two different use cases, and it doesn\u0027t mean So I think that\u0027s also something where two different use cases, and it doesn\u0027t mean you only have to have one. It\u0027s it\u0027s I think you only have to have one. It\u0027s it\u0027s I think the future is also you only have to have one. It\u0027s it\u0027s I think the future is also multiple ones. you only have to have one. It\u0027s it\u0027s I think the future is also multiple ones. you only have to have one. It\u0027s it\u0027s I think the future is also multiple ones. What model do you think one twenty twenty What model do you think won 2025, and what What model do you think won 2025, and what model do you think is gonna What model do you think won 2025, and what model do you think is gonna win \u002726? I think in the context I think in the context of a consumer chat I think in the context of a consumer chatbots is a question of I think in the context of a consumer chatbots is a question of are you willing to bet on Gemini are you willing to bet on Gemini over Tai Chi PT. are you willing to bet on Gemini over Tatchibati Mhmm. Which I are you willing to bet on Gemini over TatchiPT Mhmm. Which I would say is are you willing to bet on Gemini over TatchiPT Mhmm. Which I would say in my gut feels like a bit are you willing to bet on Gemini over TatchiPT Mhmm. Which I would say in my gut feels like a bit of a risky bet. are you willing to bet on Gemini over TatchiPT Mhmm. Which I would say in my gut feels like a bit of a risky bet because opening are you willing to bet on Gemini over TatchiPT Mhmm. Which I would say in my gut feels like a bit of a risky bet because OpenAI has been the income are you willing to bet on Gemini over TatchiPT Mhmm. Which I would say in my gut feels like a bit of a risky bet because OpenAI has been the incumbent, and there\u0027s so many are you willing to bet on Gemini over TatchiPT Mhmm. Which I would say in my gut feels like a bit of a risky bet because OpenAI has been the incumbent, and there\u0027s so many benefits to that. are you willing to bet on Gemini over TatchiPT Mhmm. Which I would say in my gut feels like a bit of a risky bet because OpenAI has been the incumbent, and there\u0027s so many benefits to that in tech. are you willing to bet on Gemini over TatchiPT Mhmm. Which I would say in my gut feels like a bit of a risky bet because OpenAI has been the incumbent, and there\u0027s so many benefits to that in tech. I think that momentum, if you\u0027ll momentum, if you look at 2025, momentum if you look at 2025 was on Gemini side, momentum if you look at 2025 was on Gemini side, but they were starting from momentum if you look at 2025 was on Gemini side, but they were starting from such a low point momentum if you look at 2025 was on Gemini side, but they were starting from such a low point, I think, of momentum if you look at 2025 was on Gemini side, but they were starting from such a low point, I think, on RIP Bard. momentum if you look at 2025 was on Gemini side, but they were starting from such a low point, I think, on RIP Bard. And these earlier momentum if you look at 2025 was on Gemini side, but they were starting from such a low point, I think, on RIP Bard. And these earlier attempts of of And these earlier attempts of of getting started. I think And these earlier attempts of of getting started. I think And these earlier attempts of of getting started. I think huge credit for them for huge credit for them for powering through the org huge credit for them for powering through the organizational huge credit for them for powering through the organizational chaos to make that happen. But also chaos to make that happen. But also, it\u0027s hard to bet against chaos to make that happen. But also, it\u0027s hard to bet against chat to OpenAI chaos to make that happen. But also, it\u0027s hard to bet against chat to OpenAI because they always come chaos to make that happen. But also, it\u0027s hard to bet against chat to OpenAI because they always come off cast chaos to make that happen. But also, it\u0027s hard to bet against chat to OpenAI because they always come off as as so chaotic. chaos to make that happen. But also, it\u0027s hard to bet against chat to OpenAI because they always come off as as so chaotic, but they\u0027re very good at chaos to make that happen. But also, it\u0027s hard to bet against chat to OpenAI because they always come off as as so chaotic, but they\u0027re very good at landing things. And I think, like, landing things. And I think, like, personally, I have landing things. And I think, like, personally, I have very mixed reviews of landing things. And I think, like, personally, I have very mixed landing things. And I think, like, personally, I have very mixed reviews of GPT five, but it had to have saved the reviews of GPT five, but it had to have saved them so much money. reviews of GPT five, but it had to have saved them so much money. reviews of GPT five, but it had to have saved them so much money. With the High Line feature being a router With the High Line feature being a router where most users are no With the High Line feature being a router where most users are no longer charging, like, charging their GPU charging, like, charging their GPU costs as much. charging, like, charging their GPU costs as much. So I think it\u0027s very hard to So I think it\u0027s very hard to dissociate So I think it\u0027s very hard to dissociate the things that I like So I think it\u0027s very hard to dissociate the things that I like out of models versus the things that are gonna the things that I like out of models versus the things that are gonna actually be a be a general public. Differentiator. Differentiator. What do you think about Differentiator. What do you think about 2026? Differentiator. What do you think about 2026? Who\u0027s gonna win? I Differentiator. What do you think about 2026? Who\u0027s gonna win? I\u0027ll say something even though it\u0027s risky. I will say I\u0027ll say something even though it\u0027s risky. I will say that I think Gemini will I\u0027ll say something even though it\u0027s risky. I will say that I think Gemini will continue to take I\u0027ll say something even though it\u0027s risky. I will say that I think Gemini will continue take progress on Chattopity. I think Google\u0027s take progress on chat to p t. I think Google scale when both of these take progress on Chatuchu p t. I think Google scale when both of these are operating take progress on Chatuchu p t. I think Google scale when both of these are operating at such extreme scales and, like, at such extreme scales, and, like, Google has the at such extreme scales, and, like, Google has the ability to at such extreme scales, and, like, Google has the ability to separate that research and product a bit separate that research and product a bit better where you hear so much separate that research and product a bit better where you hear so much about AI being separate that research and product a bit better where you hear so much about AI being separate that research and product a bit better where you hear so much about AI being chaotic operationally. And chaotic operationally and chasing the high impact chaotic operationally and chasing the high impact thing, which is a very start chaotic operationally and chasing the high impact thing, which is a very startup culture. Then on the Then on the software and enterprise Then on the software and enterprise side, I think Anthropic Then on the software and enterprise side, I think Anthropic will have continued to success as they\u0027ve, again, continued to success as they\u0027ve again and again been set up continued to success as they\u0027ve again and again been set up for that. continued to success as they\u0027ve again and again been set up continued to success as they\u0027ve again and again been set up for that. And, obviously, Google\u0027s for that. And, obviously, Google\u0027s cloud has a lot of for that. And, obviously, Google\u0027s cloud has a lot of offerings, but I think the for that. And, obviously, Google\u0027s cloud has a lot of offerings, but I think this kind of, like, for that. And, obviously, Google\u0027s cloud has a lot of offerings, but I think this kind of, like, Gemini name brand is important for Gemini name brand is important for them to build. And Gemini name brand is important for them to build. And and Google\u0027s cloud will Gemini name brand is important for them to build. They and Google\u0027s cloud will continue to do well as but that\u0027s kind of a and Google\u0027s cloud will continue to do well as but that\u0027s kind of a more and Google\u0027s cloud will continue to do well as but that\u0027s kind of a more complex thing to explain in the e more complex thing to explain in the ecosystem because that\u0027s more complex thing to explain in the ecosystem more complex thing to explain in the ecosystem because that\u0027s competing with the likes of Azure and AWS. because that\u0027s competing with the likes of Azure and AWS rather than on the because that\u0027s competing with the likes of Azure and AWS rather than on the because that\u0027s competing with the likes of Azure and AWS rather than on the model provider side. So on the infrastructure, model provider side. So in the infrastructure, you think model provider side. So in the infrastructure, you think GPUs give an advantage? Largely because Largely because the margin on in Largely because the margin on NVIDIA chips is insane. Largely because the margin on NVIDIA chips is insane, and Google Largely because the margin on NVIDIA chips is insane, and Google can develop everything from everything from top to bottom to fit everything from top to bottom to fit their stack and not have everything from top to bottom to fit their stack and not have to pay everything from top to bottom to fit their stack and not have to pay this margin, and they\u0027ve had a head this margin, and they\u0027ve had a head start in building data centers this margin, and they\u0027ve had a head start in building data centers. So all of these things this margin, and they\u0027ve had a head start in building data centers. So all of these things that have both this margin, and they\u0027ve had a head start in building data centers. So all of these things that have both high lead times and very hard margins on high lead times and very hard margins on high costs high lead times and very hard margins on high costs, Google hasn\u0027t just high lead times and very hard margins on high costs Google has a just kind of a historical advantage there. Google has a just kind of a historical advantage there. And if there\u0027s Google has a just kind of a historical advantage there. And if there\u0027s gonna be a new paradigm, it\u0027s most likely to And if there\u0027s gonna be a new paradigm, it\u0027s most likely to come from OpenAI And if there\u0027s gonna be a new paradigm, it\u0027s most likely to come from OpenAI where they\u0027re kind of their research division their research division again and again their research division again and again has kind of shown their research division again and again has kind of shown this ability to land a new research idea or a this ability to land a new research idea or a product, I think, this ability to land a new research idea or a product, I think, like deep research, so we\u0027re o one thinking model o one thinking models. Like, all of these o one thinking models. Like, all of these definitional things o one thinking models. Like, all of these definitional things have come from OpenAI, and that\u0027s o one thinking models. Like, all of these definitional things have come from OpenAI, and that\u0027s gotta be one of their top gotta be one of their top traits as gotta be one of their top trades as an organization. gotta be one of their top trade as an organization. So it\u0027s kind of hard to bet against that, but as an organization. So it\u0027s kind of hard to bet against that, but I think a lot as an organization. So it\u0027s kind of hard to bet against that, but I think a lot of this year will be about scale and I think a lot of this year will be about scale and optimizing. I think a lot of this year will be about scale and optimizing what can be described as low hanging fruit in models. what can be described as low hanging fruit in models. what can be described as low hanging fruit in models. And clearly, what can be described as low hanging fruit in models. And clearly, there\u0027s a trade off between intelligence and there\u0027s a trade off between intelligence and speed. there\u0027s a trade off between intelligence and speed. This is what there\u0027s a trade off between intelligence and speed. This is what Chaggy Pateiff five there\u0027s a trade off between intelligence and speed. This is what Chaggy Pateiff five was trying to there\u0027s a trade off between intelligence and speed. This is what Chaggy Pateiff five was trying to solve there\u0027s a trade off between intelligence and speed. This is what Chaggy Pateiff five was trying to solve behind the scenes. there\u0027s a trade off between intelligence and speed. This is what Chaggy Pateiff five was trying to solve behind the scenes. there\u0027s a trade off between intelligence and speed. This is what Chaggy Pateiff five was trying to solve behind the scenes. It\u0027s like, do people actually want intelligence? It\u0027s like, do people actually want intelligence? The broad It\u0027s like, do people actually want intelligence to broad public, or do they wanna It\u0027s like, do people actually want intelligence to broad public, or do they want speed? I think it\u0027s a nice I think it\u0027s a nice variety actually all I think it\u0027s a nice variety actually or the option to I think it\u0027s a nice variety actually or the option to, have a toggle there. I think it\u0027s a nice variety actually or the option to, have a toggle there. I think it\u0027s a nice variety actually or the option to, have a toggle there. I mean, first, for my personal I mean, first, for my personal usage, most of the I mean, first, for my personal usage, most of the time when I look I mean, first, for my personal usage, most of time when I look something up, I use JWT to ask time when I look something up, I use JPG to ask a quick question, get the information, time when I look something up, I use JPG to ask a quick question, get the information I want it fast. Before you know more, For, you know, most daily tasks For, you know, most daily tasks, I use the quick Before, you know, most daily tasks, I use the quick model. Now For, you know, most daily tasks, I use the quick model. Nowadays, I think the auto mode is pretty good where you Nowadays, I think the auto mode is pretty good where you don\u0027t have to specifically Nowadays, I think the auto mode is pretty good where you don\u0027t have to specifically say thinking or Nowadays, I think the auto mode is pretty good where you don\u0027t have to specifically say thinking or know, non thinking and stuff. Then again, know, non thinking and stuff. Then again, I also sometimes know, non thinking and stuff. Then again, I also sometimes want the promo. know, non thinking and stuff. Then again, I also sometimes want the promo. Very often, what I do is when I have something Very often, what I do is when I have something written, I Very often, what I do is when I have something written, I put it into a Very often, what I do is when I have something written, I put it into a and say, hey. Do a very and say, hey. Do a very thorough check and say, hey. Do a very thorough check is all my and say, hey. Do a very thorough check is are all my references correct? Are all my thoughts correct? are all my references correct? Are all my thoughts correct? Did I make are all my references correct? Are all my thoughts correct? Did I make any formatting mistake? are all my references correct? Are all my thoughts correct? Did I make any formatting mistakes? And are the figure And are the figure numbers wrong or something And are the figure numbers wrong or something like that? And And are the figure numbers wrong or something like that? And I don\u0027t And are the figure numbers wrong or something like that? And I don\u0027t need that right away. It\u0027s something, okay. I need that right away. It\u0027s something, okay. I finished my stuff. need that right away. It\u0027s something, okay. I finished my stuff, maybe have dinner, let it run, come and it goes through back, and go through this. And I think back, and go through this. And I think see, this is where back, and go through this. And I think see, this is where think it\u0027s important to have this option. I would go crazy if think it\u0027s important to have this option. I would go crazy if for each query, I would have think it\u0027s important to have this option. I would go crazy if for each query, I would have to wait think it\u0027s important to have this option. I would go crazy if for each query, I would have to wait thirty minutes or ten minutes each. That\u0027s me. thirty minutes or ten minutes even. That\u0027s me. Yeah. thirty minutes or ten minutes even. That\u0027s me. Yeah. I thirty minutes or ten minutes even. That\u0027s me. Yeah. I\u0027m like saying over here I\u0027m like saying over here losing my mind that you I\u0027m like saying over here losing my mind that you use the router and the I\u0027m like saying over here losing my mind that you use the router and the non thinking model. I\u0027m like, do you how do you live with how do you how do you live with how do you live with that how do you how do you live with how do you live with that? Yeah. It\u0027s like my reaction. how do you how do you live with how do you live with that? Yeah. It\u0027s like my reaction. I\u0027m how do you how do you live with how do you live with that? Yeah. It\u0027s like my reaction. I\u0027m how do you how do you live with how do you live with that? Yeah. It\u0027s like my reaction. I\u0027m been heavily on track with you for been heavily on Traquity for a while. been heavily on travertine for a while. Never touched Never touched five non thinking Never touched five non thinking. I find it it Never touched five non thinking. I find it the its tone and Never touched five non thinking. I find it it\u0027s tone and then it\u0027s Never touched five non thinking. I find it it\u0027s tone and then it\u0027s propensity of errors. It\u0027s just like propensity of errors. It\u0027s just like it has a higher likelihood of propensity of errors. It\u0027s just like it has a higher likelihood of errors. Some of this is from propensity of errors. It\u0027s just like it has a higher likelihood of errors. Some of this is from back when opening a I released o three. back when OpenAI released o three, which was the first back when OpenAI released o three, which was the first model to do this back when OpenAI released o three, which was the first model to do this deep search and find many sources and integrate deep search and find many sources and integrate them for you. deep search and find many sources and integrate them for you. I became habituated with that. So I will only use So I became habituated with that. So I will only use GPT five point two So I became habituated with that. So I will only use GPT 5.2 thinking or pro when I\u0027m finding when I\u0027m finding any sort of when I\u0027m finding any sort of information query for when I\u0027m finding any sort of information query for work, whether that\u0027s a when I\u0027m finding any sort of information query for work, whether that a paper or some code reference a paper or some code reference that I found. a paper or some code reference that I found, And it\u0027s just like, I I will regularly have, like, And it\u0027s just like, I I will regularly have, like, five pro quarries And it\u0027s just like, I I will regularly have, like, five pro queries going simultaneously each looking for one each looking for one specific paper or if each looking for one specific paper or feedback on their equation or each looking for one specific paper or feedback on their equation or something. I have a each looking for one specific paper or feedback on their equation or something. I have a fun example of where I just needed I have a funny example of where I just needed the answer as fast as I have a funny example of where I just needed the answer as fast as possible. I have a funny example of where I just needed the answer as fast as possible. For this podcast before For this podcast before I was going on the trip. For this podcast before I was going on the trip, I have For this podcast before I was going on the trip. I have, like, a local GPU running at home, and I wanna I have, like, a local GPU running at home, and I wanted to run it along our I have, like, a local GPU running at home, and I wanted to run it along I have, like, a local GPU running at home, and I wanted to run it along RL experiment. And you RL experiment. And usually, I also unplug RL experiment. And usually, I also unplug things because, you know, RL experiment. And usually, I also unplug things you never know if you\u0027re not at home. You don\u0027t wanna have things plugged you never know if you\u0027re not at home. You don\u0027t wanna have things plugged in. And I exit because you never know if you\u0027re not at home, you don\u0027t wanna have things plugged in. And I accidentally unplugged it because you never know if you\u0027re not at home, you don\u0027t wanna have things plugged in. And I accidentally unplugged it GP. It was like my wife was GPU. It was like my wife was already in the car and GPU. And it was like my wife was already in the car and it\u0027s like, oh, dang. And GPU. And it was like my wife was already in the car and it\u0027s like, oh, dang. And then basically, I I wanted as dang. And then basically, I I wanted as fast as possible dang. And then basically, I I wanted as fast as possible a Bash script that runs my different, a Bash script that runs my different, experiments. And if a Bash script that runs my different, experiments and evaluation. And a Bash script that runs my different, experiments and evaluation. And did something I know I learned how it\u0027s something I know I learned how to use Bash it\u0027s something I know I learned how to use Bash in touch did something I know I learned how to use the BASH interface well, BASH terminal, but terminal. But in that moment, I terminal. But in that moment, I just needed, like, to terminal. But in that moment, I just needed, like, ten seconds to give me the terminal. But in that moment, I just needed, like, ten seconds Give me the command. This is a hilarious terminal. But in that moment, I just needed, like, ten seconds Give me the command. This is a hilarious situation, but, yeah, terminal. But in that moment, I just needed, like, ten seconds Give me the command. This is a hilarious situation, but yeah. So what did you use? terminal. But in that moment, I just needed, like, ten seconds Give me the command. This is a hilarious situation, but yeah. So what did you use? So I did the non thinking fastest model. So I did the non thinking fastest model. It gave me the best So I did the non thinking fastest model. It gave me the best, command I So I did the non thinking fastest model. It gave me the best, command I to chain different to chain different scripts to each to chain different scripts to each other. And then the thing to chain different scripts to each other. And then to chain different scripts to each other. And then the thing is, like, you have the tea thing where the thing is, like, you have the t thing where you want to route the the thing is, like, you have the t thing where you want to route this to a log the thing is, like, you have the t thing where you want to route this to a log file. Top of my head, I was just like in file. Top of my head, I was just, like, in a hurry. I could have thought about file. Top of my head, I was just, like, in a hurry. I could have thought about it, Mitzvah. By the way, I don\u0027t know file. Top of my head, I was just, like, in a hurry. I could have thought about it, Mitchel. By the way, I don\u0027t know if there\u0027s a representative case why you\u0027re waiting By the way, I don\u0027t know if there\u0027s a representative case. Why you wait in the car you have to run? By the way, I don\u0027t know if there\u0027s a representative case while waiting in the car. You have to run. You have By the way, I don\u0027t know if there\u0027s a representative case while waiting in the car. You have to run. You have the GPU. You have to generate a bad the GPU. You have to generate a basket that sounds like a the GPU. You have to generate a basket. This sounds like a movie. I I wish the GPU. You have to generate a batch script. This sounds like a movie. I I can\u0027t imagine. Impossible. Use Gemini for a lot. Use Gemini for a lot. So I use thinking for I use Gemini for a lot. So I use thinking for all the information stuff. I use Gemini for a lot. So I use thinking for all the information stuff, and then Gemini for I use Gemini for a lot. So I use thinking for all the information stuff and then Gemini for fast things. Or stuff that have Or stuff that I\u0027ve could sometimes Google Or stuff that I\u0027ve could sometimes Google, which is like it\u0027s Or stuff that I\u0027ve could sometimes Google, which is like it\u0027s good at explaining things Or stuff that I\u0027ve could sometimes Google, which is like it\u0027s good at explaining things, and I trust Or stuff that I\u0027ve could sometimes Google, which is like it\u0027s good at explaining things, and I trust that it has this kind of background that it has this kind of background of knowledge, and it\u0027s that it has this kind of background of knowledge, and it\u0027s simple. And the Gemini app has gotten a lot better, and it\u0027s good for simple. And the Gemini app has gotten a lot better, and it\u0027s good for that sort of things. simple. And the Gemini app has gotten a lot better, and it\u0027s good for that sort of things. And then for code and any sort of philosophical And then for code and any sort of philosophical discussion I use, And then for code and any sort of philosophical discussion, I use Claude Opus 4.5. Also always with 4.5, also always with extended thinking. 4.5, also always with extended thinking. 4.5, also always with extended thinking. Extended thinking and inference time scaling is just Extended thinking and inference time scaling is just a way to make the models Extended thinking and inference time scaling is just a way to make the models marginally smarter. And marginally smarter, and I will marginally smarter, and I will always edge on that marginally smarter, and I will always edge on that side when the progress is very high because you don\u0027t know edge on that side when the progress is very high because you don\u0027t know when that\u0027ll unlock a new edge on that side when the progress is very high because you don\u0027t know when that\u0027ll unlock a new use case. And then sometimes And then sometimes you use Grok for And then sometimes you use Grok for, real time And then sometimes use Grok for, real time information or And then sometimes you use Grok for, real time information And then sometimes you use Grok for, real time information or finding something on AI Twitter that I or finding something on AI Twitter that I knew I saw and I need to dig or finding something on AI Twitter that I knew I saw and I need to dig up and just or finding something on AI Twitter that I knew I saw and I need to dig up and just or finding something on AI Twitter that I knew I saw and I need to dig up and just fixated on. Although I\u0027ve been fixated on. Although I\u0027ve been grok four k fixated on. Although when Grak four came out, the fixated on. Although when Goroc four came out, the Goroc four was a super heavy Goroc four was super heavy, which was, like, their Goroc four was super heavy, which was, like, their pro variant was actually Goroc four was super heavy, which was, like, their pro variant was actually very Goroc four was super heavy, which was, like, their pro variant was actually very good, and I was pretty impressed with it. And that good, and I was pretty impressed with it. And that was just kind of, like, muscle memory. good, and I was pretty impressed with it. And that was just kind of, like, muscle memory, loss good, and I was pretty impressed with it. And that was just kind of, like, muscle memory. Lost track of it with having the chat to BTF. Lost track of it with having the chat to b t app open. So I use Lost track of it with having the chat to b t app open. So I use many different things. Yeah. Lost track of it with having the chat to b t app open. So I use many different things. Lost track of it with having the chat to b t app open. So I use many different things. Yeah. I actually do Yeah. I actually do use GOG for Yeah. I actually do use GOG for heavy for debugging? debugging, for, like, hardcore debugging, for, like, hardcore debugging and the other ones debugging, for, like, hardcore debugging and the other ones can\u0027t solve it? I find debugging, for, like, hardcore debugging and the other ones can\u0027t solve it? I find that it\u0027s the best debugging, for, like, hardcore debugging and the other ones can\u0027t solve it? I find that it\u0027s the best app. And I it\u0027s interesting at. And I it it\u0027s interesting because you say at. And I it\u0027s interesting because you say that Twitch is the app. And I it it\u0027s interesting because you say chat with T. V. T. Is the best interface. Of For me, for us, For me, for that same reason, but For me, for that same reason, but this could be just momentum For me, for that same reason, but this could be just momentum For me, for that same reason, but this could be just momentum Gemini Gemini is the better interface. Gemini is the better interface for me. I Gemini is the better interface for me. I think because I fell in love with their best best needle in the haystack. best needle in the haystack. If I ever put best needle in the haystack. If I ever put something that has a lot best needle in the haystack. If I ever put something that has a lot of context, but I\u0027m looking for a very specific a lot of context, but I\u0027m looking for very specific kinds of information, a lot of context, but I\u0027m looking for a very specific kinds of information to make sure it tracks all of it, a lot of context, but I\u0027m looking for a very specific kinds of information to make sure it tracks all of it, I find at least, I find, at least, that Gemini for me I find, at least, that Gemini for me has been, I find, at least, that Gemini for me has been, the best I find, at least, that Gemini for me has been, the best So it\u0027s funny with some of these So it\u0027s funny with some of these models. If they win your heart over Mhmm. For one particular feature, over Mhmm. For one particular feature at one on a one over Mhmm. For one particular feature at one on a one particular day, over Mhmm. For one particular feature at one on a one particular day, over Mhmm. For one particular feature at one on a one particular day, for that particular query, the for that particular query, that prompt, for that particular query, that prompt, you\u0027re like, this model for that particular query, that prompt, you\u0027re like, this model is better. And so you\u0027ll just stick with you\u0027re like, this model is better. And so you\u0027ll just stick with it for a bit on you\u0027re like, this model is better. And so you\u0027ll just stick with it for a bit until it does something really it does something really dumb. There\u0027s like a threat it does something really dumb. There\u0027s like a threshold effect. it does something really dumb. There\u0027s like a threshold effect. Some smart thing it does something really dumb. There\u0027s like a threshold effect. Some smart thing, and then you fall in love with it. And then Some smart thing, and then you fall in love with it, and then it does some dumb thing Some smart thing, and then you fall in love with it, and then it does some dumb thing, and you\u0027re like, you know what? I\u0027m gonna Chazepati and dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the l m. And I think dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the l m. And I think it\u0027s the same how we dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the l m. And I think it\u0027s the same how we use anything like our favorite tech dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the l m. And I think it\u0027s the same how we use anything like our favorite text editor, dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the l m. And I think it\u0027s the same how we use anything like our favorite tech editor, operating systems or dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the l m. And I think it\u0027s the same how we use anything like our favorite tech editor, operating systems or the browser. dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the l m. And I think it\u0027s the same how we use anything like our favorite tech editor, operating systems or the browser. I mean, there are so many browser dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the l m. And I think it\u0027s the same how we use anything like our favorite tech editor, operating systems or the browser. I mean, there are so many browser options Safari, Firefox, dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the l m. And I think it\u0027s the same how we use anything like our favorite tech editor, operating systems or the browser. I mean, there are so many browser options Safari, Firefox, Chrome. dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the l m. And I think it\u0027s the same how we use anything like our favorite tech editor, operating systems or the browser. I mean, there are so many browser options Safari, Firefox, Chrome, all the there are dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the l m. And I think it\u0027s the same how we use anything like our favorite tech editor, operating systems or the browser. I mean, there are so many browser options Safari, Firefox, Chrome, all the comparatively similar, but then dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the l m. And I think it\u0027s the same how we use anything like our favorite tech editor, operating systems or the browser. I mean, there are so many browser options Safari, Firefox, Chrome, all the comparatively similar, but then there are ex it\u0027s cases, maybe extensions dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the l m. And I think it\u0027s the same how we use anything like our favorite tech editor, operating systems or the browser. I mean, there are so many browser options Safari, Firefox, Chrome, all the comparatively similar, but then there are ex it\u0027s cases, maybe extensions you wanna use. And dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the l m. And I think it\u0027s the same how we use anything like our favorite tech editor, operating systems or the browser. I mean, there are so many browser options Safari, Firefox, Chrome, all the comparatively similar, but then there are ex it\u0027s cases, maybe extensions you wanna use and then you switch. But dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the l m. And I think it\u0027s the same how we use anything like our favorite tech editor, operating systems or the browser. I mean, there are so many browser options Safari, Firefox, Chrome, all the comparatively similar, but then there are ex it\u0027s cases, maybe extensions you wanna use and then you switch. But I don\u0027t think there is any dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the l m. And I think it\u0027s the same how we use anything like our favorite tech editor, operating systems or the browser. I mean, there are so many browser options Safari, Firefox, Chrome, all the comparatively similar, but then there are ex it\u0027s cases, maybe extensions you wanna use and then you switch. But I don\u0027t think there is any one who dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the l m. And I think it\u0027s the same how we use anything like our favorite tech editor, operating systems or the browser. I mean, there are so many browser options Safari, Firefox, Chrome, all the comparatively similar, but then there are ex it\u0027s cases, maybe extensions you wanna use and then you switch. But I don\u0027t think there is any one who types the same dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the l m. And I think it\u0027s the same how we use anything like our favorite tech editor, operating systems or the browser. I mean, there are so many browser options Safari, Firefox, Chrome, all the comparatively similar, but then there are ex it\u0027s cases, maybe extensions you wanna use and then you switch. But I don\u0027t think there is any one who types the same thing. Like, the dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the l m. And I think it\u0027s the same how we use anything like our favorite tech editor, operating systems or the browser. I mean, there are so many browser options Safari, Firefox, Chrome, all the comparatively similar, but then there are ex it\u0027s cases, maybe extensions you wanna use and then you switch. But I don\u0027t think there is any one who types the same thing, like the website into different dumb thing, and you\u0027re like, you know what? I\u0027m gonna switch and try Claude and Chazzy PT and all that kind of stuff. This is exactly like you use it until it breaks, until you have a problem. And then then you change, the l m. And I think it\u0027s the same how we use anything like our favorite tech editor, operating systems or the browser. I mean, there are so many browser options Safari, Firefox, Chrome, all the comparatively similar, but then there are ex it\u0027s cases, maybe extensions you wanna use and then you switch. But I don\u0027t think there is any one who types the same thing like the web site into different browsers and compare site into different browsers and compares them. You only do that when site into different browsers and compares them. You only do that when the website doesn\u0027t render site, into different browsers and compares them. You only do that when the website doesn\u0027t render, if something breaks site, into different browsers and compares them. You only do that when the website doesn\u0027t render, if something breaks I think. So that\u0027s that\u0027s a good point. I think I think. So that\u0027s that\u0027s a good point. I think you use it until it I think. So that\u0027s that\u0027s a good point. I think you use it until it breaks, and then you explore other options I think. So that\u0027s that\u0027s a good point. I think you use it until it breaks, and then you explore other options I think. On the long context thing, I think. On the long context thing, I was also a Gemini user I think. On the long context thing, I was also a Gemini user for this, but the GPU I think. On the long context thing, I was also a Gemini user for this, but the GPT 5.2 release blog had, like, for this, but the GPT 5.2 release blog had, like, crazy long context. for this, but the GPT 5.2 release blog had, like, crazy long context. Scores where a lot of people were like, did they just fake Scores where a lot of people were like, did they just figure out some algorithm Scores where a lot of people were like, did they just figure out some algorithmic change? No. Scores where a lot of people were like, did they just figure out some algorithmic change? It went from, like, 30% to, like, seventy It went from, like, 30% to, like, 70% or something. And this It went from, like, 30% to, like, 70% or something. And this minor model update It went from, like, 30% to, like, 70% or something in this minor model update. It went from, like, 30% to, like, 70% or something in this minor model update. So it\u0027s also very hard to keep track of So it\u0027s also very hard to keep track of all of these things. But now So it\u0027s also very hard to keep track of all of these things. But now I\u0027m So it\u0027s also very hard to keep track of all of these things. But now I\u0027m look more favorably at GPT look more favorably at GPT five point two\u0027s long look more favorably at GPT 5.2 as long context, so it\u0027s just kinda like look more favorably at GPT 5.2 as long context, so it\u0027s just kinda like how do I actually get to how do I actually get to testing this? how do I actually get to testing this? Never ending battle. Never ending battle. Well, it\u0027s interesting that none of us talked about none of us talked about the Chinese mob none of us talked about the Chinese models none of us talked about the Chinese models from a user usage none of us talked about the Chinese models from a user usage perspective. What does that say What does that say? Does that mean that What does that say? Does that mean the Chinese models are not as What does that say? Does that mean the Chinese models are not as good, or does that mean What does that say? Does that mean the Chinese models are not as good, or does that mean we\u0027re just very biased, in good, or does that mean we\u0027re just very biased, and US good, or does that mean we\u0027re just very biased, and US focused? I do think that that\u0027s US focused? I do think that that\u0027s currently the US focused? I do think that that\u0027s currently the discrepancy between US focused? I do think that that\u0027s currently the discrepancy between just the model and the platform. just the model and the platform. So I I think the just the model and the platform. So I I think the open model just the model and the platform. So I I think the open models, they are more known for the open weights, not models, they are more known for the open weights, not their platform yet. models, they are more known for the open weights, not their platform yet. There are also a lot of companies that are willing to sell you There are also a lot of companies that are willing to sell you the open model inference that There are also a lot of companies that are willing to sell you the open model inference at a very low cost. I think, like, Open I think, like, open router, it\u0027s easy to do the I think, like, open router, it\u0027s easy to do the look at multiple models. I think, like, open router, it\u0027s easy to do the look at multi model things. You could run I think, like, open router, it\u0027s easy to do the look at multi model things. You could run deep seek I think, like, open router, it\u0027s easy to do the look at multi model things. You could run deep seek on Perplexity. I think all of us on Perplexity. I think all of us sitting here are like, we use on Perplexity. I think all of us sitting here are like, we use OpenAI GPT five Pro, consistently OpenAI GPT five Pro, consistently. We\u0027re all willing to pay OpenAI GPT five Pro, and we\u0027re consistently. We\u0027re all willing to pay OpenAI GPT five Pro, and we\u0027re consistently. We\u0027re all willing to pay for the marginal intelligence gain. And anyone for the marginal intelligence gain. And anyone that\u0027s like, the these small for the marginal intelligence gain. And anyone that\u0027s like, the these models from the US for the marginal intelligence gain. And anyone that\u0027s like, the these models from The US are better for the marginal intelligence gain. And anyone that\u0027s like, the these models from The US are better in in terms of for the marginal intelligence gain. And anyone that\u0027s like, the these models from The US are better in in terms of the outputs. I think that for the marginal intelligence gain. And anyone that\u0027s like, the these models from The US are better in in terms of the outputs, I think the the question is will they stay better will they stay better for this year will they stay better for this year and for years will they stay better for this year and for years going? But it\u0027s like, it\u0027s a long will they stay better for this year and for years going? But it\u0027s like so long as they\u0027re better, I\u0027m gonna pay for it to use so long as they\u0027re better, I\u0027m gonna pay for it to use them. I think so long as they\u0027re better, I\u0027m gonna pay for it to use them. I think there\u0027s also analysis that shows that, like, the way way that the Chinese model way that the Chinese models are served way that the Chinese models are served, this you could argue due way that the Chinese models are served, this you could argue due to expert way that the Chinese models are served, this you could argue due to expert GPUs controls or not, is that they use fewer GPUs for a replica, which controls or not, is that they use fewer GPUs for a replica, which makes them slower. controls or not, is that they use fewer GPUs for a replica, which makes them slower. And have different errors. And it\u0027s like the speed And have different errors. And it\u0027s like speed and intelligence And have different errors. And it\u0027s like speed and intelligence. And these things are And have different errors. And it\u0027s like speed and intelligence If these things are in your favor as a user, I think in the If these things are in your favor as a user, I think in The US, a lot of users will If these things are in your favor as a user, I think in The US, a lot of users will go If these things are in your favor as a user, I think in The US, a lot of users will go for this, and I think that that is something for this. And I think that that is something that will spur these Chinese spur these Chinese companies to want to compete spur these Chinese companies to want to compete in other ways spur these Chinese companies to want to compete in other ways, whether it\u0027s, like, some spur these Chinese companies to want to compete in other ways, whether it\u0027s like spur these Chinese companies to want to compete in other ways, whether it\u0027s like free or substantially lower costs. free or substantially lower costs or it\u0027ll breed free or substantially lower costs or it\u0027ll breed creativity in terms of offerings, which is creativity in terms of offerings, which is good for the ecosystem. creativity in terms of offerings, which is good for the ecosystem. But I just think the simple thing is that US models are ecosystem. But I just think the simple thing is that US models are currently better and we use ecosystem. But I just think the simple thing is that US models are currently better, and we use them. And I try ecosystem. But I just think the simple thing is that US models are currently better, and we use them. And I try Chinese I tried these other open models, and I\u0027m Chinese I tried these other open models, and I\u0027m like, fun. Chinese I tried these other open models, and I\u0027m like, fun, but not gonna Chinese I tried these other open models, and I\u0027m like, fun, but not gonna I don\u0027t go back to it. We didn\u0027t I don\u0027t go back to it. We didn\u0027t really mention program I don\u0027t go back to it. We didn\u0027t really mention programming. That\u0027s I don\u0027t go back to it. We didn\u0027t really mention programming. That\u0027s another use case that a That\u0027s another use case that a lot of people deeply That\u0027s another use case that a lot of people deeply care about. So That\u0027s another use case that a lot of people deeply care about. So I use basically half and half curve So I use basically half and half cursor and So I use basically half and half cursor and So I use basically half and half cursor and clogged code. So I use basically half and half cursor and clogged code. Because there I find them to be, like, Because there I find them to be, like, fundamentally different Because there I find them to be, like, fundamentally different experience and both useful Because there I find them to be, like, fundamentally different experience and both useful. What do you guys What do you guys you program quite a bit, so What do you guys you program quite a bit, so what what do you use What do you guys you program quite a bit, so what what do you use? What\u0027s the current vibe? So vibe? So I use the code vibe? So I use the codecs plugin for VSC vibe? So I use the codecs plugin for Versus Code. vibe? So I use the codecs plugin for Versus Code. vibe? So I use the codecs plugin for Versus Code. You know, it\u0027s very convenient. It\u0027s just like a plugin You know, it\u0027s very convenient. It\u0027s just like a plugin and then it\u0027s a chat interface. You know, it\u0027s very convenient. It\u0027s just like a plugin, and then it\u0027s a chat interface that has access to your repository. I know that I know that Claude Koehler I know that Cloud Code is, I think, a bit different. I know that Cloud Code is, I think, a bit different. It is a bit more I know that Cloud Code is, I think, a bit different. It\u0027s a bit more identity I know that Cloud Code is, I think, a bit different. It\u0027s a bit more identity touches more things. It does the whole project for you. touches more things. It does the whole project for you. I\u0027m not quite touches more things. It does the whole project for you. I\u0027m not quite there yet where I\u0027m touches more things. It does the whole project for you. I\u0027m not quite there yet where I\u0027m comfortable with that because I comfortable with that because, maybe I\u0027m a comfortable with that because, maybe I\u0027m a control freak, but I still comfortable with that because, maybe I\u0027m a control freak, but I still would like to see a bit what see a bit what\u0027s going on and see a bit what\u0027s going on. And Codex is kind of see a bit what\u0027s going on. And codex is kind of like right now for me like see a bit what\u0027s going on. And codex is kind of like right now for me like the see a bit what\u0027s going on. And codex is kind of like right now for me like the sweet spot where it is sweet spot where it is helping me, but it is sweet spot where it is helping me, but it is not taking completely over. I should mention one of the reasons taking completely over. I should mention one of the reasons I do use Claude taking completely over. I should mention one of the reasons I do use Claude Code taking completely over. I should mention one of the reasons I do use Claude Code is to build the skill of pro is to build the skill of programming with English. is to build the skill of programming with English. I mean, the experience is to build the skill of programming with English. I mean, the experience is fundamentally different. You\u0027re I mean, the experience is fundamentally different. You\u0027re as opposed to I mean, the experience is fundamentally different. You\u0027re as opposed to micromanaging the details of as opposed to micromanaging the details of the process of the as opposed to micromanaging the details of the process of the generation of the code and, of the generation of the code and, looking at the diff of the generation of the code and, looking at the diff which you can encursor, if that\u0027s the ID which you can in cursor, if that\u0027s the ID you use. which you can in cursor, if that\u0027s the ID you use and and then changing, and and then changing, altering looking and reading the code and understanding the code looking and reading the code and understanding the code deeply as you looking and reading the code and understanding the code deeply as you progress. Versus Versus just kinda like Versus just kinda like Versus just kinda like thinking in this Versus just kinda like thinking in this design space. And Joe And just guiding it And just guiding it at this, And just guiding it at this, macro level. And just guiding it at this, macro level. I think I think, is an I think, is another way of thinking I think, is another way of thinking about the programming I think, is another way of thinking about the programming process. Also, we should Also, we should say that clog Also, we should say that clogged code Also, we should say that clogged code, it just seems Also, we should say that clogged code, it just seems to be Also, we should say that clogged code, it just seems to be somehow a better utilization of somehow a better utilization of cloud Opus four five somehow a better utilization of cloud Opus four five. It\u0027s a good side by side for people to do. So you could It\u0027s a good side by side for people to do. So you can have Cloud Code open. You It\u0027s a good side by side for people to do. So you can have Cloud Code open. You can have cursor open. It\u0027s a good side by side for people to do. So you can have Cloud Code open. You can have cursor open. You can have Versus code open, and you can select the You can have Versus code open, and you can select the same models on all of them. You can have Versus code open, and you can select the same models on all of them Mhmm. And ask questions You can have Versus code open, and you can select the same models on all of them Mhmm. And ask questions in a very the cloud coded way interesting. Like, the the cloud code is way better in that interesting. Like, the the cloud code is way better in that domain. It\u0027s more interesting. Like, the the cloud code is way better in that domain. It\u0027s remarkable. Alright. We should say Alright. We should say that both of you are Alright. We should say that both of you are are legit on Alright. We should say that both of you are are legit on multiple fronts. Alright. We should say that both of you are are legit on multiple Alright. We should say that both of you are are legit on multiple fronts, researchers, programmers, and fronts, researchers, programmers, educators, fronts, researchers, programmers, educators, tweeterers. tweeterers. tweeterers, and tweeterers, and on the book front too. So Nathan So Nathan at some point, So Nathan at some point soon, hopefully, So Nathan at some point soon, hopefully, has an RLA So Nathan at some point soon, hopefully, has an r l a Jeff book coming out. So Nathan at some point soon, hopefully, has an r l a Jeff book coming out, So Nathan at some point soon, hopefully, has an r l a Jeff book coming out, It\u0027s available for preorder, and there\u0027s a It\u0027s available for preorder, and there\u0027s a full digital It\u0027s available for preorder, and there\u0027s a full digital preprint just making it pretty and better organized for the preprint just making it pretty and better organized for the physical thing, which is preprint just making it pretty and better organized for the physical thing, which is a lot of why I do it because a lot of why I do it because it\u0027s fun to create things a lot of why I do it because it\u0027s fun to create things that you think are a lot of why I do it because it\u0027s fun to create things that you think are excellent in the physical form when so much excellent in the physical form when so much of our life is digital. excellent in the physical form when so much of our life is digital. excellent in the physical form when so much of our life is digital. I should say, going to complexity here, Sebastian I should say, going to complexity here, Sebastian Raschka is a machine learning I should say, going to complexity here, Sebastian Raschka is a machine learning researcher and I should say, going to complexity here, Sebastian Raschka is a machine learning researcher and author known for several influential books. author known for several influential books. A couple of them author known for several influential books. A couple of them that I wanted to mention, which author known for several influential books. A couple of them that I wanted to mention, which is author known for several influential books. A couple of them that I wanted to mention, which is a book I highly recommend, Build a a book I highly recommend, Build a Large Language a book I highly recommend, Build a Large Language Model from Scratch. a book I highly recommend, Build a Large Language Model from Scratch. And the new one And the new one, build a reasoning And the new one, build a reasoning model from scratch. And the new one, build a reasoning model from scratch. So I\u0027m really excited about that. So I\u0027m really excited about that. Building stuff So I\u0027m really excited about that. Building stuff from scratch is one of So I\u0027m really excited about that. Building stuff from scratch So I\u0027m really excited about that. Building stuff from scratch one of the most powerful ways of learning. Honestly, building an one of the most powerful ways of learning. Honestly, building an LMS from scratch is a lot of one of the most powerful ways of learning. Honestly, building an LMS from scratch is a lot of fun. It\u0027s one of the most powerful ways of learning. Honestly, building an LMS from scratch is a lot of fun. It\u0027s also a lot of to learn. And like you said, it\u0027s also a lot of to learn. And like you said, it\u0027s probably the best way to also a lot of to learn. And like you said, it\u0027s probably the best way to learn how something really also a lot of to learn. And like you said, it\u0027s probably the best way to learn how something really works. Because you can look at you can look at figures, but figures can you can look at figures, but figures can have mistakes. You can you can look at figures, but figures can have mistakes. You can look of con a concept you can look at figures, but figures can have mistakes. You can look of con concepts you can look at figures, but figures can have mistakes. You can look of con concepts explanations, but you might explanations, but you might misunderstand them. But explanations, but you might misunderstand them. But if you see explanations, but you might misunderstand them. But if you see the there is code the there is code and the code works, the there is code and the code works, you know it\u0027s correct. the there is code and the code works, you know it\u0027s correct. I mean, there\u0027s no misunderstanding. It\u0027s like it\u0027s you know it\u0027s correct. I mean, there\u0027s no misunderstanding. It\u0027s like it\u0027s precise. Otherwise, it would you know it\u0027s correct. I mean, there\u0027s no misunderstanding. It\u0027s like it\u0027s precise. Otherwise, it wouldn\u0027t work. And you know it\u0027s correct. I mean, there\u0027s no misunderstanding. It\u0027s like it\u0027s precise. Otherwise, it wouldn\u0027t work. And I think that\u0027s like kind of like the beauty behind I think that\u0027s like kind of like the beauty behind coding. It is kind of I think that\u0027s like kind of like the beauty behind coding. It is kind of like it doesn\u0027t lie. I think that\u0027s like kind of like the beauty behind coding. It is kind of like it doesn\u0027t lie. It\u0027s math basically. So It\u0027s math, basically. So even though with math, I It\u0027s math, basically. So even though with math, I think, you can have It\u0027s math, basically. So even though with math, I think you can have mistakes in a book. You would never notice. Because you can have mistakes in a book. You would never notice because you\u0027re not running the math you can have mistakes in a book you would never notice because you\u0027re not running the math when you are reading the you can have mistakes in a book you would never notice because you\u0027re not running the math when you are reading the book, you can\u0027t verify this. And with code, book, you can\u0027t verify this. And with code, what\u0027s what\u0027s nice is you book, you can\u0027t verify this. And with code, what\u0027s what\u0027s nice is you can book, you can\u0027t verify this. And with code, what\u0027s what\u0027s nice is you can verify it. Yeah. I agree with you about the l verify it. Yeah. I agree with you about the l l from scratch book. verify it. Yeah. I agree with you about the l l m from scratch book. It\u0027s nice to tune out everything else in the Internet It\u0027s nice to tune out everything else, the Internet, and so on, and just focus It\u0027s nice to tune out everything else, the Internet, and so on. It\u0027s just focused on the book. It\u0027s nice to tune out everything else, the Internet, and so on. It\u0027s just focused on the book. It\u0027s nice to tune out everything else, the Internet, and so on. It\u0027s just focused on the book. But, you know, I read But, you know, I read, several, like, But, you know, I read, several, like, you know, history books in you know, history books. It\u0027s just less you know, history books. It\u0027s just less lonely somehow. It\u0027s you know, history books. It\u0027s just less lonely somehow. It\u0027s really more fun you know, history books. It\u0027s just less lonely somehow. It\u0027s really more fun. Like, yeah, for example, on you know, history books. It\u0027s just less lonely somehow. It\u0027s really more fun. Like, yeah, for example, on the programming front, I think you know, history books. It\u0027s just less lonely somehow. It\u0027s really more fun. Like, yeah, for example, on the programming front, I think it\u0027s genuinely more fun you know, history books. It\u0027s just less lonely somehow. It\u0027s really more fun. Like, yeah, for example, on the programming front, I think it\u0027s genuinely more fun to program with an you know, history books. It\u0027s just less lonely somehow. It\u0027s really more fun. Like, yeah, for example, on the programming front, I think it\u0027s genuinely more fun to program with an LLM. Mhmm. And you know, history books. It\u0027s just less lonely somehow. It\u0027s really more fun. Like, yeah, for example, on the programming front, I think it\u0027s genuinely more fun to program with an LLM. Mhmm. And I think it\u0027s you know, history books. It\u0027s just less lonely somehow. It\u0027s really more fun. Like, yeah, for example, on the programming front, I think it\u0027s genuinely more fun to program with an LLM. Mhmm. And I think it\u0027s genuinely more fun to read you know, history books. It\u0027s just less lonely somehow. It\u0027s really more fun. Like, yeah, for example, on the programming front, I think it\u0027s genuinely more fun to program with an LLM. Mhmm. And I think it\u0027s genuinely more fun to read with an LOM. you know, history books. It\u0027s just less lonely somehow. It\u0027s really more fun. Like, yeah, for example, on the programming front, I think it\u0027s genuinely more fun to program with an LLM. Mhmm. And I think it\u0027s genuinely more fun to read with an LMM. But you\u0027re right. you know, history books. It\u0027s just less lonely somehow. It\u0027s really more fun. Like, yeah, for example, on the programming front, I think it\u0027s genuinely more fun to program with an LLM. Mhmm. And I think it\u0027s genuinely more fun to read with an LOM. But you\u0027re right. Like, you know, history books. It\u0027s just less lonely somehow. It\u0027s really more fun. Like, yeah, for example, on the programming front, I think it\u0027s genuinely more fun to program with an LLM. Mhmm. And I think it\u0027s genuinely more fun to read with an LOM. But you\u0027re right. Like, this distraction you know, history books. It\u0027s just less lonely somehow. It\u0027s really more fun. Like, yeah, for example, on the programming front, I think it\u0027s genuinely more fun to program with an LLM. Mhmm. And I think it\u0027s genuinely more fun to read with an LOM. But you\u0027re right. Like, this distraction should be minimized. you know, history books. It\u0027s just less lonely somehow. It\u0027s really more fun. Like, yeah, for example, on the programming front, I think it\u0027s genuinely more fun to program with an LLM. Mhmm. And I think it\u0027s genuinely more fun to read with an LOM. But you\u0027re right. Like, this distraction should be minimized. So it\u0027s, you know, history books. It\u0027s just less lonely somehow. It\u0027s really more fun. Like, yeah, for example, on the programming front, I think it\u0027s genuinely more fun to program with an LLM. Mhmm. And I think it\u0027s genuinely more fun to read with an LOM. But you\u0027re right. Like, this distraction should be minimized. So it\u0027s, you use the LOM you know, history books. It\u0027s just less lonely somehow. It\u0027s really more fun. Like, yeah, for example, on the programming front, I think it\u0027s genuinely more fun to program with an LLM. Mhmm. And I think it\u0027s genuinely more fun to read with an LOM. But you\u0027re right. Like, this distraction should be minimized. So it\u0027s, you use the LOM to you know, history books. It\u0027s just less lonely somehow. It\u0027s really more fun. Like, yeah, for example, on the programming front, I think it\u0027s genuinely more fun to program with an LLM. Mhmm. And I think it\u0027s genuinely more fun to read with an LOM. But you\u0027re right. Like, this distraction should be minimized. So it\u0027s, you use the LOM to basically you know, history books. It\u0027s just less lonely somehow. It\u0027s really more fun. Like, yeah, for example, on the programming front, I think it\u0027s genuinely more fun to program with an LLM. Mhmm. And I think it\u0027s genuinely more fun to read with an LOM. But you\u0027re right. Like, this distraction should be minimized. So it\u0027s, you use the LOM to basically enrich you know, history books. It\u0027s just less lonely somehow. It\u0027s really more fun. Like, yeah, for example, on the programming front, I think it\u0027s genuinely more fun to program with an LLM. Mhmm. And I think it\u0027s genuinely more fun to read with an LOM. But you\u0027re right. Like, this distraction should be minimized. So it\u0027s, you use the LOM to basically enrich the experience you know, history books. It\u0027s just less lonely somehow. It\u0027s really more fun. Like, yeah, for example, on the programming front, I think it\u0027s genuinely more fun to program with an LLM. Mhmm. And I think it\u0027s genuinely more fun to read with an LOM. But you\u0027re right. Like, this distraction should be minimized. So it\u0027s, you use the LLM to basically enrich the experience, maybe add you know, history books. It\u0027s just less lonely somehow. It\u0027s really more fun. Like, yeah, for example, on the programming front, I think it\u0027s genuinely more fun to program with an LLM. Mhmm. And I think it\u0027s genuinely more fun to read with an LOM. But you\u0027re right. Like, this distraction should be minimized. So it\u0027s, you use the LLM to basically enrich the experience, maybe add more context, you know, history books. It\u0027s just less lonely somehow. It\u0027s really more fun. Like, yeah, for example, on the programming front, I think it\u0027s genuinely more fun to program with an LLM. Mhmm. And I think it\u0027s genuinely more fun to read with an LOM. But you\u0027re right. Like, this distraction should be minimized. So it\u0027s, you use the LLM to basically enrich the experience, maybe add more context, maybe you know, history books. It\u0027s just less lonely somehow. It\u0027s really more fun. Like, yeah, for example, on the programming front, I think it\u0027s genuinely more fun to program with an LLM. Mhmm. And I think it\u0027s genuinely more fun to read with an LOM. But you\u0027re right. Like, this distraction should be minimized. So it\u0027s, you use the LLM to basically enrich the experience, maybe add more context, maybe the I just the you know, history books. It\u0027s just less lonely somehow. It\u0027s really more fun. Like, yeah, for example, on the programming front, I think it\u0027s genuinely more fun to program with an LLM. Mhmm. And I think it\u0027s genuinely more fun to read with an LOM. But you\u0027re right. Like, this distraction should be minimized. So it\u0027s, you use the LLM to basically enrich the experience, maybe add more context, maybe the I just the rate of moments for me you know, history books. It\u0027s just less lonely somehow. It\u0027s really more fun. Like, yeah, for example, on the programming front, I think it\u0027s genuinely more fun to program with an LLM. Mhmm. And I think it\u0027s genuinely more fun to read with an LOM. But you\u0027re right. Like, this distraction should be minimized. So it\u0027s, you use the LLM to basically enrich the experience, maybe add more context, maybe the I just the rate of moments for me in a small you know, history books. It\u0027s just less lonely somehow. It\u0027s really more fun. Like, yeah, for example, on the programming front, I think it\u0027s genuinely more fun to program with an LLM. Mhmm. And I think it\u0027s genuinely more fun to read with an LOM. But you\u0027re right. Like, this distraction should be minimized. So it\u0027s, you use the LLM to basically enrich the experience, maybe add more context, maybe the I just the rate of moments for me in a small scale is you know, history books. It\u0027s just less lonely somehow. It\u0027s really more fun. Like, yeah, for example, on the programming front, I think it\u0027s genuinely more fun to program with an LLM. Mhmm. And I think it\u0027s genuinely more fun to read with an LOM. But you\u0027re right. Like, this distraction should be minimized. So it\u0027s, you use the LLM to basically enrich the experience, maybe add more context, maybe the I just the rate of moments for me in a small scale is really high without you know, history books. It\u0027s just less lonely somehow. It\u0027s really more fun. Like, yeah, for example, on the programming front, I think it\u0027s genuinely more fun to program with an LLM. Mhmm. And I think it\u0027s genuinely more fun to read with an LOM. But you\u0027re right. Like, this distraction should be minimized. So it\u0027s, you use the LLM to basically enrich the experience, maybe add more context, maybe the I just the rate of moments for me in a small scale is really high with LOMs. Hundred you know, 100%. I would I also you know, 100%. I would I also want to correct myself. you know, 100%. I would I also want to correct myself. I\u0027m not suggesting not to use LOM. I also want to correct myself. I\u0027m not suggesting not to use LOMs. I saw I also want to correct myself. I\u0027m not suggesting not to use LOMs. I suggest doing it in multiple passes, like one I suggest doing it in multiple passes, like one pass just offline I suggest doing it in multiple passes, like one pass I suggest doing it in multiple passes, like one pass just offline focus mode. And then after that, just offline focus mode. And then after that, I mean, I just offline focus mode. And then after that, I mean, I also take notes just offline focus mode. And then after that, I mean, I also take notes but I I try to resist the but I I try to resist the urge to but I I try to resist the urge to immediately look things up. I I do a second immediately look things up. I I do a second pass. It\u0027s just like for me, immediately look things up. I I do a second pass. It\u0027s just like for me most immediately look things up. I I do a second pass. It\u0027s just like for me most structured this way and I get let I mean, structured this way, and I get let I mean, sometimes things are answered structured this way, and I get let I mean, sometimes things are answered in the chapter structured this way, and I get let I mean, sometimes things are answered in the chapter, but sometimes also it just helps to in the chapter, but sometimes also it just helps to let it sink in. in the chapter, but sometimes also it just helps to let it sink in and think about it. But other people have different preferences. sink in and think about it. Other people have different preferences. I would highly recommend sync in and think about it. Other people have different preferences. I would highly recommend using LMS when reading books. when reading books. For me, it\u0027s just it\u0027s not when reading books. For me, it\u0027s just it\u0027s not the first thing to do. It\u0027s when reading books. For me, it\u0027s just it\u0027s not the first thing to do. It\u0027s like the second pass. when reading books. For me, it\u0027s just it\u0027s not the first thing to do. It\u0027s like the second pass. By way of recommendation is to say, I My way of recommendation is to say I do the opposite. My way of recommendation is to say I do the opposite. I like to use the LMM My way of recommendation is to say I do the opposite. I like to use the LMM at the beginning to lay out the full at the beginning to lay out the full context of at the beginning to lay out the full context of, like, what is this at the beginning to lay out the full context of, like, what is this world that I\u0027m now stepping in what is this world that I\u0027m now stepping into? But I tried to what is this world that I\u0027m now stepping into? But I tried to avoid what is this world that I\u0027m now stepping into? But I tried to avoid clicking out of the LMS clicking out of the LLM into the clicking out of the LLM into the world of, like, clicking out of the LLM into the world of, like, Twitter, blogs, Twitter and blogs and because they Twitter and blogs and because then you\u0027re now down this Twitter and blogs and because then you\u0027re now down the Twitter and blogs and because then you\u0027re now down the rabbit hole. You\u0027re reading somebody\u0027s opinion. rabbit hole. You\u0027re reading somebody\u0027s opinion. There\u0027s a rabbit hole. You\u0027re reading somebody\u0027s opinion. There\u0027s a flame war about a rabbit hole. You\u0027re reading somebody\u0027s opinion. There\u0027s a flame war about a particular rabbit hole. You\u0027re reading somebody\u0027s opinion. There\u0027s a flame war about a particular of a sudden, you\u0027re no longer of a sudden, you\u0027re no longer the in the realm of the Internet and Reddit the realm of the Internet and Reddit and so on. the realm of the Internet and Reddit and so on. But if you\u0027re purely the realm of the Internet and Reddit and so on. But if you\u0027re purely the realm of the Internet and Reddit and so on. But if you\u0027re purely letting the LLM letting the LLM give you the context of letting the LLM give you the context of why this matters, letting the LLM give you the context of why this matters, what are the letting the LLM give you the context of why this matters, what are the big picture ideas, big picture ideas. But sometimes books themselves big picture ideas. But sometimes books themselves are good at doing that. But not always. But not always. So But not always. So This is why I like the But not always. So This is why I like the Chatty BT app. It gives the But not always. So This is why I like the But not always. So This is why I like the Chatuchapiti app. It gives the AI a home in your computer, which But not always. So This is why I like the Chatuchapiti app. It gives the AI a home in your computer when you are folk you can focus But not always. So This is why I like the Chatuchapiti app. It gives the AI a home in your computer when you are you can focus on it rather But not always. So This is why I like the Chatuchapiti app. It gives the AI a home in your computer when you are you can focus on it rather than just being another tab But not always. So This is why I like the Chatuchapiti app. It gives the AI a home in your computer when you are you can focus on it rather than just being another tab in my But not always. So This is why I like the Chatuchapiti app. It gives the AI a home in your computer when you are But not always. So This is why I like the Chatuchapiti app. It gives the AI a home in your computer when you are you can focus on it rather than just being another tab in my mess of Internet options. And I think But not always. So This is why I like the Chatuchapiti app. It gives the AI a home in your computer when you are you can focus on it rather than just being another tab in my mess of Internet options. And I think Claude Code and these But not always. So This is why I like the Chatuchapiti app. It gives the AI a home in your computer when you are you can focus on it rather than just being another tab in my mess of Internet options. And I think Claude Code and these particular does a good job of making that a joy particular does a good job of making that a particular does a good job of making that a joy where it seems very engaging as a product designed to be engaging as a product design to be an interface that engaging as a product design to be an interface that your AI will then go out into the world. And as your AI will then go out into the world. And it\u0027s something that is very kind your AI will then go out into the world. And it\u0027s something that is very kind of intangible between it and codecs is kind of intangible between it and codecs is that it just feels kind of kind of intangible between it and codecs is that it just feels kind of warm kind of intangible between it and codecs is that it just feels kind of warm and engaging where codecs can off and engaging, where codecs can often be as good from open and engaging where codecs can often be as good from OpenAI, but it just kind of like and engaging where codecs can often be as good from OpenAI, but it just kind of like feels a little bit rougher on the edges, whereas feels a little bit rougher on the edges. Whereas, like, Cloud Code is a feels a little bit rougher on the edges. Whereas, like, Cloud Code is makes it fun feels a little bit rougher on the edges, whereas the cloud code is makes it fun to build things. Particularly from scratch. Particularly from scratch where you just don\u0027t Particularly from scratch where you just don\u0027t like, you don\u0027t have to care, but you Particularly from scratch where you just don\u0027t like, you don\u0027t have to care, but you trust that it\u0027ll Particularly from scratch where you just don\u0027t like, you don\u0027t have to care, but you trust that it\u0027ll Particularly from scratch where you just don\u0027t like, you don\u0027t have to care, but you trust that it\u0027ll make something. Like, obviously, this is good for make something. Like, obviously, this is good for websites and make something. Like, obviously, this is good for websites and kind of make something. Like, obviously, this is good for websites and kind of refreshing tooling, kind of refreshing tooling and stuff like this. kind of refreshing tooling and stuff like this, which I use kind of refreshing tooling and stuff like this, which I use it for data analysis. So I use it for data analysis. So I my my blog, we use it for data analysis. So I my my blog, we scrape hugging face. We keep the download numbers for every data Hugging Face. We keep the download numbers for every dataset and model over time Hugging Face. We keep the download numbers for every dataset and model over time now. So we have them, and it\u0027s Hugging Face. We keep the download numbers for every dataset and model over time now. So we have them, and it\u0027s Claude was just like, yeah. I\u0027ve made use of that data. Claude was just like, yeah. I\u0027ve made use of that data. No problem. And I was like, Claude was just like, yeah. I\u0027ve made use of that data. No problem. And I was like, that would have taken me days. And I was like, Honestly. And then I have enough Honestly. And then I have enough situational awareness to be like, Honestly. And then I have enough situational awareness to be like, okay. These trends obviously Honestly. And then I have enough situational awareness to be like, okay. These trends obviously Honestly. And then I have enough situational awareness to be like, okay. These trends obviously sense, and you can check things. sense and you can check things. Because that\u0027s just the kind of sense and you can check things. Because that\u0027s just a kind of wonderful interface where sense and you can check things. Because that\u0027s just a kind of wonderful interface you can have an intermediary and not have to where you can have an intermediary and not have to do the kind of awful where you can have an intermediary and not have to do the kind of awful low level work that you would have to do to maintain low level work that you would have to do to maintain different web projects. low level work that you would have to do to maintain different web projects and do this stuff. low level work that you would have to do to maintain different web projects and do this stuff. low level work that you would have to do to maintain different web projects and do this stuff. Alright. So we just talked about a Alright. So we just talked about a bunch of the Alright. So we just talked about a bunch of the closed Alright. So we just talked about a bunch of the closed weight models. models. models. Let\u0027s talk about the open models. Let\u0027s talk about the open ones. So models. Let\u0027s talk about the open ones. So tell me about the last models. Let\u0027s talk about the open ones. So tell me about the last Which LLM models. Which are interesting ones? Which LLM models. Which are interesting ones? Which stand out to you? LLM models. Which are interesting ones? Which stand out to you? LLM models. Which are interesting ones? Which stand out to you? And why. We already mastered deep seek. And why. We already mentioned Deepseek. Do you wanna see how many we can And why. We already mentioned Deepseek. Do you wanna see how many we can name off the top of our head? And why? We already mentioned Deepseek. Do you wanna see how many we can name off the top of our head? Yeah. Yeah. Without looking at notes. top of our head? Yeah. Yeah. Without looking at notes. top of our head? Yeah. Yeah. Without looking at notes. DeepSeq, Kimmy, Minimax, z dot a I, z dot a I, Ant Lang, z dot a I, Antling. We\u0027re just going z dot a I, Ant Lang, We\u0027re just going to Chinese. We\u0027re just going to Chinese. Let\u0027s go We\u0027re just going to Chinese. Let\u0027s throw in Nistrallia Let\u0027s throw in mister Charlie. I Gemma, Let\u0027s throw in. Gemma? Yeah. Let\u0027s throw in mister Aliye. Gemma? G p t o s s. Open source model The open source model by, CheggPT. The open source model by, CheggiPT. Actually, The open source model by, ChegggPT. Actually, NVIDIA Nimotron The open source model by, ChegggPT. Actually, NVIDIA Nimotron had a The open source model by, ChegggPT. Actually, NVIDIA Nimotron had a NVIDIA had a really cool one, a Nimotron three. NVIDIA had a really cool one, Nemotron three. There there\u0027s a lot of Nvidia had a really cool one, Nemotron three. There there\u0027s a lot of stuff, especially at the NVIDIA had a really cool one, Nemotron three. There there\u0027s a lot of stuff, especially at the end of the year. Quinn, one maybe the one Oh, yeah. stuff, especially at the end of the year. Quinn, one maybe the one Oh, yeah. Quinn was the the stuff, especially at the end of the year. Quinn. One maybe the one Oh, yeah. Quinn was the the obvious name I was wrestling. A little bit Trying to get through the you can get at least 10 Chinese Trying to get through the you can get at least 10 Chinese and at least ten Trying to get through the you can get at least 10 Chinese and at least 10 Western. I think that Trying to get through the you can get at least 10 Chinese and at least the 10 Western. I think that Trying to get through the you can get at least 10 Chinese and at least the 10 Western. I think that I mean, OpenAI released their first open I mean, OpenAI released their first open model since I mean, OpenAI released their first open model since GPT two. That I mean, OpenAI released their first open model since GPT two. When I when I meant talk when I was writing When I when I meant talk when I was writing about Open When I when I meant talk when I was writing about OpenAI\u0027s open model release, they\u0027re When I when I meant talk when I was writing about OpenAI\u0027s model release, they\u0027re all like, don\u0027t forget about GPT two, which I model release, they\u0027re all like, don\u0027t forget about GPT two, which I thought was really funny. model release, they\u0027re all like, don\u0027t forget about GPT two, which I thought was really funny. Because it\u0027s such a different time. But Because it\u0027s such a different time. But GPT OSS is Because it\u0027s such a different time. But GPT OSS is actually a very strong Because it\u0027s such a different time. But GPT OSS is actually a very strong model and does things at the things that the other models don\u0027t do very well. don\u0027t do very well. And I think that don\u0027t do very well. And I think that selfish don\u0027t do very well. And I think that selfishly, I\u0027ll promote the don\u0027t do very well. And I think that selfishly, I\u0027ll promote a bunch of, like, western companies. So both promote a bunch of, like, western companies. So both in The US and Europe, promote a bunch of, like, western companies. So both in The US and Europe have these, like, promote a bunch of, like, western companies. So both in The US and Europe have these, like, fully open models. So I work at Allen and fully open models. So I work at Allen Institute for fully open models. So I work at Allen Institute for AI where we\u0027ve been building Olmo, which releases data and code and all of this. building Olmo, which releases data and code and all of this. And now we have building Olmo, which releases data and code and all of this. And now we have actually competition for people that are trying to competition for people that are trying to release everything so that competition for people that are trying to release everything so that other people can train these competition for people that are trying to release everything so that other people can train these models. So there\u0027s competition for people that are trying to release everything so that other people can train these models. So there\u0027s the Institute for Foundation Models, the Institute for Foundation Models or slash LM the Institute for Foundation Models or slash LM three sixty, which the Institute for Foundation Models or slash LM three sixty, which is like had their K the Institute for Foundation Models or slash LM three sixty, which is, like, had their k two models of the Institute for Foundation Models or slash LM three sixty, which is, like, had their k two models of various types. the Institute for Foundation Models or slash LM three sixty, which is, like, had their k two models of various types. the Institute for Foundation Models or slash LM three sixty, which is, like, had their k two models of various types. Aperdis is a Swiss research Aperdis is a Swiss research consortium. Aperdis is a Swiss research consortium. Hugging Face Aperdis is a Swiss research consortium. Hugging Face, has SmallLM, which Hugging Face, has small l m, which is very popular Hugging Face, has small l m, which is very popular popular, and Nvidia\u0027s Neumetron has started releasing popular, and Nvidia\u0027s Neumetron has started releasing data as well. And then popular, and Nvidia\u0027s Neumetron has started releasing data as well. And then popular, and Nvidia\u0027s Neumetron has started releasing data as well. And then Stanford\u0027s Marin Community Stanford\u0027s Marin Community Project, which is kind of Stanford\u0027s Marin community project, which is kind of making it so there\u0027s a Stanford\u0027s Marin community project, which is kind of making it so there\u0027s a pipeline for people to open Stanford\u0027s Marin community project, which is kind of making it so there\u0027s a pipeline for people to open a GitHub issue and Stanford\u0027s Marin community project, which is kind of making it so there\u0027s a pipeline for people to open a GitHub issue and implement a new idea Stanford\u0027s Marin community project, which is kind of making it so there\u0027s a pipeline for people to open a GitHub issue and implement a new idea and then have it run Stanford\u0027s Marin community project, which is kind of making it so there\u0027s a pipeline for people to open a GitHub issue and implement a new idea and then have it run in a stable language modeling stack. in a stable language modeling stack. So this space that list was waste that list was way smaller in 2024, that list was way smaller in 2024. So I think it was, like, just that list was way smaller in 2024. So I think it was, like, AI two. So that\u0027s a great thing for more people thing for more people to get involved into thing for more people to get involved into understand language models, thing for more people to get involved and to understand language models, which doesn\u0027t thing for more people to get involved and to understand language models, which doesn\u0027t really have a, like, a Chinese company that doesn\u0027t really have a, like, a Chinese company that is has an analog. While I\u0027m talking, I will say has an analog. While I\u0027m talking, I will say that Chinese open language the Chinese open language models tend to the Chinese open language models tend to be much the Chinese open language models tend to be much bigger, and that the Chinese open language models tend to be much bigger, and that gives some of this higher peak performances. MO peak performances MOEs where a lot of these peak performances MOEs where a lot of these things that we like peak performances MOEs where a lot of these things that we like a lot, whether it was peak performances MOEs where a lot of these things that we like a lot, whether it was Gemma, and Nematron have tended and Nematron have tended to be smaller models and Nematron have tended to be smaller models from The US, which is and Nematron have tended to be smaller models from The US, which is which is and Nematron have tended to be smaller models from The US, which is which is starting to change from euros US and Europe. starting to change from US US and Europe, mister Large starting to change from US US and Europe. Mistral Large three came out, which was starting to change from US US and Europe. Mistral Large three came out, which starting to change from US US and Europe. Mistral Large three came out, which was a giant MOE model, very similar was a giant MOE model, very similar to DeepSeq architecture. is a giant MOE model, very similar to deep sea architecture in December. was a giant MOE model, very similar to DeepSeq architecture in December. And then a was a giant MOE model, very similar to DeepSeq architecture in December. And then a startup RCAI was a giant MOE model, very similar to DeepSeq architecture in December. And then a startup RCAI and both was a giant MOE model, very similar to DeepSeq architecture in December. And then a startup RCAI and both Nematron have was a giant MOE model, very similar to DeepSeq architecture in December. And then a startup RCAI and both Nematron have was a giant MOE model, very similar to DeepSeq architecture in December. And then a startup RCAI and both Nematron have Nematron and NVIDIA have teased Nematron and NVIDIA have teased MOE models of Nematron and NVIDIA have teased MOE models of this way bigger Nematron and NVIDIA have teased MOE models of this way bigger than a 100,000,000,000 parameters. Like, this foreign way bigger than a 100,000,000,000 parameters. Like, this 400,000,000,000 parameter way bigger than a 100,000,000,000 parameters, like this 400,000,000,000 parameter range. way bigger than a 100,000,000,000 parameters, like this 400,000,000,000 parameter range. Coming in this, like, q one twenty twenty Coming in this, like, q one twenty twenty six timeline. So Coming in this, like, q one twenty twenty six timeline. So I think that\u0027s kind of Coming in this, like, q one twenty twenty six timeline. So I think this Coming in this, like, q one twenty twenty six timeline. So I think this kind of balance is set to change this year in terms of kind of balance is set to change this year in terms of what people are using the kind of balance is set to change this year in terms of what people are using the Chinese versus US open models for. people are using the Chinese versus US open models for, which will be a people are using the Chinese versus US open models for. Which will be which I\u0027m personally, so it can be very Which will be which I\u0027m personally, so I can be very excited to watch. Which will be which I\u0027m personally, so I can be very excited to watch. Which will be which I\u0027m personally, so I can be very excited to watch. First of all, huge props for being First of all, huge props for being able to First of all, huge props for being able to name so many. First of all, huge props for being able to name so many of these. Did you actually Did you actually name lama? Did you actually name lama? Mouse. Feel Did you actually name lama? No. I feel like our"
+}
