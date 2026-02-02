@@ -11,7 +11,8 @@
 
 ## Domain Knowledge
 - [Deepgram Integration](domain/Deepgram-overview.md)
-- [Question Detection](domain/HEURISTIC_QUESTION_DETECTOR.md)
+- [Question Detection - Heuristic](domain/HEURISTIC_QUESTION_DETECTOR.md)
+- [Question Detection - Research Report](domain/QUESTION-DETECTION-RESEARCH-REPORT.md)
 
 ## Operations
 - [Configuration](operations/appsettings.md)

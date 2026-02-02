@@ -78,6 +78,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "domain", "domain", "{DAE56B
 		documentation\docs\domain\Deepgram-overview.md = documentation\docs\domain\Deepgram-overview.md
 		documentation\docs\Detecting Questions and Imperative Sentences in English.pdf = documentation\docs\Detecting Questions and Imperative Sentences in English.pdf
 		documentation\docs\domain\HEURISTIC_QUESTION_DETECTOR.md = documentation\docs\domain\HEURISTIC_QUESTION_DETECTOR.md
+		documentation\docs\domain\QUESTION-DETECTION-RESEARCH-REPORT.md = documentation\docs\domain\QUESTION-DETECTION-RESEARCH-REPORT.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interview-assist-transcription-detection-console", "Interview-assist-transcription-detection-console\Interview-assist-transcription-detection-console.csproj", "{9A0A441F-CAC7-4665-972E-F299C443D00F}"
