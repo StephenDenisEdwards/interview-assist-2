@@ -1,4 +1,4 @@
-using Interview_assist_library.Audio;
+using InterviewAssist.Library.Audio;
 
 namespace Interview_assist_audio_android;
 

@@ -1,4 +1,4 @@
-using Interview_assist_library.Audio;
+using InterviewAssist.Library.Audio;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 

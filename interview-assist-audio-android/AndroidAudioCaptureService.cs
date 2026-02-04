@@ -1,5 +1,5 @@
 using Android.Media;
-using Interview_assist_library.Audio;
+using InterviewAssist.Library.Audio;
 using Microsoft.Extensions.Logging;
 
 namespace Interview_assist_audio_android;
