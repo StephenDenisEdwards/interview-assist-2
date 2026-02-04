@@ -92,10 +92,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "instructions", "instruction
 		documentation\docs\instructions\EvaluationInstructions.md = documentation\docs\instructions\EvaluationInstructions.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "interview-assist-audio-android", "interview-assist-audio-android\interview-assist-audio-android.csproj", "{FCED6022-591B-4A8B-A99B-246995C83EE0}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interview-assist-transcription-detection-android", "Interview-assist-transcription-detection-android\Interview-assist-transcription-detection-android.csproj", "{0A82996B-12A6-41F3-945A-841932297F88}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -202,30 +198,6 @@ Global
 		{9A0A441F-CAC7-4665-972E-F299C443D00F}.Release|x64.Build.0 = Release|Any CPU
 		{9A0A441F-CAC7-4665-972E-F299C443D00F}.Release|x86.ActiveCfg = Release|Any CPU
 		{9A0A441F-CAC7-4665-972E-F299C443D00F}.Release|x86.Build.0 = Release|Any CPU
-		{FCED6022-591B-4A8B-A99B-246995C83EE0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FCED6022-591B-4A8B-A99B-246995C83EE0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FCED6022-591B-4A8B-A99B-246995C83EE0}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{FCED6022-591B-4A8B-A99B-246995C83EE0}.Debug|x64.Build.0 = Debug|Any CPU
-		{FCED6022-591B-4A8B-A99B-246995C83EE0}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{FCED6022-591B-4A8B-A99B-246995C83EE0}.Debug|x86.Build.0 = Debug|Any CPU
-		{FCED6022-591B-4A8B-A99B-246995C83EE0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FCED6022-591B-4A8B-A99B-246995C83EE0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FCED6022-591B-4A8B-A99B-246995C83EE0}.Release|x64.ActiveCfg = Release|Any CPU
-		{FCED6022-591B-4A8B-A99B-246995C83EE0}.Release|x64.Build.0 = Release|Any CPU
-		{FCED6022-591B-4A8B-A99B-246995C83EE0}.Release|x86.ActiveCfg = Release|Any CPU
-		{FCED6022-591B-4A8B-A99B-246995C83EE0}.Release|x86.Build.0 = Release|Any CPU
-		{0A82996B-12A6-41F3-945A-841932297F88}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0A82996B-12A6-41F3-945A-841932297F88}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0A82996B-12A6-41F3-945A-841932297F88}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{0A82996B-12A6-41F3-945A-841932297F88}.Debug|x64.Build.0 = Debug|Any CPU
-		{0A82996B-12A6-41F3-945A-841932297F88}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{0A82996B-12A6-41F3-945A-841932297F88}.Debug|x86.Build.0 = Debug|Any CPU
-		{0A82996B-12A6-41F3-945A-841932297F88}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0A82996B-12A6-41F3-945A-841932297F88}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0A82996B-12A6-41F3-945A-841932297F88}.Release|x64.ActiveCfg = Release|Any CPU
-		{0A82996B-12A6-41F3-945A-841932297F88}.Release|x64.Build.0 = Release|Any CPU
-		{0A82996B-12A6-41F3-945A-841932297F88}.Release|x86.ActiveCfg = Release|Any CPU
-		{0A82996B-12A6-41F3-945A-841932297F88}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
