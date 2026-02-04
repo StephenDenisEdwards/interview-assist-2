@@ -1,3 +1,4 @@
+using InterviewAssist.Audio.Termux;
 using InterviewAssist.Audio.Windows;
 using InterviewAssist.Library.Audio;
 using InterviewAssist.Library.Pipeline.Detection;
@@ -31,6 +32,7 @@ public partial class Program
         string? datasetFile = null;
         string? generateTestsFile = null;
         string? generateTestsOutput = null;
+        bool useTermuxAudio = false;
 
         for (int i = 0; i < args.Length; i++)
         {
@@ -109,6 +111,10 @@ public partial class Program
                 generateTestsFile = args[i + 1];
                 i++;
             }
+            else if (args[i] == "--termux")
+            {
+                useTermuxAudio = true;
+            }
             else if (args[i] == "--help" || args[i] == "-h")
             {
                 Console.WriteLine("Interview Assist - Transcription & Detection Console");
@@ -141,6 +147,7 @@ public partial class Program
                 Console.WriteLine("  --model <model>         Model for ground truth extraction (default: gpt-4o)");
                 Console.WriteLine("  --output <file>         Output file for evaluation report (.json)");
                 Console.WriteLine("  --analyze-errors <file> Analyze false positive patterns from evaluation report");
+                Console.WriteLine("  --termux                Use Termux audio capture (for Android/Termux environment)");
                 Console.WriteLine("  --help, -h              Show this help message");
                 Console.WriteLine();
                 Console.WriteLine("Keyboard shortcuts in normal mode:");
@@ -303,7 +310,8 @@ public partial class Program
             // Create the main UI and run
             var app = new TranscriptionApp(
                 source, sampleRate, deepgramOptions, diarizeEnabled, intentDetectionEnabled,
-                intentDetectionOptions, backgroundColorHex, intentColorHex, recordingOptions, playbackFile, playbackMode);
+                intentDetectionOptions, backgroundColorHex, intentColorHex, recordingOptions, playbackFile, playbackMode,
+                useTermuxAudio);
             await app.RunAsync();
         }
         finally
@@ -694,6 +702,7 @@ public class TranscriptionApp
     private readonly RecordingOptions _recordingOptions;
     private readonly string? _playbackFile;
     private readonly string? _playbackModeOverride;
+    private readonly bool _useTermuxAudio;
 
     // UI elements
     private TextView _transcriptView = null!;
@@ -726,7 +735,8 @@ public class TranscriptionApp
         string intentColorHex,
         RecordingOptions recordingOptions,
         string? playbackFile,
-        string? playbackModeOverride = null)
+        string? playbackModeOverride = null,
+        bool useTermuxAudio = false)
     {
         _audioSource = audioSource;
         _sampleRate = sampleRate;
@@ -739,6 +749,7 @@ public class TranscriptionApp
         _recordingOptions = recordingOptions;
         _playbackFile = playbackFile;
         _playbackModeOverride = playbackModeOverride;
+        _useTermuxAudio = useTermuxAudio;
     }
 
     public async Task RunAsync()
@@ -1048,9 +1059,11 @@ public class TranscriptionApp
             _isTranscribing = true;
             Application.MainLoop?.Invoke(() => _transcriptionStatusItem.Title = "RUNNING");
 
-            AddDebug("Starting audio capture...");
+            AddDebug($"Starting audio capture ({(_useTermuxAudio ? "Termux" : "Windows")})...");
 
-            var audio = new WindowsAudioCaptureService(_sampleRate, _audioSource);
+            IAudioCaptureService audio = _useTermuxAudio
+                ? new TermuxAudioCaptureService(_sampleRate, _audioSource)
+                : new WindowsAudioCaptureService(_sampleRate, _audioSource);
             _deepgramService = new DeepgramTranscriptionService(audio, _deepgramOptions);
 
             // Create intent pipeline if enabled

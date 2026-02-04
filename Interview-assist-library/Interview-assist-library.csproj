@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net8.0-android</TargetFrameworks>
+    <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
@@ -13,13 +13,6 @@
     <PackageReference Include="Serilog.Extensions.Logging" Version="8.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
-  </ItemGroup>
-  <!-- PdfPig only for non-Android targets -->
-  <ItemGroup Condition="!$(TargetFramework.Contains('android'))">
     <PackageReference Include="UglyToad.PdfPig" Version="1.7.0-custom-5" />
-  </ItemGroup>
-  <!-- Exclude PDF-dependent code on Android -->
-  <ItemGroup Condition="$(TargetFramework.Contains('android'))">
-    <Compile Remove="Context\DocumentTextLoader.cs" />
   </ItemGroup>
 </Project>
