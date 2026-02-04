@@ -1,0 +1,57 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore interview-assist-2.sln
+
+      - name: Build
+        run: dotnet build interview-assist-2.sln --no-restore --configuration Release
+
+      - name: Run unit tests
+        run: dotnet test Interview-assist-library-unit-tests/Interview-assist-library-unit-tests.csproj --no-build --configuration Release --verbosity normal
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build
+          path: |
+            **/bin/Release/net8.0/*.dll
+            **/bin/Release/net8.0/*.exe
+            **/bin/Release/net8.0/*.json
+          retention-days: 7
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore interview-assist-2.sln
+
+      - name: Build
+        run: dotnet build interview-assist-2.sln --no-restore --configuration Release
+
+      - name: Run unit tests
+        run: dotnet test Interview-assist-library-unit-tests/Interview-assist-library-unit-tests.csproj --no-build --configuration Release --verbosity normal
