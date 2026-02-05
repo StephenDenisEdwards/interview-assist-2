@@ -16,6 +16,12 @@ dotnet run --project Interview-assist-transcription-console/Interview-assist-tra
 
 # Run pipeline console app
 dotnet run --project Interview-assist-pipeline-console/Interview-assist-pipeline-console.csproj
+
+# Run transcription-detection console app
+dotnet run --project Interview-assist-transcription-detection-console/Interview-assist-transcription-detection-console.csproj
+
+# Run transcription-detection console app in playback mode (no audio required)
+dotnet run --project Interview-assist-transcription-detection-console/Interview-assist-transcription-detection-console.csproj -- --playback recordings/session.jsonl
 ```
 
 ## Test Commands
@@ -44,6 +50,7 @@ This is a real-time interview assistance application that captures audio and int
 - **interview-assist-audio-windows**: Windows-specific audio capture using NAudio (net8.0)
 - **Interview-assist-pipeline**: Pipeline-based STT + semantic question detection (net8.0)
 - **Interview-assist-transcription-console**: Console app for transcription testing
+- **Interview-assist-transcription-detection-console**: Console app with Terminal.Gui UI, supports playback mode
 - **Interview-assist-pipeline-console**: Console app for pipeline mode
 - **Interview-assist-library-unit-tests**: xUnit tests for the core library
 - **Interview-assist-library-integration-tests**: Integration tests requiring API access
@@ -54,7 +61,7 @@ This is a real-time interview assistance application that captures audio and int
 
 **IRealtimeSink** (`Interview-assist-library/Realtime/IRealtimeSink.cs`): Observer pattern for consuming API events. Use `WireToApi()` extension to subscribe/unsubscribe. Implementations: `MauiRealtimeSink`, `ConsoleRealtimeSink`.
 
-**IAudioCaptureService** (`Interview-assist-library/Audio/IAudioCaptureService.cs`): Platform-specific audio input abstraction. Two sources: Microphone (WaveInEvent) and Loopback (WasapiLoopbackCapture).
+**IAudioCaptureService** (`Interview-assist-library/Audio/IAudioCaptureService.cs`): Platform-specific audio input abstraction. Implementation: `WindowsAudioCaptureService` (NAudio, supports Microphone and Loopback).
 
 ### Audio Processing Pipeline
 

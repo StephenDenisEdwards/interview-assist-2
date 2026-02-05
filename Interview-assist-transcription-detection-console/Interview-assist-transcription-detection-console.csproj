@@ -20,7 +20,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Interview-assist-library\Interview-assist-library.csproj" />
     <ProjectReference Include="..\interview-assist-audio-windows\interview-assist-audio-windows.csproj" />
-    <ProjectReference Include="..\interview-assist-audio-termux\interview-assist-audio-termux.csproj" />
     <ProjectReference Include="..\Interview-assist-pipeline\Interview-assist-pipeline.csproj" />
   </ItemGroup>
 
