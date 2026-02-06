@@ -436,7 +436,7 @@ public sealed class EvaluationRunner
         // Run strategy comparison
         Console.WriteLine("Comparing strategies...");
         var comparer = new StrategyComparer(_options);
-        var result = await comparer.CompareAsync(events, groundTruth, heuristicOptions, llmOptions, ct);
+        var result = await comparer.CompareAsync(events, groundTruth, heuristicOptions, llmOptions, ct: ct);
 
         // Print results
         PrintComparisonResults(result);

@@ -177,6 +177,7 @@ public static class ServiceCollectionExtensions
             IntentDetectionMode.Heuristic => new HeuristicIntentStrategy(options.Heuristic),
             IntentDetectionMode.Llm => CreateLlmStrategy(options.Llm),
             IntentDetectionMode.Parallel => CreateParallelStrategy(options.Heuristic, options.Llm),
+            IntentDetectionMode.Deepgram => CreateDeepgramStrategy(options.Deepgram, options.Llm),
             _ => throw new InvalidOperationException($"Unknown detection mode: {options.Mode}")
         };
     }
@@ -197,6 +198,15 @@ public static class ServiceCollectionExtensions
 
         var llmDetector = new OpenAiIntentDetector(apiKey, llmOptions.Model, llmOptions.ConfidenceThreshold);
         return new ParallelIntentStrategy(llmDetector, heuristicOptions, llmOptions);
+    }
+
+    private static LlmIntentStrategy CreateDeepgramStrategy(DeepgramDetectionOptions deepgramOptions, LlmDetectionOptions llmOptions)
+    {
+        var apiKey = deepgramOptions.ApiKey ?? Environment.GetEnvironmentVariable("DEEPGRAM_API_KEY")
+            ?? throw new InvalidOperationException("Deepgram API key is required for Deepgram detection mode. Set Deepgram:ApiKey or DEEPGRAM_API_KEY environment variable.");
+
+        var detector = new DeepgramIntentDetector(apiKey, deepgramOptions);
+        return new LlmIntentStrategy(detector, llmOptions);
     }
 
     /// <summary>

@@ -25,6 +25,7 @@ public sealed class StrategyComparer
         IReadOnlyList<ExtractedQuestion> groundTruth,
         HeuristicDetectionOptions? heuristicOptions = null,
         LlmDetectionOptions? llmOptions = null,
+        DeepgramDetectionOptions? deepgramOptions = null,
         CancellationToken ct = default)
     {
         var results = new List<StrategyResult>();
@@ -63,6 +64,18 @@ public sealed class StrategyComparer
                 groundTruth,
                 ct);
             results.Add(parallelResult);
+        }
+
+        // Test Deepgram strategy (if API key available)
+        if (!string.IsNullOrWhiteSpace(deepgramOptions?.ApiKey))
+        {
+            var deepgramResult = await TestStrategyAsync(
+                "Deepgram",
+                () => CreateDeepgramStrategy(deepgramOptions, llmOptions ?? new LlmDetectionOptions()),
+                asrEvents,
+                groundTruth,
+                ct);
+            results.Add(deepgramResult);
         }
 
         // Determine best strategy for each metric
@@ -191,6 +204,17 @@ public sealed class StrategyComparer
             llmOptions.ConfidenceThreshold);
 
         return new ParallelIntentStrategy(detector, heuristicOptions, llmOptions);
+    }
+
+    private static LlmIntentStrategy CreateDeepgramStrategy(
+        DeepgramDetectionOptions deepgramOptions,
+        LlmDetectionOptions llmOptions)
+    {
+        var detector = new DeepgramIntentDetector(
+            deepgramOptions.ApiKey!,
+            deepgramOptions);
+
+        return new LlmIntentStrategy(detector, llmOptions);
     }
 }
 
