@@ -26,7 +26,9 @@ public sealed class LlmIntentStrategy : IIntentDetectionStrategy
     public string ModeName => "LLM";
 
     public event Action<IntentEvent>? OnIntentDetected;
+#pragma warning disable CS0067 // Event required by interface but not used in LLM-only strategy
     public event Action<IntentCorrectionEvent>? OnIntentCorrected;
+#pragma warning restore CS0067
 
     public LlmIntentStrategy(ILlmIntentDetector llm, LlmDetectionOptions? options = null)
     {
@@ -281,7 +283,14 @@ public sealed class LlmIntentStrategy : IIntentDetectionStrategy
 
     public void Dispose()
     {
-        _timeoutCts?.Cancel();
+        try
+        {
+            _timeoutCts?.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // Already disposed by ResetTimeoutTimer
+        }
         _timeoutCts?.Dispose();
     }
 

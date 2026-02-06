@@ -41,11 +41,15 @@ public sealed class UtteranceBuilder : IUtteranceBuilder
             OpenUtterance(evt, now);
         }
 
+        // Capture locally to avoid race with timer thread nulling _current
+        var current = _current;
+        if (current == null) return;
+
         // Update utterance
-        UpdateUtterance(evt, now);
+        UpdateUtterance(current, evt, now);
 
         // Check for close conditions
-        CheckCloseConditions(evt, now);
+        CheckCloseConditions(current, evt, now);
     }
 
     public void SignalUtteranceEnd()
@@ -66,10 +70,12 @@ public sealed class UtteranceBuilder : IUtteranceBuilder
 
     public void CheckTimeouts()
     {
-        if (_current == null) return;
+        // Capture locally to avoid race with CloseUtterance nulling _current on another thread
+        var current = _current;
+        if (current == null) return;
 
         var now = _clock();
-        var duration = now - _current.StartTime;
+        var duration = now - current.StartTime;
 
         // Max duration guard
         if (duration > _options.MaxUtteranceDuration)
@@ -79,7 +85,7 @@ public sealed class UtteranceBuilder : IUtteranceBuilder
         }
 
         // Silence gap detection
-        var silenceDuration = now - _current.LastActivityTime;
+        var silenceDuration = now - current.LastActivityTime;
         if (silenceDuration > _options.SilenceGapThreshold)
         {
             CloseUtterance(UtteranceCloseReason.SilenceGap);
@@ -87,8 +93,8 @@ public sealed class UtteranceBuilder : IUtteranceBuilder
         }
 
         // Terminal punctuation + pause (check both flag and value due to potential race condition)
-        var punctuationTime = _current.TerminalPunctuationTime;
-        if (_current.HasTerminalPunctuation && punctuationTime.HasValue)
+        var punctuationTime = current.TerminalPunctuationTime;
+        if (current.HasTerminalPunctuation && punctuationTime.HasValue)
         {
             var pauseSincePunctuation = now - punctuationTime.Value;
             if (pauseSincePunctuation > _options.PunctuationPauseThreshold)
@@ -120,12 +126,10 @@ public sealed class UtteranceBuilder : IUtteranceBuilder
         });
     }
 
-    private void UpdateUtterance(AsrEvent evt, DateTime now)
+    private void UpdateUtterance(UtteranceState current, AsrEvent evt, DateTime now)
     {
-        if (_current == null) return;
-
-        _current.LastActivityTime = now;
-        _current.RawText = CombineText(_current.CommittedText, evt.Text);
+        current.LastActivityTime = now;
+        current.RawText = CombineText(current.CommittedText, evt.Text);
 
         // Update stable text
         string stableText;
@@ -133,25 +137,25 @@ public sealed class UtteranceBuilder : IUtteranceBuilder
         {
             // Commit final segment
             _stabilizer.CommitFinal(evt.Text);
-            _current.CommittedText = CombineText(_current.CommittedText, evt.Text);
-            stableText = _current.CommittedText;
+            current.CommittedText = CombineText(current.CommittedText, evt.Text);
+            stableText = current.CommittedText;
         }
         else
         {
             // Process interim
             stableText = CombineText(
-                _current.CommittedText,
+                current.CommittedText,
                 _stabilizer.AddHypothesis(evt.Text, evt.Words)
             );
         }
 
-        _current.StableText = stableText;
+        current.StableText = stableText;
 
         // Check for terminal punctuation
-        CheckTerminalPunctuation(_current.RawText, now);
+        CheckTerminalPunctuation(current, current.RawText, now);
 
         // Max length guard
-        if (_current.RawText.Length > _options.MaxUtteranceLength)
+        if (current.RawText.Length > _options.MaxUtteranceLength)
         {
             CloseUtterance(UtteranceCloseReason.MaxLength);
             return;
@@ -159,20 +163,18 @@ public sealed class UtteranceBuilder : IUtteranceBuilder
 
         OnUtteranceUpdate?.Invoke(new UtteranceEvent
         {
-            Id = _current.Id,
+            Id = current.Id,
             Type = UtteranceEventType.Update,
-            StartTime = _current.StartTime,
-            StableText = _current.StableText,
-            RawText = _current.RawText,
-            Duration = now - _current.StartTime,
-            SpeakerId = _current.SpeakerId
+            StartTime = current.StartTime,
+            StableText = current.StableText,
+            RawText = current.RawText,
+            Duration = now - current.StartTime,
+            SpeakerId = current.SpeakerId
         });
     }
 
-    private void CheckCloseConditions(AsrEvent evt, DateTime now)
+    private void CheckCloseConditions(UtteranceState current, AsrEvent evt, DateTime now)
     {
-        if (_current == null) return;
-
         // Deepgram explicit utterance end
         if (evt.IsUtteranceEnd)
         {
@@ -182,50 +184,49 @@ public sealed class UtteranceBuilder : IUtteranceBuilder
 
     private void CloseUtterance(UtteranceCloseReason reason)
     {
-        if (_current == null) return;
+        // Capture and exchange atomically to avoid race with timer thread
+        var current = Interlocked.Exchange(ref _current, null);
+        if (current == null) return;
 
         var now = _clock();
-        var finalText = string.IsNullOrWhiteSpace(_current.StableText)
-            ? _current.RawText
-            : _current.StableText;
+        var finalText = string.IsNullOrWhiteSpace(current.StableText)
+            ? current.RawText
+            : current.StableText;
 
         OnUtteranceFinal?.Invoke(new UtteranceEvent
         {
-            Id = _current.Id,
+            Id = current.Id,
             Type = UtteranceEventType.Final,
-            StartTime = _current.StartTime,
+            StartTime = current.StartTime,
             StableText = finalText,
-            RawText = _current.RawText,
-            Duration = now - _current.StartTime,
+            RawText = current.RawText,
+            Duration = now - current.StartTime,
             CloseReason = reason,
-            SpeakerId = _current.SpeakerId
+            SpeakerId = current.SpeakerId
         });
 
-        _current = null;
         _stabilizer.Reset();
     }
 
-    private void CheckTerminalPunctuation(string text, DateTime now)
+    private static void CheckTerminalPunctuation(UtteranceState current, string text, DateTime now)
     {
-        if (_current == null) return;
-
         var trimmed = text.TrimEnd();
         if (trimmed.Length > 0)
         {
             var lastChar = trimmed[^1];
             if (lastChar is '.' or '?' or '!')
             {
-                if (!_current.HasTerminalPunctuation)
+                if (!current.HasTerminalPunctuation)
                 {
-                    _current.HasTerminalPunctuation = true;
-                    _current.TerminalPunctuationTime = now;
+                    current.HasTerminalPunctuation = true;
+                    current.TerminalPunctuationTime = now;
                 }
             }
             else
             {
                 // Punctuation was removed (hypothesis changed)
-                _current.HasTerminalPunctuation = false;
-                _current.TerminalPunctuationTime = null;
+                current.HasTerminalPunctuation = false;
+                current.TerminalPunctuationTime = null;
             }
         }
     }

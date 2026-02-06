@@ -120,11 +120,24 @@ public sealed class StrategyComparer
             }
         };
 
-        // Replay ASR events
+        // Replay ASR events with real-time pacing so async strategies
+        // (LLM, Deepgram) have time for their rate limiters and triggers to fire.
         detectionSw.Start();
+        long previousOffsetMs = 0;
+
         foreach (var asr in asrEvents)
         {
             ct.ThrowIfCancellationRequested();
+
+            // Simulate real-time gaps between events
+            var delayMs = asr.OffsetMs - previousOffsetMs;
+            if (delayMs > 0)
+            {
+                // Cap individual delays to avoid excessively long waits
+                var cappedDelay = Math.Min(delayMs, 5000);
+                await Task.Delay((int)cappedDelay, ct);
+            }
+            previousOffsetMs = asr.OffsetMs;
 
             pipeline.ProcessAsrEvent(new AsrEvent
             {
@@ -133,16 +146,14 @@ public sealed class StrategyComparer
                 SpeakerId = asr.Data.SpeakerId
             });
 
-            // Small delay to allow async processing
             if (asr.Data.IsFinal)
             {
                 pipeline.SignalUtteranceEnd();
-                await Task.Delay(10, ct);
             }
         }
 
-        // Wait for any pending detections
-        await Task.Delay(500, ct);
+        // Wait for any pending async detections to complete
+        await Task.Delay(4000, ct);
 
         sw.Stop();
 

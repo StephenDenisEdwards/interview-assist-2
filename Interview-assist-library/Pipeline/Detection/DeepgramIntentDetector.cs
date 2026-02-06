@@ -31,6 +31,18 @@ public sealed class DeepgramIntentDetector : ILlmIntentDetector
         _http.DefaultRequestHeaders.Add("Authorization", $"Token {apiKey}");
     }
 
+    /// <summary>
+    /// Internal constructor for unit testing with a pre-configured HttpClient.
+    /// </summary>
+    internal DeepgramIntentDetector(HttpClient httpClient, DeepgramDetectionOptions? options = null)
+    {
+        options ??= new DeepgramDetectionOptions();
+        _confidenceThreshold = options.ConfidenceThreshold;
+        _customIntents = options.CustomIntents;
+        _customIntentMode = options.CustomIntentMode;
+        _http = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+    }
+
     public async Task<IReadOnlyList<DetectedIntent>> DetectIntentsAsync(
         string text,
         string? previousContext = null,
@@ -154,7 +166,7 @@ public sealed class DeepgramIntentDetector : ILlmIntentDetector
     {
         var lower = label.ToLowerInvariant();
 
-        // Question-indicating intents
+        // Question-indicating intents (explicit question words)
         if (lower.Contains("ask") || lower.Contains("question") ||
             lower.Contains("inquire") || lower.Contains("wonder"))
         {
@@ -164,6 +176,14 @@ public sealed class DeepgramIntentDetector : ILlmIntentDetector
 
         // Imperative forms that are effectively questions (asking for information)
         if (lower.Contains("explain") || lower.Contains("describe") || lower.Contains("tell"))
+        {
+            return (IntentType.Question, InferQuestionSubtype(lower));
+        }
+
+        // Information-seeking intents (Deepgram often returns verb-phrase labels like
+        // "Find out difference...", "Learn about...", "Understand...")
+        if (lower.Contains("find out") || lower.Contains("learn") || lower.Contains("understand") ||
+            lower.Contains("know") || lower.Contains("clarif") || lower.Contains("seek"))
         {
             return (IntentType.Question, InferQuestionSubtype(lower));
         }

@@ -400,7 +400,14 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
 
     public void Dispose()
     {
-        _timeoutCts?.Cancel();
+        try
+        {
+            _timeoutCts?.Cancel();
+        }
+        catch (ObjectDisposedException)
+        {
+            // Already disposed by ResetTimeoutTimer
+        }
         _timeoutCts?.Dispose();
     }
 

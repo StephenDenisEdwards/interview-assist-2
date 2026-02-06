@@ -13,7 +13,7 @@ public class DeepgramDetectionOptions
     /// <summary>
     /// Minimum confidence threshold for Deepgram intent detections.
     /// </summary>
-    public double ConfidenceThreshold { get; set; } = 0.7;
+    public double ConfidenceThreshold { get; set; } = 0.3;
 
     /// <summary>
     /// Custom intents to include in the Deepgram request.
