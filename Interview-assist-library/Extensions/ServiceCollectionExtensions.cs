@@ -630,6 +630,7 @@ public class IntentDetectionOptionsBuilder
     private bool _enablePreprocessing = true;
     private bool _enableDeduplication = true;
     private int _deduplicationWindowMs = 30000;
+    private int _contextWindowChars = 1500;
     private double _heuristicMinConfidence = 0.4;
 
     public IntentDetectionOptionsBuilder WithEnabled(bool enabled)
@@ -705,6 +706,12 @@ public class IntentDetectionOptionsBuilder
         return this;
     }
 
+    public IntentDetectionOptionsBuilder WithContextWindowChars(int chars)
+    {
+        _contextWindowChars = chars;
+        return this;
+    }
+
     public IntentDetectionOptionsBuilder WithHeuristicMinConfidence(double confidence)
     {
         _heuristicMinConfidence = confidence;
@@ -733,7 +740,8 @@ public class IntentDetectionOptionsBuilder
                 TriggerTimeoutMs = _triggerTimeoutMs,
                 EnablePreprocessing = _enablePreprocessing,
                 EnableDeduplication = _enableDeduplication,
-                DeduplicationWindowMs = _deduplicationWindowMs
+                DeduplicationWindowMs = _deduplicationWindowMs,
+                ContextWindowChars = _contextWindowChars
             }
         };
     }

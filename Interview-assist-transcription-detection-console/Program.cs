@@ -391,7 +391,8 @@ public partial class Program
                 TriggerTimeoutMs = llmConfig.GetValue("TriggerTimeoutMs", 3000),
                 EnablePreprocessing = llmConfig.GetValue("EnablePreprocessing", true),
                 EnableDeduplication = llmConfig.GetValue("EnableDeduplication", true),
-                DeduplicationWindowMs = llmConfig.GetValue("DeduplicationWindowMs", 30000)
+                DeduplicationWindowMs = llmConfig.GetValue("DeduplicationWindowMs", 30000),
+                ContextWindowChars = llmConfig.GetValue("ContextWindowChars", 1500)
             },
             Deepgram = new DeepgramDetectionOptions
             {
@@ -500,7 +501,8 @@ public partial class Program
             TriggerTimeoutMs = llmConfig.GetValue("TriggerTimeoutMs", 3000),
             EnablePreprocessing = llmConfig.GetValue("EnablePreprocessing", true),
             EnableDeduplication = llmConfig.GetValue("EnableDeduplication", true),
-            DeduplicationWindowMs = llmConfig.GetValue("DeduplicationWindowMs", 30000)
+            DeduplicationWindowMs = llmConfig.GetValue("DeduplicationWindowMs", 30000),
+            ContextWindowChars = llmConfig.GetValue("ContextWindowChars", 1500)
         };
 
         // Load Deepgram detection options

@@ -1,4 +1,3 @@
-using System.Text;
 using InterviewAssist.Library.Pipeline.Utterance;
 
 namespace InterviewAssist.Library.Pipeline.Detection;
@@ -14,8 +13,8 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
     private readonly HeuristicDetectionOptions _heuristicOptions;
     private readonly LlmDetectionOptions _llmOptions;
 
-    private readonly StringBuilder _buffer = new();
-    private readonly List<PendingUtterance> _pendingUtterances = new();
+    private readonly List<TrackedUtterance> _unprocessedUtterances = new();
+    private readonly List<TrackedUtterance> _contextWindow = new();
     private readonly Dictionary<string, EmittedIntent> _emittedIntents = new();
     private readonly HashSet<string> _detectedFingerprints = new();
     private readonly Dictionary<string, DateTime> _detectionTimes = new();
@@ -79,35 +78,28 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
         if (string.IsNullOrWhiteSpace(text))
             return;
 
+        bool forceDetect = false;
+
         lock (_lock)
         {
-            if (_buffer.Length > 0)
-                _buffer.Append(' ');
-            _buffer.Append(text);
-
-            _pendingUtterances.Add(new PendingUtterance(
+            _unprocessedUtterances.Add(new TrackedUtterance(
                 utterance.Id,
                 text,
                 DateTime.UtcNow,
                 heuristicIntent));
 
-            // Trim buffer if too long
-            if (_buffer.Length > _llmOptions.BufferMaxChars)
-            {
-                var excess = _buffer.Length - _llmOptions.BufferMaxChars;
-                _buffer.Remove(0, excess);
-
-                while (_pendingUtterances.Count > 0 &&
-                       !_buffer.ToString().Contains(_pendingUtterances[0].Text))
-                {
-                    _pendingUtterances.RemoveAt(0);
-                }
-            }
-
             // Check for trigger
             if (_llmOptions.TriggerOnQuestionMark && text.Contains('?'))
             {
                 _hasTrigger = true;
+            }
+
+            // Force detection if unprocessed text exceeds buffer limit
+            var unprocessedChars = GetTotalChars(_unprocessedUtterances);
+            if (unprocessedChars > _llmOptions.BufferMaxChars)
+            {
+                _hasTrigger = true;
+                forceDetect = true;
             }
         }
 
@@ -115,7 +107,7 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
         ResetTimeoutTimer(ct);
 
         // Try LLM detection if triggered
-        if (_hasTrigger)
+        if (_hasTrigger || forceDetect)
         {
             await TryLlmDetectAsync(ct);
         }
@@ -158,7 +150,7 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
 
                 lock (_lock)
                 {
-                    if (_buffer.Length > 0)
+                    if (_unprocessedUtterances.Count > 0)
                         _hasTrigger = true;
                 }
 
@@ -173,8 +165,9 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
 
     private async Task TryLlmDetectAsync(CancellationToken ct)
     {
-        string bufferText;
-        List<PendingUtterance> pending;
+        string newText;
+        string? contextText;
+        List<TrackedUtterance> unprocessedSnapshot;
 
         lock (_lock)
         {
@@ -185,41 +178,39 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
             if (elapsed.TotalMilliseconds < _llmOptions.RateLimitMs)
                 return;
 
-            if (_buffer.Length == 0)
+            if (_unprocessedUtterances.Count == 0)
                 return;
 
-            bufferText = _buffer.ToString();
-            pending = _pendingUtterances.ToList();
+            // Build context from already-processed utterances
+            contextText = _contextWindow.Count > 0
+                ? string.Join(" ", _contextWindow.Select(u => u.Text))
+                : null;
+
+            // Build new text from unprocessed utterances
+            newText = string.Join(" ", _unprocessedUtterances.Select(u => u.Text));
+            unprocessedSnapshot = _unprocessedUtterances.ToList();
+
             _hasTrigger = false;
             _lastLlmDetection = DateTime.UtcNow;
         }
 
-        // Call LLM
-        var llmIntents = await _llm.DetectIntentsAsync(bufferText, null, ct);
+        // Call LLM with new text and context
+        var llmIntents = await _llm.DetectIntentsAsync(newText, contextText, ct);
 
         // Process LLM results and compare with heuristic
-        ProcessLlmResults(llmIntents, pending);
+        ProcessLlmResults(llmIntents, unprocessedSnapshot);
 
-        // Clear processed content
+        // Move unprocessed → context window, trim context
         lock (_lock)
         {
-            if (llmIntents.Count > 0)
-            {
-                var cutoff = DateTime.UtcNow.AddMilliseconds(-_llmOptions.RateLimitMs);
-                _pendingUtterances.RemoveAll(p => p.AddedAt < cutoff);
+            _contextWindow.AddRange(_unprocessedUtterances);
+            _unprocessedUtterances.Clear();
 
-                _buffer.Clear();
-                foreach (var p in _pendingUtterances)
-                {
-                    if (_buffer.Length > 0)
-                        _buffer.Append(' ');
-                    _buffer.Append(p.Text);
-                }
-            }
+            TrimContextWindow();
         }
     }
 
-    private void ProcessLlmResults(IReadOnlyList<DetectedIntent> llmIntents, List<PendingUtterance> pending)
+    private void ProcessLlmResults(IReadOnlyList<DetectedIntent> llmIntents, List<TrackedUtterance> pending)
     {
         var matchedUtterances = new HashSet<string>();
 
@@ -349,9 +340,9 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
         return IntentCorrectionType.TypeChanged;
     }
 
-    private PendingUtterance? FindBestMatchingUtterance(string intentText, List<PendingUtterance> pending)
+    private TrackedUtterance? FindBestMatchingUtterance(string intentText, List<TrackedUtterance> pending)
     {
-        PendingUtterance? bestMatch = null;
+        TrackedUtterance? bestMatch = null;
         int bestScore = 0;
 
         var intentWords = TranscriptionPreprocessor.GetSignificantWords(intentText);
@@ -369,6 +360,24 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
         }
 
         return bestMatch;
+    }
+
+    private void TrimContextWindow()
+    {
+        var totalChars = GetTotalChars(_contextWindow);
+        while (_contextWindow.Count > 0 && totalChars > _llmOptions.ContextWindowChars)
+        {
+            totalChars -= _contextWindow[0].Text.Length;
+            _contextWindow.RemoveAt(0);
+        }
+    }
+
+    private static int GetTotalChars(List<TrackedUtterance> utterances)
+    {
+        var total = 0;
+        foreach (var u in utterances)
+            total += u.Text.Length;
+        return total;
     }
 
     private void CleanupOldDetections()
@@ -411,6 +420,6 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
         _timeoutCts?.Dispose();
     }
 
-    private record PendingUtterance(string Id, string Text, DateTime AddedAt, DetectedIntent HeuristicIntent);
+    private record TrackedUtterance(string Id, string Text, DateTime AddedAt, DetectedIntent HeuristicIntent);
     private record EmittedIntent(string UtteranceId, DetectedIntent Intent, DateTime EmittedAt, bool IsFromHeuristic);
 }

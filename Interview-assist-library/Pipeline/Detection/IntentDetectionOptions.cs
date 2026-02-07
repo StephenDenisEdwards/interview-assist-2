@@ -101,4 +101,9 @@ public class LlmDetectionOptions
     /// Time window for deduplication in milliseconds.
     /// </summary>
     public int DeduplicationWindowMs { get; set; } = 30000;
+
+    /// <summary>
+    /// Maximum characters of processed context to retain for pronoun resolution.
+    /// </summary>
+    public int ContextWindowChars { get; set; } = 1500;
 }
