@@ -2,11 +2,11 @@
 
 ## Status
 
-Accepted
+Accepted — evaluated and found unsuitable for question detection (see [Evaluation Results](#evaluation-results))
 
 ## Context
 
-The pipeline needs a mid-tier intent detection option between the free-but-inaccurate heuristic strategy (~67% recall) and the accurate-but-expensive LLM strategy (~95% recall, 500–2000ms latency). Deepgram offers intent recognition through two surfaces:
+The pipeline needs a mid-tier intent detection option between the free-but-inaccurate heuristic strategy and the accurate-but-expensive LLM strategy. Deepgram offers intent recognition through two surfaces:
 
 1. **Streaming WebSocket** (`/v1/listen`) — supports transcription but does **not** support intent detection.
 2. **REST Read endpoint** (`/v1/read`) — accepts text, returns detected intents with confidence scores.
@@ -24,7 +24,7 @@ Additionally, Deepgram's intent labels are dynamic verb phrases (e.g., "Find out
 
 ## Decision
 
-Use Deepgram's `/v1/read` REST endpoint via raw `HttpClient`, implementing the `ILlmIntentDetector` interface.
+Use Deepgram's `/v1/read` REST endpoint via raw `HttpClient`, implementing the `ILlmIntentDetector` interface. Keep the implementation in the codebase as an available strategy even though evaluation showed poor results for question detection — it may have value for other intent types (imperatives, topic classification) in the future.
 
 ### Implementation (`DeepgramIntentDetector`)
 
@@ -47,23 +47,61 @@ The project already uses raw `HttpClient` for Deepgram transcription (WebSocket 
 
 Deepgram's streaming WebSocket (`/v1/listen`) does not support the `intents` feature. Intent detection is only available on the `/v1/read` text analysis endpoint.
 
+## Evaluation Results
+
+Evaluated across 4 recorded interview sessions (10K–131K characters, 3–39 ground truth questions per session). Deepgram scored **0% F1 across all recordings** — 0 true positives, only false positives and false negatives.
+
+### Results Summary
+
+| Recording | Ground Truth | Deepgram Detected | TP | FP | FN | F1 |
+|-----------|-------------|-------------------|----|----|-----|-----|
+| session-162854 (10K) | 3 | 0 | 0 | 0 | 3 | 0% |
+| session-155843 (99K) | 28 | 2 | 0 | 2 | 28 | 0% |
+| session-163251 (131K) | 15 | 2 | 0 | 2 | 15 | 0% |
+| session-114135 (86K) | 39 | 2 | 0 | 2 | 39 | 0% |
+
+For comparison, the LLM strategy (gpt-4o-mini) scored 19–100% F1 on the same recordings.
+
+### Root Cause Analysis
+
+**Deepgram's intent recognition solves a different problem than question detection.** The `/v1/read` intent model is designed for **conversation routing** — classifying user requests in task-oriented systems (e.g., "I want to check my balance" → route to billing). It is not designed for **speech act classification** (determining whether an utterance is a question, statement, or command).
+
+Specific findings from API testing:
+
+1. **Intent labels are goal descriptions, not speech act classifications.** Deepgram returns verb phrases describing the speaker's objective:
+   - "What is the difference between microservices and monolithic architecture?" → label: `"Find out difference between microservices and monolithic architecture"` (conf: 0.003)
+   - "Could you clarify when to use each one?" → label: `"Understand difference between abstract classes and interfaces"` (conf: 0.448)
+   - A statement like "We processed two million transactions per day" → label: `"Work on distributed payments system"` (conf: 0.003)
+
+2. **Confidence scores are not calibrated for question detection.** Scores range from 0.001–0.7 regardless of whether the text is a question. An explicit question ("What challenges did you face?") received confidence 0.01, while a non-question statement received 0.003 — no meaningful separation.
+
+3. **Custom intents provide marginal improvement.** Adding custom intents like "ask a question" and "seek explanation" occasionally boosted confidence for some texts (e.g., 0.448 for a clarification request) but not consistently enough to establish a reliable threshold.
+
+4. **The keyword-based label classifier cannot compensate.** Even when Deepgram returns a label that passes the confidence threshold, the label often doesn't contain question-indicating keywords. Labels like "Show flex" (conf: 0.709) pass the threshold but are correctly classified as statements.
+
+### Why the Strategy is Retained
+
+The implementation is kept in the codebase because:
+- It is cleanly isolated behind `ILlmIntentDetector` with no impact on other strategies
+- It may have value for future imperative command detection or topic classification
+- It serves as a documented evaluation — preventing re-investigation of the same approach
+- The evaluation infrastructure (StrategyComparer) benefits from having multiple strategies to test
+
 ## Consequences
 
 ### Positive
 
-- **Mid-tier latency**: ~50–100ms per call, 5–20x faster than LLM-based detection
-- **Lower cost**: Deepgram text analysis pricing is cheaper than GPT-4o-mini token costs
 - **No new dependencies**: Reuses existing `HttpClient` pattern
 - **Pluggable**: Implements `ILlmIntentDetector`, slots into `LlmIntentStrategy` for buffering, rate-limiting, and deduplication
 - **Custom intents**: Supports domain-specific intent hints via query parameters
+- **Documented evaluation**: Concrete data showing why general-purpose intent recognition doesn't work for question detection
 
 ### Negative
 
-- **Dynamic labels require mapping**: Deepgram returns free-form verb phrases, not a fixed taxonomy. The keyword-based `ClassifyIntent()` method may misclassify novel labels
-- **Lower confidence scores**: Deepgram's confidence distribution differs from LLM scores, requiring a lower threshold (0.3 vs 0.7)
+- **Not effective for question detection**: 0% F1 across all evaluated recordings
+- **Dynamic labels require mapping**: Deepgram returns free-form verb phrases, not a fixed taxonomy. The keyword-based `ClassifyIntent()` method misclassifies most labels
+- **Confidence scores not meaningful for this use case**: No threshold separates questions from statements
 - **No context window**: Unlike the LLM strategy, Deepgram analyzes each text segment independently without conversational context
-- **Rate limiting**: Deepgram enforces a 10-request concurrency limit; must be managed via the `LlmIntentStrategy` rate limiter
-- **HTTP timeout risk**: 5-second default timeout; network issues produce empty results rather than errors
 
 ### Configuration
 
