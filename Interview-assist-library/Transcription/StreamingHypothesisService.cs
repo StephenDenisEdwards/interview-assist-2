@@ -165,7 +165,6 @@ public sealed class StreamingHypothesisService : IStreamingTranscriptionService
         int minBatchBytes = streamingOptions.MinBatchMs * bytesPerMs;
 
         int chunkCount = 0;
-        int transcribeAttempts = 0;
 
         try
         {

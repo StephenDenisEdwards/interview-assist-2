@@ -1,3 +1,7 @@
+// CS0420: Interlocked operations on volatile fields are intentional - Interlocked provides its own barriers
+// CS0067: OnDebug event is part of the IRealtimeApi interface but not used in this implementation
+#pragma warning disable CS0420, CS0067
+
 using InterviewAssist.Library.Audio;
 using InterviewAssist.Library.Constants;
 using InterviewAssist.Library.Context;

@@ -1,0 +1,58 @@
+{
+  "GeneratedAt": "2026-02-06T15:08:24.5117342Z",
+  "SessionFile": "session-2026-02-01-163251.jsonl",
+  "GroundTruthCount": 17,
+  "Strategies": [
+    {
+      "StrategyName": "Heuristic",
+      "DetectionCount": 44,
+      "TruePositives": 5,
+      "FalsePositives": 39,
+      "FalseNegatives": 12,
+      "Precision": 0.11363636363636363,
+      "Recall": 0.29411764705882354,
+      "F1Score": 0.16393442622950818,
+      "AverageLatencyMs": 123.54,
+      "TotalProcessingMs": 6340
+    },
+    {
+      "StrategyName": "LLM",
+      "DetectionCount": 0,
+      "TruePositives": 0,
+      "FalsePositives": 0,
+      "FalseNegatives": 17,
+      "Precision": 0,
+      "Recall": 0,
+      "F1Score": 0,
+      "AverageLatencyMs": 0,
+      "TotalProcessingMs": 6304
+    },
+    {
+      "StrategyName": "Parallel",
+      "DetectionCount": 44,
+      "TruePositives": 5,
+      "FalsePositives": 39,
+      "FalseNegatives": 12,
+      "Precision": 0.11363636363636363,
+      "Recall": 0.29411764705882354,
+      "F1Score": 0.16393442622950818,
+      "AverageLatencyMs": 121.56,
+      "TotalProcessingMs": 6299
+    },
+    {
+      "StrategyName": "Deepgram",
+      "DetectionCount": 0,
+      "TruePositives": 0,
+      "FalsePositives": 0,
+      "FalseNegatives": 17,
+      "Precision": 0,
+      "Recall": 0,
+      "F1Score": 0,
+      "AverageLatencyMs": 0,
+      "TotalProcessingMs": 6302
+    }
+  ],
+  "BestForF1": "Heuristic",
+  "BestForPrecision": "Heuristic",
+  "BestForRecall": "Heuristic"
+}

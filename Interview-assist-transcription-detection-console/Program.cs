@@ -503,8 +503,31 @@ public partial class Program
             DeduplicationWindowMs = llmConfig.GetValue("DeduplicationWindowMs", 30000)
         };
 
+        // Load Deepgram detection options
+        var deepgramDetectionConfig = intentConfig.GetSection("Deepgram");
+        var deepgramDetectionApiKey = GetFirstNonEmpty(
+            deepgramDetectionConfig["ApiKey"],
+            configuration["Deepgram:ApiKey"],
+            Environment.GetEnvironmentVariable("DEEPGRAM_API_KEY"));
+
+        var customIntents = new List<string>();
+        var customIntentsStr = deepgramDetectionConfig["CustomIntents"];
+        if (!string.IsNullOrWhiteSpace(customIntentsStr))
+        {
+            customIntents.AddRange(customIntentsStr.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+        }
+
+        var deepgramOptions = new DeepgramDetectionOptions
+        {
+            ApiKey = deepgramDetectionApiKey,
+            ConfidenceThreshold = deepgramDetectionConfig.GetValue("ConfidenceThreshold", 0.7),
+            CustomIntents = customIntents,
+            CustomIntentMode = deepgramDetectionConfig["CustomIntentMode"] ?? "extended",
+            TimeoutMs = deepgramDetectionConfig.GetValue("TimeoutMs", 5000)
+        };
+
         var runner = new EvaluationRunner(options);
-        return await runner.CompareStrategiesAsync(sessionFile, outputFile, heuristicOptions, llmOptions);
+        return await runner.CompareStrategiesAsync(sessionFile, outputFile, heuristicOptions, llmOptions, deepgramOptions);
     }
 
     private static async Task<int> RunEvaluationModeAsync(string evaluateFile, string? outputFile, string? model)

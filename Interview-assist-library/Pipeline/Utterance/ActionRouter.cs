@@ -78,8 +78,11 @@ public sealed class ActionRouter : IActionRouter
             }
         }
 
-        // Fire immediately - conflict resolution only affects subsequent intents
-        // within the conflict window
+        // Fire immediately and start conflict window for subsequent intents
+        lock (_conflictLock)
+        {
+            _conflictWindowStart = now;
+        }
         return FireIntent(intent, utteranceId, now);
     }
 

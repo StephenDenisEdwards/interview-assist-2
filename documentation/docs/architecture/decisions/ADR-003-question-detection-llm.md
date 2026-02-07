@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Superseded by [ADR-007](ADR-007-multi-strategy-intent-detection.md)
 
 ## Context
 

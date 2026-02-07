@@ -23,4 +23,5 @@
 
 ## Development
 - [In-Progress Plans](plans/in-progress/)
+  - [IMPROVEMENT-PLAN-0013: Deepgram Intent Recognition](plans/in-progress/IMPROVEMENT-PLAN-0013-deepgram-intent-recognition.md)
 - [Completed Plans](plans/completed/)

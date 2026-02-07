@@ -27,7 +27,9 @@ public sealed class BasicTranscriptionService : IStreamingTranscriptionService
     private DateTime _lastStableTime = DateTime.UtcNow;
 
     public event Action<StableTextEventArgs>? OnStableText;
+#pragma warning disable CS0067 // Event required by interface but not used in this basic implementation
     public event Action<ProvisionalTextEventArgs>? OnProvisionalText;
+#pragma warning restore CS0067
     public event Action<HypothesisEventArgs>? OnFullHypothesis;
     public event Action<string>? OnInfo;
     public event Action<string>? OnWarning;
@@ -93,7 +95,7 @@ public sealed class BasicTranscriptionService : IStreamingTranscriptionService
         }
 
         try { _audio?.Stop(); } catch { }
-        if (_audioHandler != null)
+        if (_audioHandler != null && _audio != null)
         {
             try { _audio.OnAudioChunk -= _audioHandler; } catch { }
             _audioHandler = null;

@@ -246,7 +246,7 @@ public class QuestionQueueTests
     }
 
     [Fact]
-    public void QueuedQuestion_HasCorrectProperties()
+    public async Task QueuedQuestion_HasCorrectProperties()
     {
         // Arrange
         var queue = new QuestionQueue();
@@ -258,7 +258,7 @@ public class QuestionQueueTests
         // Act
         QueuedQuestion? queued = null;
         var enumerator = queue.ReadAllAsync().GetAsyncEnumerator();
-        if (enumerator.MoveNextAsync().AsTask().Result)
+        if (await enumerator.MoveNextAsync())
         {
             queued = enumerator.Current;
         }
@@ -299,7 +299,7 @@ public class QuestionQueueTests
     }
 
     [Fact]
-    public void ThreadSafety_ConcurrentEnqueue_NoExceptions()
+    public async Task ThreadSafety_ConcurrentEnqueue_NoExceptions()
     {
         // Arrange
         var queue = new QuestionQueue(maxSize: 100);
@@ -326,7 +326,7 @@ public class QuestionQueueTests
             }));
         }
 
-        Task.WaitAll(tasks.ToArray());
+        await Task.WhenAll(tasks);
 
         // Assert
         Assert.Empty(exceptions);

@@ -58,6 +58,23 @@ Audio → WebSocket → OpenAI Realtime API → Transcript + Response
 
 ### PipelineRealtimeApi
 
+**Current architecture (with utterance segmentation and multi-strategy detection):**
+
+```
+Audio → Deepgram STT → Stabilizer → UtteranceBuilder → IntentDetectionStrategy → ActionRouter
+              ↓                            ↓                      ↓
+        interim/final              open/update/final       OnIntentDetected
+         ASR events                  utterance events      OnIntentCorrected
+```
+
+- Deepgram streaming transcription with native interim/final results (see ADR-005)
+- Stabilizer computes stable text from interim hypotheses via LCP algorithm (see ADR-008)
+- UtteranceBuilder segments speech into discrete utterances with multiple close conditions (see ADR-008)
+- Pluggable intent detection: Heuristic, LLM, Parallel, or Deepgram strategies (see ADR-007)
+- ActionRouter handles imperative routing with conflict resolution and per-subtype cooldowns
+
+**Legacy architecture (without utterance segmentation):**
+
 ```
 Audio → Whisper STT → TranscriptBuffer → QuestionDetector → QuestionQueue
                                                ↓

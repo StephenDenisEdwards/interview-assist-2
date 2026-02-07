@@ -266,7 +266,7 @@ public class TranscriptBufferTests
     }
 
     [Fact]
-    public void ThreadSafety_ConcurrentAddAndRead_NoExceptions()
+    public async Task ThreadSafety_ConcurrentAddAndRead_NoExceptions()
     {
         // Arrange
         var buffer = new TranscriptBuffer();
@@ -314,14 +314,14 @@ public class TranscriptBufferTests
             }));
         }
 
-        Task.WaitAll(tasks.ToArray());
+        await Task.WhenAll(tasks);
 
         // Assert
         Assert.Empty(exceptions);
     }
 
     [Fact]
-    public void ThreadSafety_ConcurrentPruneAndAdd_NoExceptions()
+    public async Task ThreadSafety_ConcurrentPruneAndAdd_NoExceptions()
     {
         // Arrange
         var buffer = new TranscriptBuffer(maxAgeSeconds: 1);
@@ -364,7 +364,7 @@ public class TranscriptBufferTests
             }
         }));
 
-        Task.WaitAll(tasks.ToArray());
+        await Task.WhenAll(tasks);
 
         // Assert
         Assert.Empty(exceptions);

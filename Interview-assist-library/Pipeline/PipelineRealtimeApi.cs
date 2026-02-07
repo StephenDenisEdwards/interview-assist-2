@@ -47,19 +47,22 @@ public sealed class PipelineRealtimeApi : IRealtimeApi
     public event Action? OnConnected;
     public event Action? OnReady;
     public event Action? OnDisconnected;
-    public event Action? OnReconnecting;
     public event Action<string>? OnInfo;
     public event Action<string>? OnWarning;
-    public event Action<string>? OnDebug;
     public event Action<Exception>? OnError;
     public event Action<string>? OnUserTranscript;
-    public event Action? OnSpeechStarted;
-    public event Action? OnSpeechStopped;
     public event Action<string>? OnAssistantTextDelta;
     public event Action? OnAssistantTextDone;
+    public event Action<string, string, string>? OnFunctionCallResponse;
+
+#pragma warning disable CS0067 // Events required by interface but not used in this implementation
+    public event Action? OnReconnecting;
+    public event Action<string>? OnDebug;
+    public event Action? OnSpeechStarted;
+    public event Action? OnSpeechStopped;
     public event Action<string>? OnAssistantAudioTranscriptDelta;
     public event Action? OnAssistantAudioTranscriptDone;
-    public event Action<string, string, string>? OnFunctionCallResponse;
+#pragma warning restore CS0067
     #endregion
 
     public bool IsConnected { get; private set; }

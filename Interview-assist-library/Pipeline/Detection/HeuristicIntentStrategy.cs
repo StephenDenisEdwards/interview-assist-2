@@ -14,7 +14,9 @@ public sealed class HeuristicIntentStrategy : IIntentDetectionStrategy
     public string ModeName => "Heuristic";
 
     public event Action<IntentEvent>? OnIntentDetected;
+#pragma warning disable CS0067 // Event required by interface but not used in heuristic-only strategy
     public event Action<IntentCorrectionEvent>? OnIntentCorrected;
+#pragma warning restore CS0067
 
     public HeuristicIntentStrategy(HeuristicDetectionOptions? options = null)
     {
