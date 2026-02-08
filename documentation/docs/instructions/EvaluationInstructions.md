@@ -44,7 +44,15 @@ dotnet run --project Interview-assist-transcription-detection-console
 # Or toggle recording with Ctrl+R
 ```
 
-Sessions are saved to `recordings/session-{timestamp}.jsonl`.
+Sessions are saved to `recordings/session-{timestamp}.jsonl`. If `SaveAudio: true` is set in `Recording` config, a `.wav` file is also saved alongside each JSONL.
+
+You can also re-transcribe a WAV recording through Deepgram (useful for testing different Deepgram settings or detection strategies):
+
+```bash
+dotnet run --project Interview-assist-transcription-detection-console -- --playback recordings/session.wav
+```
+
+WAV playback requires a Deepgram API key (the audio is sent to Deepgram for live transcription). JSONL playback does not.
 
 ---
 

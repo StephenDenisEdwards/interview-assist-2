@@ -10,6 +10,13 @@ public sealed record ExtractedQuestion(
     int ApproximatePosition);
 
 /// <summary>
+/// Result of ground truth extraction, including parsed questions and the raw LLM response.
+/// </summary>
+public sealed record GroundTruthResult(
+    IReadOnlyList<ExtractedQuestion> Questions,
+    string RawLlmResponse);
+
+/// <summary>
 /// Result of comparing detected questions against ground truth.
 /// </summary>
 public sealed record EvaluationResult

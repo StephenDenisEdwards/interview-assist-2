@@ -57,8 +57,19 @@ public sealed class GroundTruthExtractor : IDisposable
         string fullTranscript,
         CancellationToken ct = default)
     {
+        var result = await ExtractQuestionsWithRawAsync(fullTranscript, ct);
+        return result.Questions;
+    }
+
+    /// <summary>
+    /// Extract all questions from the full transcript, returning both parsed questions and the raw LLM response.
+    /// </summary>
+    public async Task<GroundTruthResult> ExtractQuestionsWithRawAsync(
+        string fullTranscript,
+        CancellationToken ct = default)
+    {
         if (string.IsNullOrWhiteSpace(fullTranscript))
-            return Array.Empty<ExtractedQuestion>();
+            return new GroundTruthResult(Array.Empty<ExtractedQuestion>(), string.Empty);
 
         try
         {
@@ -74,7 +85,7 @@ public sealed class GroundTruthExtractor : IDisposable
                 },
                 response_format = new { type = "json_object" },
                 temperature = 0.1,
-                max_tokens = 4096
+                max_completion_tokens = 4096
             };
 
             var json = JsonSerializer.Serialize(requestBody);
@@ -86,11 +97,13 @@ public sealed class GroundTruthExtractor : IDisposable
             {
                 var error = await response.Content.ReadAsStringAsync(ct);
                 Console.Error.WriteLine($"[GroundTruth Error] {response.StatusCode}: {error}");
-                return Array.Empty<ExtractedQuestion>();
+                return new GroundTruthResult(Array.Empty<ExtractedQuestion>(), string.Empty);
             }
 
             var responseJson = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
-            return ParseResponse(responseJson);
+            var rawContent = ExtractContentFromResponse(responseJson);
+            var questions = ParseResponse(responseJson);
+            return new GroundTruthResult(questions, rawContent);
         }
         catch (OperationCanceledException)
         {
@@ -99,7 +112,30 @@ public sealed class GroundTruthExtractor : IDisposable
         catch (Exception ex)
         {
             Console.Error.WriteLine($"[GroundTruth Error] {ex.Message}");
-            return Array.Empty<ExtractedQuestion>();
+            return new GroundTruthResult(Array.Empty<ExtractedQuestion>(), string.Empty);
+        }
+    }
+
+    private static string ExtractContentFromResponse(string responseJson)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(responseJson);
+            var root = doc.RootElement;
+
+            if (!root.TryGetProperty("choices", out var choices) || choices.GetArrayLength() == 0)
+                return string.Empty;
+
+            var firstChoice = choices[0];
+            if (!firstChoice.TryGetProperty("message", out var message) ||
+                !message.TryGetProperty("content", out var content))
+                return string.Empty;
+
+            return content.GetString() ?? string.Empty;
+        }
+        catch (JsonException)
+        {
+            return string.Empty;
         }
     }
 

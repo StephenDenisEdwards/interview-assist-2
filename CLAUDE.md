@@ -20,8 +20,11 @@ dotnet run --project Interview-assist-pipeline-console/Interview-assist-pipeline
 # Run transcription-detection console app
 dotnet run --project Interview-assist-transcription-detection-console/Interview-assist-transcription-detection-console.csproj
 
-# Run transcription-detection console app in playback mode (no audio required)
+# Run transcription-detection console app in playback mode (JSONL replay, no audio/API required)
 dotnet run --project Interview-assist-transcription-detection-console/Interview-assist-transcription-detection-console.csproj -- --playback recordings/session.jsonl
+
+# Run transcription-detection console app in WAV playback mode (re-transcribes via Deepgram)
+dotnet run --project Interview-assist-transcription-detection-console/Interview-assist-transcription-detection-console.csproj -- --playback recordings/session.wav
 ```
 
 ## Test Commands

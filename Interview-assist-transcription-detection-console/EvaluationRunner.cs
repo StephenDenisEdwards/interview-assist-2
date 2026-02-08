@@ -70,7 +70,8 @@ public sealed class EvaluationRunner
         }
 
         using var extractor = new GroundTruthExtractor(_options.ApiKey, _options.Model);
-        var groundTruth = await extractor.ExtractQuestionsAsync(transcript, ct);
+        var groundTruthResult = await extractor.ExtractQuestionsWithRawAsync(transcript, ct);
+        var groundTruth = groundTruthResult.Questions;
         Console.WriteLine($"  Questions found: {groundTruth.Count}");
         Console.WriteLine();
 
@@ -108,6 +109,7 @@ public sealed class EvaluationRunner
         PrintSubtypeResults(subtypeResult, misclassifications);
         PrintErrorAnalysis(errorAnalysis, confidenceBuckets);
         PrintMissedAnalysis(missedAnalysis);
+        PrintGroundTruthRaw(groundTruthResult.RawLlmResponse);
 
         // Save to file if requested
         if (!string.IsNullOrWhiteSpace(outputFile))
@@ -296,6 +298,27 @@ public sealed class EvaluationRunner
         }
     }
 
+    private static void PrintGroundTruthRaw(string rawLlmResponse)
+    {
+        if (string.IsNullOrWhiteSpace(rawLlmResponse))
+            return;
+
+        Console.WriteLine();
+        Console.WriteLine("=== Raw Ground Truth LLM Response ===");
+
+        // Pretty-print if the response is valid JSON, otherwise print as-is
+        try
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(rawLlmResponse);
+            var formatted = System.Text.Json.JsonSerializer.Serialize(doc, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+            Console.WriteLine(formatted);
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            Console.WriteLine(rawLlmResponse);
+        }
+    }
+
     /// <summary>
     /// Run threshold tuning to find optimal confidence settings.
     /// </summary>
@@ -430,7 +453,8 @@ public sealed class EvaluationRunner
         }
 
         using var extractor = new GroundTruthExtractor(_options.ApiKey, _options.Model);
-        var groundTruth = await extractor.ExtractQuestionsAsync(transcript, ct);
+        var groundTruthResult = await extractor.ExtractQuestionsWithRawAsync(transcript, ct);
+        var groundTruth = groundTruthResult.Questions;
         Console.WriteLine($"  Questions found: {groundTruth.Count}");
         Console.WriteLine();
 
@@ -441,6 +465,7 @@ public sealed class EvaluationRunner
 
         // Print results
         PrintComparisonResults(result);
+        PrintGroundTruthRaw(groundTruthResult.RawLlmResponse);
 
         // Save to file if requested
         if (!string.IsNullOrWhiteSpace(outputFile))
@@ -730,7 +755,8 @@ public sealed class EvaluationRunner
         }
 
         using var extractor = new GroundTruthExtractor(_options.ApiKey, _options.Model);
-        var groundTruth = await extractor.ExtractQuestionsAsync(transcript, ct);
+        var groundTruthResult = await extractor.ExtractQuestionsWithRawAsync(transcript, ct);
+        var groundTruth = groundTruthResult.Questions;
 
         var evaluator = new DetectionEvaluator(_options.MatchThreshold);
         var result = evaluator.Evaluate(groundTruth, deduplicated);
@@ -741,6 +767,7 @@ public sealed class EvaluationRunner
 
         // Print results
         PrintRegressionResults(testResult);
+        PrintGroundTruthRaw(groundTruthResult.RawLlmResponse);
 
         return testResult.OverallStatus == RegressionStatus.Failed ? 1 : 0;
     }

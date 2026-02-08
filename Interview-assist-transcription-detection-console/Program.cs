@@ -125,7 +125,7 @@ public partial class Program
                 Console.WriteLine("  dotnet run -- --analyze-errors <file>     Analyze error patterns from report");
                 Console.WriteLine();
                 Console.WriteLine("Options:");
-                Console.WriteLine("  --playback <file>       Play back a recorded session file (.jsonl)");
+                Console.WriteLine("  --playback <file>       Play back a recorded session (.jsonl or .wav)");
                 Console.WriteLine("  --mode <mode>           Override detection mode for playback (Heuristic, Llm, Parallel)");
                 Console.WriteLine("  --evaluate <file>       Evaluate detection against LLM-extracted ground truth");
                 Console.WriteLine("  --compare <file>        Compare Heuristic, LLM, and Parallel strategies");
@@ -217,9 +217,12 @@ public partial class Program
             .AddUserSecrets<Program>(optional: true)
             .Build();
 
-        // In playback mode, Deepgram API key is not required
+        // In JSONL playback mode, Deepgram API key is not required.
+        // WAV playback still needs it (audio goes through Deepgram for transcription).
+        var isWavPlayback = playbackFile != null
+            && Path.GetExtension(playbackFile).Equals(".wav", StringComparison.OrdinalIgnoreCase);
         string? deepgramApiKey = null;
-        if (playbackFile == null)
+        if (playbackFile == null || isWavPlayback)
         {
             // Get Deepgram API key
             deepgramApiKey = GetFirstNonEmpty(
@@ -1055,6 +1058,19 @@ public class TranscriptionApp
 
     private async Task StartPlaybackAsync(CancellationToken ct)
     {
+        var extension = Path.GetExtension(_playbackFile!).ToLowerInvariant();
+        if (extension == ".wav")
+        {
+            await StartWavPlaybackAsync(ct);
+        }
+        else
+        {
+            await StartJsonlPlaybackAsync(ct);
+        }
+    }
+
+    private async Task StartJsonlPlaybackAsync(CancellationToken ct)
+    {
         try
         {
             AddDebug($"Loading playback file: {_playbackFile}");
@@ -1127,6 +1143,85 @@ public class TranscriptionApp
         catch (OperationCanceledException)
         {
             AddDebug("Playback cancelled.");
+        }
+        catch (Exception ex)
+        {
+            AddDebug($"ERROR: {ex.Message}");
+        }
+    }
+
+    private async Task StartWavPlaybackAsync(CancellationToken ct)
+    {
+        try
+        {
+            AddDebug($"Starting WAV playback: {_playbackFile}");
+
+            // Create file-based audio source
+            var wavAudio = new WavFileAudioSource(_playbackFile!, _sampleRate);
+
+            // Create Deepgram transcription service with WAV audio source
+            _deepgramService = new DeepgramTranscriptionService(wavAudio, _deepgramOptions);
+
+            // Create intent pipeline
+            if (_intentDetectionEnabled)
+            {
+                var strategy = CreateDetectionStrategy();
+                _intentPipeline = new UtteranceIntentPipeline(detectionStrategy: strategy);
+                WireIntentPipelineEvents();
+
+                var modeName = _intentPipeline.DetectionModeName;
+                Application.MainLoop?.Invoke(() => _detectionModeStatusItem.Title = $"Mode: {modeName}");
+                AddDebug($"Intent detection enabled (mode: {modeName})");
+
+                // Create session recorder (attached to pipeline)
+                _recorder = new SessionRecorder(_intentPipeline);
+                _recorder.OnInfo += msg => Application.MainLoop?.Invoke(() => AddDebug($"[Recording] {msg}"));
+
+                if (_recordingOptions.AutoStart)
+                {
+                    Application.MainLoop?.Invoke(() =>
+                    {
+                        StartRecording();
+                        AddDebug("Recording auto-started (AutoStart=true)");
+                    });
+                }
+            }
+
+            // Wire Deepgram events (same as live transcription)
+            WireDeepgramEvents();
+
+            // When WAV playback completes, wait for final results then stop
+            wavAudio.OnPlaybackComplete += () =>
+            {
+                _ = Task.Run(async () =>
+                {
+                    AddDebug("WAV playback complete, waiting for final results...");
+                    await Task.Delay(2000);
+
+                    // Stop recording if active
+                    if (_recorder?.IsRecording == true)
+                    {
+                        Application.MainLoop?.Invoke(() =>
+                        {
+                            _recorder.Stop();
+                            _recordingStatusItem.Title = "";
+                            AddDebug("Recording stopped (playback complete)");
+                        });
+                    }
+
+                    AddDebug("Stopping Deepgram...");
+                    await _deepgramService.StopAsync();
+                    AddDebug("WAV playback session finished. Press Ctrl+Q to quit.");
+                });
+            };
+
+            AddDebug($"Connecting to Deepgram (model: {_deepgramOptions.Model})...");
+
+            await _deepgramService.StartAsync(ct);
+        }
+        catch (OperationCanceledException)
+        {
+            AddDebug("WAV playback cancelled.");
         }
         catch (Exception ex)
         {

@@ -16,6 +16,7 @@ public sealed class DeepgramTranscriptionService : IStreamingTranscriptionServic
     private readonly DeepgramOptions _options;
     private readonly StringBuilder _stableTranscript = new();
     private readonly object _transcriptLock = new();
+    private readonly SemaphoreSlim _sendLock = new(1, 1);
 
     private ClientWebSocket? _ws;
     private CancellationTokenSource? _cts;
@@ -500,11 +501,19 @@ public sealed class DeepgramTranscriptionService : IStreamingTranscriptionServic
                     break;
                 }
 
-                await _ws.SendAsync(
-                    new ArraySegment<byte>(chunk),
-                    WebSocketMessageType.Binary,
-                    endOfMessage: true,
-                    ct).ConfigureAwait(false);
+                await _sendLock.WaitAsync(ct).ConfigureAwait(false);
+                try
+                {
+                    await _ws.SendAsync(
+                        new ArraySegment<byte>(chunk),
+                        WebSocketMessageType.Binary,
+                        endOfMessage: true,
+                        ct).ConfigureAwait(false);
+                }
+                finally
+                {
+                    _sendLock.Release();
+                }
             }
         }
         catch (OperationCanceledException) { }
@@ -528,11 +537,19 @@ public sealed class DeepgramTranscriptionService : IStreamingTranscriptionServic
 
                 if (_ws.State == WebSocketState.Open)
                 {
-                    await _ws.SendAsync(
-                        new ArraySegment<byte>(keepAliveJson),
-                        WebSocketMessageType.Text,
-                        endOfMessage: true,
-                        ct).ConfigureAwait(false);
+                    await _sendLock.WaitAsync(ct).ConfigureAwait(false);
+                    try
+                    {
+                        await _ws.SendAsync(
+                            new ArraySegment<byte>(keepAliveJson),
+                            WebSocketMessageType.Text,
+                            endOfMessage: true,
+                            ct).ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        _sendLock.Release();
+                    }
                 }
             }
         }
@@ -554,11 +571,19 @@ public sealed class DeepgramTranscriptionService : IStreamingTranscriptionServic
         {
             // Send close stream message
             var closeJson = JsonSerializer.SerializeToUtf8Bytes(new DeepgramCloseStream());
-            await _ws.SendAsync(
-                new ArraySegment<byte>(closeJson),
-                WebSocketMessageType.Text,
-                endOfMessage: true,
-                CancellationToken.None).ConfigureAwait(false);
+            await _sendLock.WaitAsync(CancellationToken.None).ConfigureAwait(false);
+            try
+            {
+                await _ws.SendAsync(
+                    new ArraySegment<byte>(closeJson),
+                    WebSocketMessageType.Text,
+                    endOfMessage: true,
+                    CancellationToken.None).ConfigureAwait(false);
+            }
+            finally
+            {
+                _sendLock.Release();
+            }
 
             // Close WebSocket gracefully
             await _ws.CloseAsync(
