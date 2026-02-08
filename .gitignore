@@ -363,3 +363,7 @@ MigrationBackup/
 FodyWeavers.xsd
 # Claude Code local settings
 .claude/settings.local.json
+
+# Recorded sessions and evaluation results
+recordings/
+evaluations/
