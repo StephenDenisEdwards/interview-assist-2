@@ -302,7 +302,8 @@ public partial class Program
         {
             Folder = recordingConfig["Folder"] ?? "recordings",
             FileNamePattern = recordingConfig["FileNamePattern"] ?? "session-{timestamp}.jsonl",
-            AutoStart = recordingConfig.GetValue("AutoStart", false)
+            AutoStart = recordingConfig.GetValue("AutoStart", false),
+            SaveAudio = recordingConfig.GetValue("SaveAudio", false)
         };
 
         // Initialize Terminal.Gui
@@ -768,10 +769,12 @@ public class TranscriptionApp
     private UtteranceIntentPipeline? _intentPipeline;
     private ColorScheme? _intentColorScheme;
     private SessionRecorder? _recorder;
+    private AudioFileRecorder? _audioRecorder;
     private SessionPlayer? _player;
     private bool _isTranscribing;
     private StatusItem _transcriptionStatusItem = null!;
     private StatusItem _detectionModeStatusItem = null!;
+    private readonly object _pipelineGate = new();
 
     public TranscriptionApp(
         AudioInputSource audioSource,
@@ -973,6 +976,8 @@ public class TranscriptionApp
         // Cleanup
         _cts.Cancel();
         _recorder?.Stop();
+        _audioRecorder?.Stop();
+        _audioRecorder?.Dispose();
         _player?.Stop();
         if (_deepgramService != null)
         {
@@ -989,6 +994,7 @@ public class TranscriptionApp
         if (_recorder.IsRecording)
         {
             _recorder.Stop();
+            _audioRecorder?.Stop();
             _recordingStatusItem.Title = "";
             AddDebug("Recording stopped");
         }
@@ -1013,6 +1019,15 @@ public class TranscriptionApp
             SampleRate = _sampleRate
         };
         _recorder.Start(filePath, config);
+
+        // Start audio file recording alongside the JSONL recording
+        if (_audioRecorder != null)
+        {
+            var wavPath = Path.ChangeExtension(filePath, ".wav");
+            _audioRecorder.Start(wavPath);
+            AddDebug($"Audio recording to: {wavPath}");
+        }
+
         _recordingStatusItem.Title = "REC";
         AddDebug($"Recording to: {filePath}");
     }
@@ -1027,6 +1042,7 @@ public class TranscriptionApp
         if (_recorder?.IsRecording == true)
         {
             _recorder.Stop();
+            _audioRecorder?.Stop();
             _recordingStatusItem.Title = "";
         }
 
@@ -1128,6 +1144,13 @@ public class TranscriptionApp
             AddDebug("Starting audio capture...");
 
             var audio = new WindowsAudioCaptureService(_sampleRate, _audioSource);
+
+            // Create audio file recorder if configured
+            if (_recordingOptions.SaveAudio)
+            {
+                _audioRecorder = new AudioFileRecorder(audio, _sampleRate);
+            }
+
             _deepgramService = new DeepgramTranscriptionService(audio, _deepgramOptions);
 
             // Create intent pipeline if enabled
@@ -1197,12 +1220,12 @@ public class TranscriptionApp
                 AddTranscript(args.Text + " ");
 
                 // Feed to intent pipeline
-                _intentPipeline?.ProcessAsrEvent(new AsrEvent
+                EnqueuePipelineEvent(pipeline => pipeline.ProcessAsrEvent(new AsrEvent
                 {
                     Text = args.Text,
                     IsFinal = true,
                     SpeakerId = args.Speaker?.ToString()
-                });
+                }));
             });
         };
 
@@ -1211,12 +1234,12 @@ public class TranscriptionApp
             // Feed provisional to intent pipeline for early detection (no display)
             if (!string.IsNullOrWhiteSpace(args.Text))
             {
-                _intentPipeline?.ProcessAsrEvent(new AsrEvent
+                EnqueuePipelineEvent(pipeline => pipeline.ProcessAsrEvent(new AsrEvent
                 {
                     Text = args.Text,
                     IsFinal = false,
                     SpeakerId = args.Speaker?.ToString()
-                });
+                }));
             }
         };
 
@@ -1227,7 +1250,7 @@ public class TranscriptionApp
                 // Signal utterance end to intent pipeline
                 if (msg.Contains("Utterance end"))
                 {
-                    _intentPipeline?.SignalUtteranceEnd();
+                    EnqueuePipelineEvent(pipeline => pipeline.SignalUtteranceEnd());
                 }
 
                 AddDebug($"[Info] {msg}");
@@ -1243,6 +1266,29 @@ public class TranscriptionApp
         {
             Application.MainLoop?.Invoke(() => AddDebug($"[Error] {ex.Message}"));
         };
+    }
+
+    private void EnqueuePipelineEvent(Action<UtteranceIntentPipeline> action)
+    {
+        void Run()
+        {
+            var pipeline = _intentPipeline;
+            if (pipeline == null) return;
+
+            lock (_pipelineGate)
+            {
+                action(pipeline);
+            }
+        }
+
+        if (Application.MainLoop != null)
+        {
+            Application.MainLoop.Invoke(Run);
+        }
+        else
+        {
+            Run();
+        }
     }
 
     private void WireIntentPipelineEvents()
@@ -1266,25 +1312,18 @@ public class TranscriptionApp
                 // Display detected questions in the intent list
                 if (evt.Intent.Type == IntentType.Question)
                 {
-                    var subtypeLabel = evt.Intent.Subtype switch
-                    {
-                        IntentSubtype.Definition => "Definition",
-                        IntentSubtype.HowTo => "How-To",
-                        IntentSubtype.Compare => "Compare",
-                        IntentSubtype.Troubleshoot => "Troubleshoot",
-                        _ => "Question"
-                    };
+                    var subtypeLabel = FormatSubtypeLabel(evt.Intent.Subtype);
 
                     // Include speaker if available
                     var speakerPrefix = _currentSpeaker.HasValue
-                        ? $"S{_currentSpeaker.Value} "
+                        ? $"Speaker {_currentSpeaker.Value} | "
                         : "";
 
                     // Show confidence for quality evaluation
-                    var confidence = evt.Intent.Confidence.ToString("F1");
+                    var confidenceLabel = FormatConfidenceLabel(evt.Intent.Confidence);
 
                     // Add to intent list
-                    AddIntent($"[{speakerPrefix}{subtypeLabel} {confidence}] {evt.Intent.SourceText}");
+                    AddIntent($"[{speakerPrefix}{subtypeLabel} | {confidenceLabel}] {evt.Intent.SourceText}");
                 }
             });
         };
@@ -1316,23 +1355,16 @@ public class TranscriptionApp
                 // Handle corrections that result in questions
                 if (evt.CorrectedIntent.Type == IntentType.Question)
                 {
-                    var subtypeLabel = evt.CorrectedIntent.Subtype switch
-                    {
-                        IntentSubtype.Definition => "Definition",
-                        IntentSubtype.HowTo => "How-To",
-                        IntentSubtype.Compare => "Compare",
-                        IntentSubtype.Troubleshoot => "Troubleshoot",
-                        _ => "Question"
-                    };
+                    var subtypeLabel = FormatSubtypeLabel(evt.CorrectedIntent.Subtype);
 
                     var prefix = evt.CorrectionType switch
                     {
-                        IntentCorrectionType.Added => "[LLM+]",      // LLM found something heuristic missed
-                        IntentCorrectionType.TypeChanged => "[LLM~]", // LLM corrected the type
-                        _ => "[LLM]"
+                        IntentCorrectionType.Added => "LLM added",
+                        IntentCorrectionType.TypeChanged => "LLM reclassified",
+                        _ => "LLM"
                     };
 
-                    AddIntent($"{prefix} [{subtypeLabel}] {evt.CorrectedIntent.SourceText}");
+                    AddIntent($"[{prefix} | {subtypeLabel}] {evt.CorrectedIntent.SourceText}");
                 }
             });
         };
@@ -1376,6 +1408,27 @@ public class TranscriptionApp
         // Auto-scroll to bottom
         _debugView.MoveEnd();
     }
+
+    private static string FormatSubtypeLabel(IntentSubtype? subtype) => subtype switch
+    {
+        IntentSubtype.Definition => "Asking for definition",
+        IntentSubtype.HowTo => "Asking how-to",
+        IntentSubtype.Compare => "Asking to compare",
+        IntentSubtype.Troubleshoot => "Troubleshooting",
+        IntentSubtype.Stop => "Stop command",
+        IntentSubtype.Repeat => "Repeat request",
+        IntentSubtype.Continue => "Continue request",
+        IntentSubtype.StartOver => "Start over request",
+        IntentSubtype.Generate => "Generate request",
+        _ => "General question"
+    };
+
+    private static string FormatConfidenceLabel(double confidence) => confidence switch
+    {
+        >= 0.9 => $"High confidence ({confidence:F1})",
+        >= 0.7 => $"Medium confidence ({confidence:F1})",
+        _ => $"Low confidence ({confidence:F1})"
+    };
 
     private static string Truncate(string text, int maxLength)
     {

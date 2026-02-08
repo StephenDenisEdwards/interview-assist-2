@@ -19,6 +19,11 @@ public sealed record RecordingOptions
     public bool AutoStart { get; init; } = false;
 
     /// <summary>
+    /// Whether to save captured audio as a WAV file alongside the JSONL recording.
+    /// </summary>
+    public bool SaveAudio { get; init; } = false;
+
+    /// <summary>
     /// Generate a file path for a new recording.
     /// </summary>
     public string GenerateFilePath()
