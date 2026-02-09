@@ -219,6 +219,82 @@ The summary table uses a `TableView` or `ListView`. The reviewer can:
 
 ---
 
+### Concept E: Transcript-Centric Annotation with Interactive Text Selection
+
+Display the full transcript in the left panel with detected questions highlighted inline. The right panel maintains a synchronised list of all questions (both LLM-detected and human-added). The user can select text in the transcript to create new questions, and remove questions from the list. Both panels stay in bidirectional sync -- adding a question updates the transcript highlighting, and removing a question from the list removes its highlight.
+
+This differs from Concept C in a key way: Concept C is **review-focused** (navigate through existing LLM highlights, accept/reject each). Concept E is **annotation-focused** (the transcript and question list are equal peers, and adding new questions by selecting text is a first-class operation, not a secondary action).
+
+```
++--------------------------------------+-----------------------------------+
+| TRANSCRIPT                           | QUESTIONS (5)                     |
+|                                      |                                   |
+| [00:30] Speaker 1: So I've been      |  1. [LLM] What is dependency      |
+| working with ASP.NET Core lately     |     injection?                    |
+| and I'm really impressed with the    |     Subtype: Definition           |
+| middleware pipeline.                 |                                   |
+|                                      |  2. [LLM] How do you implement    |
+| [00:35] Speaker 2: Yeah it's quite   |     the repository pattern?       |
+| elegant. ██████████████████████████  |     Subtype: HowTo                |
+| █ What is dependency injection? ████ |                                   |
+| █████████████████████████████████    |  3. [LLM] Is Billie Eilish about  |
+| That's something I keep hearing      |     to lose her house?            |
+| about.                               |     Subtype: Rhetorical           |
+|                                      |                                   |
+| [00:42] Speaker 1: Well dependency   |  4. [USR] What about thread       |
+| injection is a design pattern        |     safety?                       |
+| where you pass dependencies to a     |     Subtype: HowTo                |
+| class rather than having the class   |                                   |
+| create them itself.                  |  5. [USR] Can you walk me through |
+|                                      |     the middleware pipeline?      |
+| [00:48] Speaker 2: ████████████████  |     Subtype: HowTo                |
+| █ How do you implement the repo ████ |                                   |
+| █ pattern? █████████████████████████ |                                   |
+| I've seen it in a few codebases      |                                   |
+| but never really understood it.      |                                   |
+|                                      |                                   |
+| [00:55] Speaker 1: Sure. ████████   |                                   |
+| █ Can you walk me through the ██████ |                                   |
+| █ middleware pipeline? █████████████ |                                   |
+| Let me show you...                   |                                   |
++--------------------------------------+-----------------------------------+
+| [S]elect text  [D]elete selected  [T]ype subtype  [Tab]Focus  Ctrl+Q Quit|
++--------------------------------------+-----------------------------------+
+```
+
+**Layout:** Two-column split using `FrameView`:
+
+1. **Left panel (60%)** -- full transcript in a scrollable `TextView`. LLM-detected questions are highlighted with a coloured background. User-added questions are highlighted in a distinct colour. Highlight colours stay in sync with the question list. The user can select a region of text (using Shift+Arrow or mouse) and press `S` to mark it as a question.
+2. **Right panel (40%)** -- `ListView` of all questions, both LLM-detected (`[LLM]`) and user-added (`[USR]`). Each entry shows the question text and subtype. Arrow keys navigate; `D` removes the selected question (and removes its transcript highlight). `T` cycles the subtype.
+3. **StatusBar** -- key legend, always visible.
+
+**Bidirectional sync:**
+- Selecting text in the transcript and pressing `S` adds a new `[USR]` entry to the right panel list and highlights the selected region.
+- Pressing `D` on a list entry removes it from the list and removes the corresponding highlight from the transcript.
+- Selecting an entry in the right panel scrolls the transcript to the corresponding position and briefly flashes the highlight.
+- Selecting a highlight in the transcript selects the corresponding entry in the right panel.
+
+**Mapping questions to transcript positions:**
+- LLM-detected questions are mapped to transcript positions using `UtteranceId` from `IntentEventData` to find the corresponding `UtteranceEvent`, which provides `StartOffsetMs` and `EndOffsetMs`. Character offsets are calculated by summing segment text lengths from the reconstructed transcript.
+- User-selected text uses the character offset directly from the `TextView` selection range.
+
+**Advantages:**
+- Most natural annotation workflow -- the user reads the transcript and highlights questions directly
+- Adding missed questions is a first-class operation (text selection), not a secondary action
+- Full dataset overview (question list) AND full context (transcript) visible simultaneously
+- Bidirectional sync means the user never loses track of where a question appears in context
+- Closest to how human annotators naturally work: read text, highlight interesting parts
+- Reduces anchoring bias for missed questions -- the user is reading the full transcript, not just reviewing LLM suggestions
+
+**Disadvantages:**
+- Terminal.Gui 1.x has limited support for inline colour changes within a single `TextView` -- would likely need a custom view or extensive `ProcessKey` handling (same limitation as Concept C)
+- Interactive text selection for highlighting requires custom `ProcessKey`/mouse event handling
+- Bidirectional sync between two panels is complex to implement correctly
+- Mapping LLM-detected questions back to character offsets in the transcript requires custom logic (no built-in method exists)
+- Most complex concept to implement
+
+---
+
 ## Recommended Approach
 
 **Concept D (Two-Phase Review)** is the strongest option. It combines the speed of sequential review with the oversight of a summary table. However, it is also the most work to build.
