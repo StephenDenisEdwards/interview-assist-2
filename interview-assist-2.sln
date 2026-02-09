@@ -85,6 +85,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "domain", "domain", "{DAE56B
 		documentation\docs\Detecting Questions and Imperative Sentences in English.pdf = documentation\docs\Detecting Questions and Imperative Sentences in English.pdf
 		documentation\docs\domain\HEURISTIC_QUESTION_DETECTOR.md = documentation\docs\domain\HEURISTIC_QUESTION_DETECTOR.md
 		documentation\docs\domain\QUESTION-DETECTION-RESEARCH-REPORT.md = documentation\docs\domain\QUESTION-DETECTION-RESEARCH-REPORT.md
+		documentation\docs\domain\TRANSCRIPT-QUESTION-MAPPING-ISSUES.md = documentation\docs\domain\TRANSCRIPT-QUESTION-MAPPING-ISSUES.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interview-assist-transcription-detection-console", "Interview-assist-transcription-detection-console\Interview-assist-transcription-detection-console.csproj", "{9A0A441F-CAC7-4665-972E-F299C443D00F}"
@@ -108,6 +109,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ideas", "ideas", "{7F3A1B2C
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interview-assist-annotation-console", "Interview-assist-annotation-console\Interview-assist-annotation-console.csproj", "{691EBA47-D875-43D4-8CB9-0B897E11849A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interview-assist-annotation-concept-e-console", "Interview-assist-annotation-concept-e-console\Interview-assist-annotation-concept-e-console.csproj", "{4A75BF1B-01E2-449D-88E2-5D4184B52759}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -227,6 +230,18 @@ Global
 		{691EBA47-D875-43D4-8CB9-0B897E11849A}.Release|x64.Build.0 = Release|Any CPU
 		{691EBA47-D875-43D4-8CB9-0B897E11849A}.Release|x86.ActiveCfg = Release|Any CPU
 		{691EBA47-D875-43D4-8CB9-0B897E11849A}.Release|x86.Build.0 = Release|Any CPU
+		{4A75BF1B-01E2-449D-88E2-5D4184B52759}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A75BF1B-01E2-449D-88E2-5D4184B52759}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A75BF1B-01E2-449D-88E2-5D4184B52759}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4A75BF1B-01E2-449D-88E2-5D4184B52759}.Debug|x64.Build.0 = Debug|Any CPU
+		{4A75BF1B-01E2-449D-88E2-5D4184B52759}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4A75BF1B-01E2-449D-88E2-5D4184B52759}.Debug|x86.Build.0 = Debug|Any CPU
+		{4A75BF1B-01E2-449D-88E2-5D4184B52759}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A75BF1B-01E2-449D-88E2-5D4184B52759}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A75BF1B-01E2-449D-88E2-5D4184B52759}.Release|x64.ActiveCfg = Release|Any CPU
+		{4A75BF1B-01E2-449D-88E2-5D4184B52759}.Release|x64.Build.0 = Release|Any CPU
+		{4A75BF1B-01E2-449D-88E2-5D4184B52759}.Release|x86.ActiveCfg = Release|Any CPU
+		{4A75BF1B-01E2-449D-88E2-5D4184B52759}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

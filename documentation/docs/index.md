@@ -13,6 +13,7 @@
 - [Deepgram Integration](domain/Deepgram-overview.md)
 - [Question Detection - Heuristic](domain/HEURISTIC_QUESTION_DETECTOR.md)
 - [Question Detection - Research Report](domain/QUESTION-DETECTION-RESEARCH-REPORT.md)
+- [Transcript-to-Question Mapping Issues](domain/TRANSCRIPT-QUESTION-MAPPING-ISSUES.md)
 
 ## Operations
 - [Configuration](operations/appsettings.md)

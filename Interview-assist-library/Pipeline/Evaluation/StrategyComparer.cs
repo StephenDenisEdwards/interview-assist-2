@@ -168,7 +168,8 @@ public sealed class StrategyComparer
                     Type = d.Type.ToString(),
                     Subtype = d.Subtype?.ToString(),
                     Confidence = d.Confidence,
-                    SourceText = d.SourceText
+                    SourceText = d.SourceText,
+                    OriginalText = d.OriginalText
                 },
                 UtteranceId = $"u{i}",
                 IsCandidate = false

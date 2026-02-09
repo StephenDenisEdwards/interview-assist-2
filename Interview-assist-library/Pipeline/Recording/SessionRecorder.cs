@@ -179,6 +179,7 @@ public sealed class SessionRecorder : IDisposable
                     Subtype = evt.Intent.Subtype?.ToString(),
                     Confidence = evt.Intent.Confidence,
                     SourceText = evt.Intent.SourceText,
+                    OriginalText = evt.Intent.OriginalText,
                     Slots = evt.Intent.Slots != null ? new IntentSlotsData
                     {
                         Topic = evt.Intent.Slots.Topic,
@@ -220,6 +221,7 @@ public sealed class SessionRecorder : IDisposable
                     Subtype = evt.OriginalIntent.Subtype?.ToString(),
                     Confidence = evt.OriginalIntent.Confidence,
                     SourceText = evt.OriginalIntent.SourceText,
+                    OriginalText = evt.OriginalIntent.OriginalText,
                     Slots = evt.OriginalIntent.Slots != null ? new IntentSlotsData
                     {
                         Topic = evt.OriginalIntent.Slots.Topic,
@@ -233,6 +235,7 @@ public sealed class SessionRecorder : IDisposable
                     Subtype = evt.CorrectedIntent.Subtype?.ToString(),
                     Confidence = evt.CorrectedIntent.Confidence,
                     SourceText = evt.CorrectedIntent.SourceText,
+                    OriginalText = evt.CorrectedIntent.OriginalText,
                     Slots = evt.CorrectedIntent.Slots != null ? new IntentSlotsData
                     {
                         Topic = evt.CorrectedIntent.Slots.Topic,

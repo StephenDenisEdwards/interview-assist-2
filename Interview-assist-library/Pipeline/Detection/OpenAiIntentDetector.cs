@@ -20,18 +20,24 @@ public sealed class OpenAiIntentDetector : ILlmIntentDetector
         Detect questions, imperatives, and other intents directed at a listener.
 
         For each detected intent, provide:
+        - original_text: The EXACT verbatim text from the transcript (copy-paste, no changes)
         - text: The question/imperative, made SELF-CONTAINED (resolve pronouns using context)
         - type: "Question" | "Imperative" | "Statement"
         - subtype: For questions: "Definition" | "HowTo" | "Compare" | "Troubleshoot" | null
                    For imperatives: "Stop" | "Repeat" | "Continue" | "Generate" | null
         - confidence: 0.0 to 1.0
 
-        CRITICAL - Self-contained text:
-        - Every detected item MUST make sense on its own without surrounding context
-        - Resolve pronouns (it, this, that, they) using previous context
+        CRITICAL - Two text fields:
+        - original_text: Copy the EXACT words from the transcript. Do not modify, clean up, or rephrase.
+        - text: Make the question SELF-CONTAINED by resolving pronouns and adding context.
+        - If the question is already self-contained, both fields will be the same.
         - Examples:
-          * "When should we use it?" where "it" = "abstract class" → "When should we use an abstract class?"
-          * "What are the advantages?" where context = interfaces → "What are the advantages of using interfaces?"
+          * "When should we use it?" where "it" = "abstract class":
+            original_text: "When should we use it?"
+            text: "When should we use an abstract class?"
+          * "What are the advantages?" where context = interfaces:
+            original_text: "What are the advantages?"
+            text: "What are the advantages of using interfaces?"
         - If you cannot determine what a pronoun refers to, set confidence < 0.5
 
         Detection rules:
@@ -168,6 +174,10 @@ public sealed class OpenAiIntentDetector : ILlmIntentDetector
                     ? textProp.GetString() ?? ""
                     : "";
 
+                var originalText = item.TryGetProperty("original_text", out var origProp)
+                    ? origProp.GetString()
+                    : null;
+
                 var confidence = item.TryGetProperty("confidence", out var confProp)
                     ? confProp.GetDouble()
                     : 0.0;
@@ -208,7 +218,8 @@ public sealed class OpenAiIntentDetector : ILlmIntentDetector
                     Type = intentType,
                     Subtype = subtype,
                     Confidence = confidence,
-                    SourceText = text
+                    SourceText = text,
+                    OriginalText = originalText
                 });
             }
 

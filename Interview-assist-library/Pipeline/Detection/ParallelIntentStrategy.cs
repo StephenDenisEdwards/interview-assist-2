@@ -322,7 +322,8 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
                     {
                         Type = IntentType.Statement,
                         Confidence = 0.5,
-                        SourceText = emission.Intent.SourceText
+                        SourceText = emission.Intent.SourceText,
+                        OriginalText = emission.Intent.OriginalText
                     },
                     CorrectionType = IntentCorrectionType.Removed
                 });

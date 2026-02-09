@@ -92,6 +92,8 @@ public sealed record DetectedIntent
     public double Confidence { get; init; }
     public IntentSlots Slots { get; init; } = new();
     public required string SourceText { get; init; }
+    /// <summary>Verbatim excerpt from the transcript, before any pronoun resolution or cleanup.</summary>
+    public string? OriginalText { get; init; }
     public DateTime DetectedAtUtc { get; init; } = DateTime.UtcNow;
 }
 

@@ -115,6 +115,8 @@ public sealed record DetectedIntentData
     public string? Subtype { get; init; }
     public double Confidence { get; init; }
     public string SourceText { get; init; } = "";
+    /// <summary>Verbatim excerpt from the transcript, before any pronoun resolution or cleanup.</summary>
+    public string? OriginalText { get; init; }
     public IntentSlotsData? Slots { get; init; }
 }
 

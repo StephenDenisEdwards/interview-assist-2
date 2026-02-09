@@ -39,6 +39,11 @@ public record DetectedQuestion
     public required QuestionType Type { get; init; }
 
     /// <summary>
+    /// Verbatim excerpt from the transcript, before any pronoun resolution or cleanup.
+    /// </summary>
+    public string? OriginalText { get; init; }
+
+    /// <summary>
     /// Unique identifier for deduplication.
     /// </summary>
     public string Id { get; init; } = Guid.NewGuid().ToString();

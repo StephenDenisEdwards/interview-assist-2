@@ -24,18 +24,26 @@ public sealed class OpenAiQuestionDetectionService : IQuestionDetectionService
         Your task is to identify questions or imperatives directed at the interviewee.
 
         For each detected item, provide:
+        - original_text: The EXACT verbatim text from the transcript (copy-paste, no changes)
         - text: The question or imperative, made SELF-CONTAINED (see critical rules below)
         - type: One of "question", "imperative", "clarification", or "follow_up"
         - confidence: A score from 0.0 to 1.0 indicating your confidence
 
-        CRITICAL - Making questions self-contained:
-        - Every question MUST make sense on its own without needing surrounding context
-        - If a question contains pronouns (it, this, that, they, them) that refer to a subject mentioned earlier, RESOLVE the pronoun by including the subject
-        - Examples of resolving references:
-          * "When should we use it?" where "it" refers to "abstract class" → "When should we use an abstract class?"
-          * "What are the advantages?" where context is about interfaces → "What are the advantages of using interfaces?"
-          * "Can you explain that further?" where "that" refers to dependency injection → "Can you explain dependency injection further?"
-        - Keep questions that are already self-contained as-is:
+        CRITICAL - Two text fields:
+        - original_text: Copy the EXACT words from the transcript. Do not modify, clean up, or rephrase.
+        - text: Make the question SELF-CONTAINED by resolving pronouns and adding context.
+        - If the question is already self-contained, both fields will be the same.
+        - Examples:
+          * "When should we use it?" where "it" refers to "abstract class":
+            original_text: "When should we use it?"
+            text: "When should we use an abstract class?"
+          * "What are the advantages?" where context is about interfaces:
+            original_text: "What are the advantages?"
+            text: "What are the advantages of using interfaces?"
+          * "Can you explain that further?" where "that" refers to dependency injection:
+            original_text: "Can you explain that further?"
+            text: "Can you explain dependency injection further?"
+        - Keep questions that are already self-contained as-is (both fields identical):
           * "Can you store different types in an array?" → Keep as-is
           * "What is a jagged array?" → Keep as-is
         - If you cannot determine what a pronoun refers to from the context, skip the question
@@ -177,6 +185,10 @@ public sealed class OpenAiQuestionDetectionService : IQuestionDetectionService
                     ? textProp.GetString() ?? ""
                     : "";
 
+                var originalText = item.TryGetProperty("original_text", out var origProp)
+                    ? origProp.GetString()
+                    : null;
+
                 var confidence = item.TryGetProperty("confidence", out var confProp)
                     ? confProp.GetDouble()
                     : 0.0;
@@ -201,6 +213,7 @@ public sealed class OpenAiQuestionDetectionService : IQuestionDetectionService
                 results.Add(new DetectedQuestion
                 {
                     Text = text,
+                    OriginalText = originalText,
                     Confidence = confidence,
                     Type = questionType
                 });
