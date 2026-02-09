@@ -138,6 +138,7 @@ public sealed class UtteranceBuilder : IUtteranceBuilder
             // Commit final segment
             _stabilizer.CommitFinal(evt.Text);
             current.CommittedText = CombineText(current.CommittedText, evt.Text);
+            current.CommittedFinalTimestamps.Add(evt.ReceivedAtUtc);
             stableText = current.CommittedText;
         }
         else
@@ -202,7 +203,10 @@ public sealed class UtteranceBuilder : IUtteranceBuilder
             RawText = current.RawText,
             Duration = now - current.StartTime,
             CloseReason = reason,
-            SpeakerId = current.SpeakerId
+            SpeakerId = current.SpeakerId,
+            CommittedAsrTimestamps = current.CommittedFinalTimestamps.Count > 0
+                ? current.CommittedFinalTimestamps.ToList().AsReadOnly()
+                : null
         });
 
         _stabilizer.Reset();
@@ -261,5 +265,6 @@ public sealed class UtteranceBuilder : IUtteranceBuilder
         public bool HasTerminalPunctuation { get; set; }
         public DateTime? TerminalPunctuationTime { get; set; }
         public string? SpeakerId { get; init; }
+        public List<DateTime> CommittedFinalTimestamps { get; } = new();
     }
 }

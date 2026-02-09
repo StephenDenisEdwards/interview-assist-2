@@ -86,6 +86,12 @@ public sealed record UtteranceEventData
     public long DurationMs { get; init; }
     public string? CloseReason { get; init; }
     public string? SpeakerId { get; init; }
+
+    /// <summary>
+    /// OffsetMs values of the IsFinal ASR events that composed this utterance.
+    /// Only on Final events. Null for old recordings (backward compatible).
+    /// </summary>
+    public IReadOnlyList<long>? AsrFinalOffsetMs { get; init; }
 }
 
 /// <summary>

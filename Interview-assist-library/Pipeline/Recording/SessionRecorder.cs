@@ -158,7 +158,9 @@ public sealed class SessionRecorder : IDisposable
                 RawText = evt.RawText,
                 DurationMs = (long)evt.Duration.TotalMilliseconds,
                 CloseReason = evt.CloseReason?.ToString(),
-                SpeakerId = evt.SpeakerId
+                SpeakerId = evt.SpeakerId,
+                AsrFinalOffsetMs = evt.CommittedAsrTimestamps?.Select(
+                    ts => (long)(ts - _startTime).TotalMilliseconds).ToList()
             }
         });
     }

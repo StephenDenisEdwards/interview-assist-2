@@ -79,9 +79,9 @@ public class Program
             Console.WriteLine("Warning: No transcript content found in recording.");
         }
 
-        // Build utterance time ranges for time-based mapping
-        var utteranceTimeRanges = BuildUtteranceTimeRanges(events);
-        Console.WriteLine($"  Found {utteranceTimeRanges.Count} utterance time ranges");
+        // Build utterance info for time-based mapping
+        var utteranceInfo = BuildUtteranceInfo(events);
+        Console.WriteLine($"  Found {utteranceInfo.Count} utterance records");
 
         // Extract final detected questions (exclude candidates — preliminary heuristic guesses),
         // apply LLM corrections, then deduplicate by utteranceId
@@ -100,7 +100,7 @@ public class Program
 
         // Map detected questions to transcript positions using time correlation
         var mapDiagnostics = new List<string>();
-        var annotatedQuestions = MapQuestionsByTime(dedupedQuestions, asrSegments, utteranceTimeRanges, mapDiagnostics);
+        var annotatedQuestions = MapQuestionsByTime(dedupedQuestions, asrSegments, utteranceInfo, mapDiagnostics);
         Console.WriteLine($"  Mapped {annotatedQuestions.Count} of {dedupedQuestions.Count} questions to transcript positions");
 
         // Write diagnostics to a log file (Terminal.Gui overwrites the console)
@@ -109,7 +109,7 @@ public class Program
             $"Recording: {Path.GetFileName(recordingFile)}",
             $"Events: {events.Count}",
             $"Transcript: {transcript.Length:N0} chars, {asrSegments.Count} ASR segments",
-            $"Utterance time ranges: {utteranceTimeRanges.Count}",
+            $"Utterance records: {utteranceInfo.Count}",
             $"Questions: {allQuestions.Count} total, {detectedQuestions.Count} final ({allQuestions.Count - detectedQuestions.Count} candidates excluded)",
             $"After LLM corrections: {correctedQuestions.Count}",
             $"After dedup: {dedupedQuestions.Count}",
@@ -170,24 +170,27 @@ public class Program
         return (sb.ToString(), segments);
     }
 
+    internal record UtteranceInfo(long StartMs, long EndMs, IReadOnlyList<long>? AsrFinalOffsetMs);
+
     /// <summary>
-    /// Build a lookup of utterance time ranges from Final utterance events.
+    /// Build a lookup of utterance info from Final utterance events.
     /// Each utterance's speech spans from (offsetMs - durationMs) to offsetMs.
+    /// Includes AsrFinalOffsetMs when available (new recordings).
     /// </summary>
-    internal static Dictionary<string, (long StartMs, long EndMs)> BuildUtteranceTimeRanges(
+    internal static Dictionary<string, UtteranceInfo> BuildUtteranceInfo(
         List<RecordedEvent> events)
     {
-        var ranges = new Dictionary<string, (long StartMs, long EndMs)>();
+        var info = new Dictionary<string, UtteranceInfo>();
 
         foreach (var utt in events.OfType<RecordedUtteranceEvent>()
             .Where(e => e.Data.EventType == "Final"))
         {
             long endMs = utt.OffsetMs;
             long startMs = endMs - utt.Data.DurationMs;
-            ranges[utt.Data.Id] = (startMs, endMs);
+            info[utt.Data.Id] = new UtteranceInfo(startMs, endMs, utt.Data.AsrFinalOffsetMs);
         }
 
-        return ranges;
+        return info;
     }
 
     /// <summary>
@@ -289,14 +292,14 @@ public class Program
     }
 
     /// <summary>
-    /// Map detected questions to transcript character offsets using time correlation.
-    /// Each question's utteranceId is looked up to get a time range, then ASR segments
-    /// whose delivery time falls within that range determine the character offsets.
+    /// Map detected questions to transcript character offsets.
+    /// When AsrFinalOffsetMs is available (new recordings), matches each offset to ASR segments
+    /// for direct character position lookup. Falls back to time-range correlation for old recordings.
     /// </summary>
     internal static List<AnnotatedQuestion> MapQuestionsByTime(
         IReadOnlyList<RecordedIntentEvent> questions,
         List<AsrSegmentInfo> asrSegments,
-        Dictionary<string, (long StartMs, long EndMs)> utteranceTimeRanges,
+        Dictionary<string, UtteranceInfo> utteranceInfo,
         List<string>? diagnostics = null)
     {
         var result = new List<AnnotatedQuestion>();
@@ -310,42 +313,56 @@ public class Program
 
             var label = sourceText[..Math.Min(50, sourceText.Length)];
 
-            // Look up the utterance time range for this question
-            if (!utteranceTimeRanges.TryGetValue(q.Data.UtteranceId, out var timeRange))
+            if (!utteranceInfo.TryGetValue(q.Data.UtteranceId, out var info))
             {
-                diagnostics?.Add($"SKIP [{q.Data.UtteranceId}] '{label}' — no utterance time range found");
+                diagnostics?.Add($"SKIP [{q.Data.UtteranceId}] '{label}' — no utterance info found");
                 continue;
             }
 
-            diagnostics?.Add($"MAP  [{q.Data.UtteranceId}] '{label}' — utterance range: {timeRange.StartMs}-{timeRange.EndMs}ms");
+            List<AsrSegmentInfo> matching;
 
-            // Find ASR segments whose delivery time falls within the utterance window
-            var matching = asrSegments
-                .Where(s => s.OffsetMs >= timeRange.StartMs && s.OffsetMs <= timeRange.EndMs)
-                .ToList();
-
-            diagnostics?.Add($"     Exact match: {matching.Count} ASR segments");
-
-            // If no exact match, progressively widen the window
-            if (matching.Count == 0)
+            if (info.AsrFinalOffsetMs is { Count: > 0 } offsets)
             {
-                foreach (var margin in new[] { 500, 1500 })
+                // New path: direct offset matching with 50ms tolerance
+                diagnostics?.Add($"MAP  [{q.Data.UtteranceId}] '{label}' — direct offset match ({offsets.Count} offsets)");
+                matching = new List<AsrSegmentInfo>();
+                foreach (var offset in offsets)
                 {
-                    matching = asrSegments
-                        .Where(s => s.OffsetMs >= timeRange.StartMs - margin && s.OffsetMs <= timeRange.EndMs + margin)
-                        .ToList();
-                    diagnostics?.Add($"     Widened ±{margin}ms: {matching.Count} ASR segments");
-                    if (matching.Count > 0) break;
+                    var seg = asrSegments.FirstOrDefault(s => Math.Abs(s.OffsetMs - offset) <= 50);
+                    if (seg != null)
+                        matching.Add(seg);
+                }
+                diagnostics?.Add($"     Matched {matching.Count} of {offsets.Count} offsets to ASR segments");
+            }
+            else
+            {
+                // Fallback: time-range correlation for old recordings
+                diagnostics?.Add($"MAP  [{q.Data.UtteranceId}] '{label}' — time-range fallback: {info.StartMs}-{info.EndMs}ms");
+                matching = asrSegments
+                    .Where(s => s.OffsetMs >= info.StartMs && s.OffsetMs <= info.EndMs)
+                    .ToList();
+
+                diagnostics?.Add($"     Exact match: {matching.Count} ASR segments");
+
+                if (matching.Count == 0)
+                {
+                    foreach (var margin in new[] { 500, 1500 })
+                    {
+                        matching = asrSegments
+                            .Where(s => s.OffsetMs >= info.StartMs - margin && s.OffsetMs <= info.EndMs + margin)
+                            .ToList();
+                        diagnostics?.Add($"     Widened ±{margin}ms: {matching.Count} ASR segments");
+                        if (matching.Count > 0) break;
+                    }
                 }
             }
 
             if (matching.Count == 0)
             {
-                // Find nearest ASR segment for debugging
                 var nearest = asrSegments
-                    .OrderBy(s => Math.Min(Math.Abs(s.OffsetMs - timeRange.StartMs), Math.Abs(s.OffsetMs - timeRange.EndMs)))
+                    .OrderBy(s => Math.Min(Math.Abs(s.OffsetMs - info.StartMs), Math.Abs(s.OffsetMs - info.EndMs)))
                     .FirstOrDefault();
-                diagnostics?.Add($"     FAILED — nearest ASR at {nearest?.OffsetMs}ms (gap: {(nearest != null ? Math.Min(Math.Abs(nearest.OffsetMs - timeRange.StartMs), Math.Abs(nearest.OffsetMs - timeRange.EndMs)) : -1)}ms)");
+                diagnostics?.Add($"     FAILED — nearest ASR at {nearest?.OffsetMs}ms (gap: {(nearest != null ? Math.Min(Math.Abs(nearest.OffsetMs - info.StartMs), Math.Abs(nearest.OffsetMs - info.EndMs)) : -1)}ms)");
                 continue;
             }
 

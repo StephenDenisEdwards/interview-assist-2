@@ -73,6 +73,12 @@ public sealed record UtteranceEvent
 
     /// <summary>Speaker ID if diarization is enabled.</summary>
     public string? SpeakerId { get; init; }
+
+    /// <summary>
+    /// UTC timestamps of IsFinal ASR events committed into this utterance.
+    /// Only populated on Final events. Used for downstream position mapping.
+    /// </summary>
+    public IReadOnlyList<DateTime>? CommittedAsrTimestamps { get; init; }
 }
 
 public enum UtteranceEventType

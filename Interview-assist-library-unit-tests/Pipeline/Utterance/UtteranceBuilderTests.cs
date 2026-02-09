@@ -164,6 +164,47 @@ public class UtteranceBuilderTests
     }
 
     [Fact]
+    public void FinalEvent_CommittedAsrTimestamps_MatchesFinalAsrEvents()
+    {
+        var builder = CreateBuilder();
+        UtteranceEvent? finalEvent = null;
+        builder.OnUtteranceFinal += e => finalEvent = e;
+
+        var time1 = new DateTime(2024, 1, 1, 12, 0, 1, DateTimeKind.Utc);
+        var time2 = new DateTime(2024, 1, 1, 12, 0, 3, DateTimeKind.Utc);
+
+        // First final ASR event
+        builder.ProcessAsrEvent(new AsrEvent { Text = "What is a lock", IsFinal = true, ReceivedAtUtc = time1 });
+
+        // Second final ASR event
+        builder.ProcessAsrEvent(new AsrEvent { Text = "statement in C#?", IsFinal = true, ReceivedAtUtc = time2 });
+
+        // Close the utterance
+        builder.SignalUtteranceEnd();
+
+        Assert.NotNull(finalEvent);
+        Assert.NotNull(finalEvent.CommittedAsrTimestamps);
+        Assert.Equal(2, finalEvent.CommittedAsrTimestamps.Count);
+        Assert.Equal(time1, finalEvent.CommittedAsrTimestamps[0]);
+        Assert.Equal(time2, finalEvent.CommittedAsrTimestamps[1]);
+    }
+
+    [Fact]
+    public void FinalEvent_NoFinals_CommittedAsrTimestampsIsNull()
+    {
+        var builder = CreateBuilder();
+        UtteranceEvent? finalEvent = null;
+        builder.OnUtteranceFinal += e => finalEvent = e;
+
+        // Only partials, no finals committed
+        builder.ProcessAsrEvent(new AsrEvent { Text = "Hello world", IsFinal = false });
+        builder.SignalUtteranceEnd();
+
+        Assert.NotNull(finalEvent);
+        Assert.Null(finalEvent.CommittedAsrTimestamps);
+    }
+
+    [Fact]
     public void ProcessAsrEvent_SplitQuestion_BuildsCompleteUtterance()
     {
         // Simulates: "What is a lock statement" followed by "used for in C#?"
