@@ -367,3 +367,5 @@ FodyWeavers.xsd
 # Recorded sessions and evaluation results
 recordings/
 evaluations/
+old_recordings/
+old_evaluations/
