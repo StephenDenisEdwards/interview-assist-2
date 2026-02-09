@@ -60,7 +60,7 @@ public sealed class ConceptEApp
         };
 
         // Left panel: transcript with highlights
-        var transcriptFrame = new FrameView("Transcript")
+        var transcriptFrame = new FrameView($"Transcript ({_transcript.Length:N0} chars)")
         {
             X = 0,
             Y = 0,
@@ -83,13 +83,14 @@ public sealed class ConceptEApp
         transcriptFrame.Add(_textView);
 
         // Right panel: question list
-        _questionFrame = new FrameView($"Questions ({_questions.Count})")
+        _questionFrame = new FrameView("Questions")
         {
             X = Pos.Right(transcriptFrame),
             Y = 0,
             Width = Dim.Fill(),
             Height = Dim.Fill()
         };
+        UpdateQuestionFrameTitle();
 
         RefreshListItems();
 
@@ -144,6 +145,7 @@ public sealed class ConceptEApp
         var question = new AnnotatedQuestion(
             Id: _nextId++,
             Text: selectedText,
+            OriginalText: selectedText,
             Subtype: null,
             Confidence: 1.0,
             TranscriptStartOffset: selStart,
@@ -266,11 +268,36 @@ public sealed class ConceptEApp
         _listItems.Clear();
         foreach (var q in _questions)
         {
-            string sourceLabel = q.Source == QuestionSource.LlmDetected ? "LLM" : "USR";
-            string tag = q.Subtype != null ? $"\n  ({q.Subtype})" : "\n  [!] no subtype";
-            _listItems.Add($"[{sourceLabel}] {q.Text}{tag}");
+            var subtypeLabel = FormatSubtypeLabel(q.Subtype);
+            var confidenceLabel = FormatConfidenceLabel(q.Confidence);
+            var sourceLabel = q.Source == QuestionSource.LlmDetected ? "LLM" : "USR";
+
+            var sb = new System.Text.StringBuilder();
+            sb.Append($"[{sourceLabel} | {subtypeLabel} | {confidenceLabel}]");
+            sb.Append($"\n  Reformulated: {q.Text}");
+            sb.Append($"\n  Original:     {q.OriginalText ?? "(not available)"}");
+            _listItems.Add(sb.ToString());
         }
     }
+
+    private static string FormatSubtypeLabel(string? subtype) => subtype switch
+    {
+        "Definition" => "Asking for definition",
+        "HowTo" => "Asking how-to",
+        "Compare" => "Asking to compare",
+        "Troubleshoot" => "Troubleshooting",
+        "Rhetorical" => "Rhetorical",
+        "Clarification" => "Clarification",
+        null => "General question",
+        _ => subtype
+    };
+
+    private static string FormatConfidenceLabel(double confidence) => confidence switch
+    {
+        >= 0.9 => $"High confidence ({confidence:F1})",
+        >= 0.7 => $"Medium confidence ({confidence:F1})",
+        _ => $"Low confidence ({confidence:F1})"
+    };
 
     private HashSet<int> GetFlaggedIndices()
     {
@@ -335,6 +362,7 @@ public sealed class ConceptEApp
 public sealed record AnnotatedQuestion(
     int Id,
     string Text,
+    string? OriginalText,
     string? Subtype,
     double Confidence,
     int TranscriptStartOffset,

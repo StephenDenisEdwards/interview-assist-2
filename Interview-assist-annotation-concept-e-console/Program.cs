@@ -70,23 +70,56 @@ public class Program
 
         Console.WriteLine($"  Loaded {events.Count} events");
 
-        // Build transcript from final ASR events (non-overlapping, clean text)
-        var transcript = BuildTranscriptFromAsrEvents(events);
-        Console.WriteLine($"  Transcript length: {transcript.Length:N0} chars");
+        // Build transcript from final ASR events with timing info
+        var (transcript, asrSegments) = BuildTranscriptWithTiming(events);
+        Console.WriteLine($"  Transcript length: {transcript.Length:N0} chars, {asrSegments.Count} ASR segments");
 
         if (string.IsNullOrWhiteSpace(transcript))
         {
             Console.WriteLine("Warning: No transcript content found in recording.");
         }
 
-        // Extract and deduplicate detected questions
-        var detectedQuestions = TranscriptExtractor.ExtractDetectedQuestions(events);
-        var dedupedQuestions = TranscriptExtractor.DeduplicateQuestions(detectedQuestions);
-        Console.WriteLine($"  Detected {detectedQuestions.Count} questions, {dedupedQuestions.Count} after dedup");
+        // Build utterance time ranges for time-based mapping
+        var utteranceTimeRanges = BuildUtteranceTimeRanges(events);
+        Console.WriteLine($"  Found {utteranceTimeRanges.Count} utterance time ranges");
 
-        // Map detected questions to character offsets by searching for their text
-        var annotatedQuestions = MapQuestionsByTextSearch(dedupedQuestions, transcript);
-        Console.WriteLine($"  Mapped {annotatedQuestions.Count} questions to transcript positions");
+        // Extract final detected questions (exclude candidates — preliminary heuristic guesses),
+        // apply LLM corrections, then deduplicate by utteranceId
+        var allQuestions = TranscriptExtractor.ExtractDetectedQuestions(events);
+        var detectedQuestions = allQuestions.Where(q => !q.Data.IsCandidate).ToList();
+        Console.WriteLine($"  Detected {allQuestions.Count} total questions, {detectedQuestions.Count} final (excluded {allQuestions.Count - detectedQuestions.Count} candidates)");
+        var correctedQuestions = ApplyIntentCorrections(detectedQuestions, events);
+        Console.WriteLine($"  After LLM corrections: {correctedQuestions.Count} questions");
+        // Deduplicate by utteranceId — keep the last (highest confidence) per utterance
+        var dedupedQuestions = correctedQuestions
+            .GroupBy(q => q.Data.UtteranceId)
+            .Select(g => g.OrderByDescending(q => q.Data.Intent.Confidence).First())
+            .OrderBy(q => q.OffsetMs)
+            .ToList();
+        Console.WriteLine($"  After dedup: {dedupedQuestions.Count} questions");
+
+        // Map detected questions to transcript positions using time correlation
+        var mapDiagnostics = new List<string>();
+        var annotatedQuestions = MapQuestionsByTime(dedupedQuestions, asrSegments, utteranceTimeRanges, mapDiagnostics);
+        Console.WriteLine($"  Mapped {annotatedQuestions.Count} of {dedupedQuestions.Count} questions to transcript positions");
+
+        // Write diagnostics to a log file (Terminal.Gui overwrites the console)
+        var logLines = new List<string>
+        {
+            $"Recording: {Path.GetFileName(recordingFile)}",
+            $"Events: {events.Count}",
+            $"Transcript: {transcript.Length:N0} chars, {asrSegments.Count} ASR segments",
+            $"Utterance time ranges: {utteranceTimeRanges.Count}",
+            $"Questions: {allQuestions.Count} total, {detectedQuestions.Count} final ({allQuestions.Count - detectedQuestions.Count} candidates excluded)",
+            $"After LLM corrections: {correctedQuestions.Count}",
+            $"After dedup: {dedupedQuestions.Count}",
+            $"Mapped: {annotatedQuestions.Count} of {dedupedQuestions.Count}",
+            "",
+            "=== Mapping Details ==="
+        };
+        logLines.AddRange(mapDiagnostics);
+        var logPath = Path.ChangeExtension(recordingFile, null) + "-load.log";
+        File.WriteAllText(logPath, string.Join(Environment.NewLine, logLines));
 
         Console.WriteLine();
         Console.WriteLine("Starting UI...");
@@ -110,187 +143,227 @@ public class Program
         return 0;
     }
 
-    /// <summary>
-    /// Build transcript from final ASR events (Deepgram's committed segments).
-    /// These are non-overlapping, unlike UtteranceEvent.Final which contains
-    /// duplicated text due to aggressive utterance boundary detection.
-    /// </summary>
-    internal static string BuildTranscriptFromAsrEvents(List<RecordedEvent> events)
-    {
-        var finalTexts = events
-            .OfType<RecordedAsrEvent>()
-            .Where(e => e.Data.IsFinal && !string.IsNullOrWhiteSpace(e.Data.Text))
-            .Select(e => e.Data.Text.Trim());
+    internal record AsrSegmentInfo(int CharStart, int CharEnd, long OffsetMs);
 
-        return string.Join(" ", finalTexts);
+    /// <summary>
+    /// Build transcript from final ASR events and track each segment's character
+    /// offsets and delivery time. ASR finals are non-overlapping committed segments.
+    /// </summary>
+    internal static (string Transcript, List<AsrSegmentInfo> Segments) BuildTranscriptWithTiming(
+        List<RecordedEvent> events)
+    {
+        var sb = new StringBuilder();
+        var segments = new List<AsrSegmentInfo>();
+
+        foreach (var asrEvent in events.OfType<RecordedAsrEvent>()
+            .Where(e => e.Data.IsFinal && !string.IsNullOrWhiteSpace(e.Data.Text)))
+        {
+            var text = asrEvent.Data.Text.Trim();
+            int charStart = sb.Length;
+            sb.Append(text);
+            int charEnd = sb.Length;
+            sb.Append(' ');
+
+            segments.Add(new AsrSegmentInfo(charStart, charEnd, asrEvent.OffsetMs));
+        }
+
+        return (sb.ToString(), segments);
     }
 
     /// <summary>
-    /// Map detected questions to character offsets by searching for their SourceText
-    /// in the transcript. Falls back to word-sequence matching when exact match fails
-    /// (SourceText may span ASR segment boundaries with different spacing/punctuation).
+    /// Build a lookup of utterance time ranges from Final utterance events.
+    /// Each utterance's speech spans from (offsetMs - durationMs) to offsetMs.
     /// </summary>
-    internal static List<AnnotatedQuestion> MapQuestionsByTextSearch(
+    internal static Dictionary<string, (long StartMs, long EndMs)> BuildUtteranceTimeRanges(
+        List<RecordedEvent> events)
+    {
+        var ranges = new Dictionary<string, (long StartMs, long EndMs)>();
+
+        foreach (var utt in events.OfType<RecordedUtteranceEvent>()
+            .Where(e => e.Data.EventType == "Final"))
+        {
+            long endMs = utt.OffsetMs;
+            long startMs = endMs - utt.Data.DurationMs;
+            ranges[utt.Data.Id] = (startMs, endMs);
+        }
+
+        return ranges;
+    }
+
+    /// <summary>
+    /// Apply LLM intent corrections to the base detected questions.
+    /// - "Removed": drop the question (LLM says it's a false positive)
+    /// - "TypeChanged": replace the intent data if the corrected type is still Question
+    /// - "Added": insert a new question the heuristic missed
+    /// - "Confirmed": no change needed
+    /// </summary>
+    internal static IReadOnlyList<RecordedIntentEvent> ApplyIntentCorrections(
+        IReadOnlyList<RecordedIntentEvent> baseQuestions,
+        List<RecordedEvent> allEvents)
+    {
+        var corrections = allEvents
+            .OfType<RecordedIntentCorrectionEvent>()
+            .ToList();
+
+        if (corrections.Count == 0)
+            return baseQuestions;
+
+        // Index base questions by utteranceId for matching against corrections
+        var questionsByUtterance = baseQuestions
+            .GroupBy(q => q.Data.UtteranceId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        // Track which utteranceIds have been removed
+        var removedUtteranceIds = new HashSet<string>();
+
+        // Track corrections that update existing questions
+        var replacements = new Dictionary<string, DetectedIntentData>();
+
+        // Track added questions (LLM found questions heuristic missed)
+        var addedQuestions = new List<RecordedIntentCorrectionEvent>();
+
+        foreach (var correction in corrections)
+        {
+            var uttId = correction.Data.UtteranceId;
+
+            switch (correction.Data.CorrectionType)
+            {
+                case "Removed":
+                    removedUtteranceIds.Add(uttId);
+                    break;
+
+                case "TypeChanged":
+                    if (correction.Data.CorrectedIntent.Type == "Question")
+                        replacements[uttId] = correction.Data.CorrectedIntent;
+                    else
+                        removedUtteranceIds.Add(uttId); // reclassified away from Question
+                    break;
+
+                case "Added":
+                    if (correction.Data.CorrectedIntent.Type == "Question")
+                        addedQuestions.Add(correction);
+                    break;
+
+                // "Confirmed" — no action needed
+            }
+        }
+
+        // Build the corrected list
+        var result = new List<RecordedIntentEvent>();
+
+        foreach (var q in baseQuestions)
+        {
+            if (removedUtteranceIds.Contains(q.Data.UtteranceId))
+                continue;
+
+            if (replacements.TryGetValue(q.Data.UtteranceId, out var replacement))
+            {
+                // Replace the intent data but keep the original event's timing/utteranceId
+                result.Add(q with
+                {
+                    Data = q.Data with { Intent = replacement }
+                });
+            }
+            else
+            {
+                result.Add(q);
+            }
+        }
+
+        // Add LLM-discovered questions
+        foreach (var added in addedQuestions)
+        {
+            result.Add(new RecordedIntentEvent
+            {
+                OffsetMs = added.OffsetMs,
+                Data = new IntentEventData
+                {
+                    Intent = added.Data.CorrectedIntent,
+                    UtteranceId = added.Data.UtteranceId,
+                    IsCandidate = false
+                }
+            });
+        }
+
+        return result.OrderBy(q => q.OffsetMs).ToList();
+    }
+
+    /// <summary>
+    /// Map detected questions to transcript character offsets using time correlation.
+    /// Each question's utteranceId is looked up to get a time range, then ASR segments
+    /// whose delivery time falls within that range determine the character offsets.
+    /// </summary>
+    internal static List<AnnotatedQuestion> MapQuestionsByTime(
         IReadOnlyList<RecordedIntentEvent> questions,
-        string transcript)
+        List<AsrSegmentInfo> asrSegments,
+        Dictionary<string, (long StartMs, long EndMs)> utteranceTimeRanges,
+        List<string>? diagnostics = null)
     {
         var result = new List<AnnotatedQuestion>();
         int nextId = 1;
-        var usedRanges = new List<(int Start, int End)>();
-        var transcriptLower = transcript.ToLowerInvariant();
 
         foreach (var q in questions)
         {
             var sourceText = q.Data.Intent.SourceText;
-            var originalText = q.Data.Intent.OriginalText;
             if (string.IsNullOrWhiteSpace(sourceText))
                 continue;
 
-            // Prefer OriginalText for matching (verbatim transcript excerpt)
-            // Fall back to SourceText (self-contained, may be reformulated)
-            var searchText = !string.IsNullOrWhiteSpace(originalText) ? originalText : sourceText;
+            var label = sourceText[..Math.Min(50, sourceText.Length)];
 
-            // Try exact match first
-            var match = FindExactMatch(transcriptLower, searchText.ToLowerInvariant(), usedRanges);
-
-            // Fall back to word-sequence match
-            if (match == null)
-                match = FindWordSequenceMatch(transcriptLower, searchText, usedRanges);
-
-            // If OriginalText didn't match, try SourceText as fallback
-            if (match == null && !string.IsNullOrWhiteSpace(originalText))
+            // Look up the utterance time range for this question
+            if (!utteranceTimeRanges.TryGetValue(q.Data.UtteranceId, out var timeRange))
             {
-                match = FindExactMatch(transcriptLower, sourceText.ToLowerInvariant(), usedRanges);
-                if (match == null)
-                    match = FindWordSequenceMatch(transcriptLower, sourceText, usedRanges);
+                diagnostics?.Add($"SKIP [{q.Data.UtteranceId}] '{label}' — no utterance time range found");
+                continue;
             }
 
-            if (match == null)
-                continue;
+            diagnostics?.Add($"MAP  [{q.Data.UtteranceId}] '{label}' — utterance range: {timeRange.StartMs}-{timeRange.EndMs}ms");
 
-            usedRanges.Add(match.Value);
+            // Find ASR segments whose delivery time falls within the utterance window
+            var matching = asrSegments
+                .Where(s => s.OffsetMs >= timeRange.StartMs && s.OffsetMs <= timeRange.EndMs)
+                .ToList();
+
+            diagnostics?.Add($"     Exact match: {matching.Count} ASR segments");
+
+            // If no exact match, progressively widen the window
+            if (matching.Count == 0)
+            {
+                foreach (var margin in new[] { 500, 1500 })
+                {
+                    matching = asrSegments
+                        .Where(s => s.OffsetMs >= timeRange.StartMs - margin && s.OffsetMs <= timeRange.EndMs + margin)
+                        .ToList();
+                    diagnostics?.Add($"     Widened ±{margin}ms: {matching.Count} ASR segments");
+                    if (matching.Count > 0) break;
+                }
+            }
+
+            if (matching.Count == 0)
+            {
+                // Find nearest ASR segment for debugging
+                var nearest = asrSegments
+                    .OrderBy(s => Math.Min(Math.Abs(s.OffsetMs - timeRange.StartMs), Math.Abs(s.OffsetMs - timeRange.EndMs)))
+                    .FirstOrDefault();
+                diagnostics?.Add($"     FAILED — nearest ASR at {nearest?.OffsetMs}ms (gap: {(nearest != null ? Math.Min(Math.Abs(nearest.OffsetMs - timeRange.StartMs), Math.Abs(nearest.OffsetMs - timeRange.EndMs)) : -1)}ms)");
+                continue;
+            }
+
+            int charStart = matching.First().CharStart;
+            int charEnd = matching.Last().CharEnd;
 
             result.Add(new AnnotatedQuestion(
                 Id: nextId++,
                 Text: sourceText,
+                OriginalText: q.Data.Intent.OriginalText,
                 Subtype: q.Data.Intent.Subtype,
                 Confidence: q.Data.Intent.Confidence,
-                TranscriptStartOffset: match.Value.Start,
-                TranscriptEndOffset: match.Value.End,
+                TranscriptStartOffset: charStart,
+                TranscriptEndOffset: charEnd,
                 Source: QuestionSource.LlmDetected));
         }
 
         return result;
-    }
-
-    private static (int Start, int End)? FindExactMatch(
-        string transcriptLower, string searchLower, List<(int Start, int End)> usedRanges)
-    {
-        int searchFrom = 0;
-        while (searchFrom < transcriptLower.Length)
-        {
-            int idx = transcriptLower.IndexOf(searchLower, searchFrom, StringComparison.Ordinal);
-            if (idx < 0) break;
-
-            int end = idx + searchLower.Length;
-            if (!usedRanges.Any(r => idx < r.End && end > r.Start))
-                return (idx, end);
-
-            searchFrom = idx + 1;
-        }
-        return null;
-    }
-
-    /// <summary>
-    /// Find the shortest span in the transcript that contains all words from the
-    /// source text in order. Handles cases where SourceText spans ASR segment
-    /// boundaries and has different whitespace/punctuation than the ASR transcript.
-    /// </summary>
-    private static (int Start, int End)? FindWordSequenceMatch(
-        string transcriptLower, string sourceText, List<(int Start, int End)> usedRanges)
-    {
-        // Extract words from the source text (letters/digits only, lowercase)
-        var sourceWords = ExtractWords(sourceText.ToLowerInvariant());
-        if (sourceWords.Count == 0) return null;
-
-        // Extract words from transcript with their character positions
-        var transcriptWords = ExtractWordsWithPositions(transcriptLower);
-        if (transcriptWords.Count == 0) return null;
-
-        // Slide through transcript words looking for the source word sequence
-        for (int i = 0; i <= transcriptWords.Count - sourceWords.Count; i++)
-        {
-            bool matched = true;
-            int lastMatchIdx = i;
-
-            for (int j = 0; j < sourceWords.Count; j++)
-            {
-                // Allow a small gap (up to 2 extra transcript words) for inserted filler
-                bool found = false;
-                int maxLookahead = j == 0 ? 0 : 2;
-                for (int k = 0; k <= maxLookahead; k++)
-                {
-                    int tIdx = lastMatchIdx + (j == 0 ? 0 : 1) + k;
-                    if (tIdx >= transcriptWords.Count) break;
-                    if (transcriptWords[tIdx].Word == sourceWords[j])
-                    {
-                        lastMatchIdx = tIdx;
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found) { matched = false; break; }
-            }
-
-            if (matched)
-            {
-                int start = transcriptWords[i].Start;
-                int end = transcriptWords[lastMatchIdx].End;
-
-                if (!usedRanges.Any(r => start < r.End && end > r.Start))
-                    return (start, end);
-            }
-        }
-
-        return null;
-    }
-
-    private static List<string> ExtractWords(string text)
-    {
-        var words = new List<string>();
-        var sb = new StringBuilder();
-        foreach (char c in text)
-        {
-            if (char.IsLetterOrDigit(c))
-                sb.Append(c);
-            else if (sb.Length > 0)
-            {
-                words.Add(sb.ToString());
-                sb.Clear();
-            }
-        }
-        if (sb.Length > 0) words.Add(sb.ToString());
-        return words;
-    }
-
-    private static List<(string Word, int Start, int End)> ExtractWordsWithPositions(string text)
-    {
-        var words = new List<(string Word, int Start, int End)>();
-        int i = 0;
-        while (i < text.Length)
-        {
-            if (char.IsLetterOrDigit(text[i]))
-            {
-                int start = i;
-                while (i < text.Length && char.IsLetterOrDigit(text[i])) i++;
-                words.Add((text.Substring(start, i - start), start, i));
-            }
-            else
-            {
-                i++;
-            }
-        }
-        return words;
     }
 
     private static async Task<List<RecordedEvent>> LoadEventsAsync(string filePath)

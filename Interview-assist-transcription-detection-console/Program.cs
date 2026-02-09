@@ -760,12 +760,14 @@ public class TranscriptionApp
     // UI elements
     private TextView _transcriptView = null!;
     private TextView _intentView = null!;
+    private FrameView _intentFrame = null!;
     private TextView _debugView = null!;
     private StatusItem _recordingStatusItem = null!;
 
     // State
     private readonly List<string> _debugLines = new();
     private readonly List<string> _intentLines = new();
+    private int _intentCount;
     private int? _currentSpeaker;
     private CancellationTokenSource? _cts;
     private DeepgramTranscriptionService? _deepgramService;
@@ -888,7 +890,7 @@ public class TranscriptionApp
         transcriptFrame.Add(_transcriptView);
 
         // Intent panel - Below transcript
-        var intentFrame = new FrameView("Detected Intents")
+        _intentFrame = new FrameView("Detected Intents (0)")
         {
             X = 0,
             Y = Pos.Bottom(transcriptFrame),
@@ -906,9 +908,9 @@ public class TranscriptionApp
             ReadOnly = true,
             WordWrap = true
         };
-        intentFrame.Add(_intentView);
+        _intentFrame.Add(_intentView);
 
-        topContainer.Add(transcriptFrame, intentFrame);
+        topContainer.Add(transcriptFrame, _intentFrame);
 
         // Bottom panel - Debug output
         var bottomFrame = new FrameView("Debug")
@@ -1417,8 +1419,14 @@ public class TranscriptionApp
                     // Show confidence for quality evaluation
                     var confidenceLabel = FormatConfidenceLabel(evt.Intent.Confidence);
 
-                    // Add to intent list
-                    AddIntent($"[{speakerPrefix}{subtypeLabel} | {confidenceLabel}] {evt.Intent.SourceText}");
+                    // Add to intent list with header and indented text fields
+                    _intentCount++;
+                    _intentFrame.Title = $"Detected Intents ({_intentCount})";
+                    AddIntent($"[{speakerPrefix}{subtypeLabel} | {confidenceLabel}]");
+                    AddIntent($"  Reformulated: {evt.Intent.SourceText}");
+                    var originalText = evt.Intent.OriginalText;
+                    AddIntent($"  Original:     {originalText ?? "(not available)"}");
+                    AddIntent("");
                 }
             });
         };
@@ -1459,7 +1467,13 @@ public class TranscriptionApp
                         _ => "LLM"
                     };
 
-                    AddIntent($"[{prefix} | {subtypeLabel}] {evt.CorrectedIntent.SourceText}");
+                    _intentCount++;
+                    _intentFrame.Title = $"Detected Intents ({_intentCount})";
+                    AddIntent($"[{prefix} | {subtypeLabel}]");
+                    AddIntent($"  Reformulated: {evt.CorrectedIntent.SourceText}");
+                    var corrOriginalText = evt.CorrectedIntent.OriginalText;
+                    AddIntent($"  Original:     {corrOriginalText ?? "(not available)"}");
+                    AddIntent("");
                 }
             });
         };
