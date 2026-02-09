@@ -204,6 +204,124 @@ public record IntentSlots
 }
 ```
 
+### 4a. LLM Detection Strategy (Sliding Context Window)
+
+When `IntentDetectionMode.Llm` or `IntentDetectionMode.Parallel` is selected, `LlmIntentStrategy` replaces the heuristic regex rules with an LLM-based classifier. The strategy uses a **two-buffer sliding context window** that separates new text from already-processed context.
+
+#### Two-Buffer Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    LlmIntentStrategy Buffers                        │
+│                                                                     │
+│  _unprocessedUtterances          _contextWindow                     │
+│  ┌──────────────────────┐        ┌──────────────────────────────┐   │
+│  │ New utterances        │        │ Already-classified text       │   │
+│  │ awaiting LLM call     │        │ retained for pronoun          │   │
+│  │                       │        │ resolution                    │   │
+│  │ (classify these)      │        │ (provide as context only)     │   │
+│  └──────────────────────┘        └──────────────────────────────┘   │
+│                                                                     │
+│  Max: BufferMaxChars (800)        Max: ContextWindowChars (1500)    │
+│  Overflow → force trigger         Overflow → FIFO eviction          │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+**Why two buffers?** The LLM should only classify *new* text (to avoid re-detecting previously handled intents), but it needs *previous* text as context for pronoun resolution (e.g., resolving "it" in "When should we use it?" to the topic discussed earlier).
+
+- `_unprocessedUtterances` — `List<TrackedUtterance>` of utterances that have not yet been sent to the LLM. These are the classification targets.
+- `_contextWindow` — `List<TrackedUtterance>` of utterances that have already been classified. Sent to the LLM as read-only context in a "Previous context" preamble.
+
+#### Detection Flow
+
+```
+Utterance arrives (ProcessUtteranceAsync)
+    │
+    ├─ Preprocess (noise removal, technical term correction)
+    │
+    ├─ Add to _unprocessedUtterances
+    │
+    ├─ Check trigger conditions:
+    │   ├─ Question mark in text?          → set trigger flag
+    │   ├─ Unprocessed chars > BufferMaxChars? → set trigger + force detect
+    │   └─ Reset timeout timer (TriggerTimeoutMs)
+    │
+    ├─ If triggered → TryDetectAsync:
+    │   ├─ Check rate limit (RateLimitMs since last call)
+    │   ├─ Build contextText from _contextWindow
+    │   ├─ Build newText from _unprocessedUtterances
+    │   ├─ Call ILlmIntentDetector.DetectIntentsAsync(newText, contextText)
+    │   ├─ Deduplicate results (fingerprint + time window)
+    │   ├─ Emit OnIntentDetected for each valid intent
+    │   └─ Move _unprocessedUtterances → _contextWindow, trim context
+    │
+    └─ External signals:
+        ├─ SignalPause() → set trigger, fire-and-forget detection
+        └─ Timeout timer expires → set trigger, detect
+```
+
+#### Trigger Mechanisms
+
+The LLM is not called on every utterance. Instead, text accumulates in the unprocessed buffer until a trigger fires:
+
+| Trigger | Condition | Default | Configurable |
+|---------|-----------|---------|-------------|
+| **Question mark** | Text contains `?` | Enabled | `TriggerOnQuestionMark` |
+| **Speech pause** | `SignalPause()` called (e.g., Deepgram utterance-end) | Enabled | `TriggerOnPause` |
+| **Inactivity timeout** | No new utterance for N ms | 3000ms | `TriggerTimeoutMs` |
+| **Buffer overflow** | Unprocessed chars exceed limit | 800 chars | `BufferMaxChars` |
+
+The timeout timer resets on every new utterance, creating a natural batching effect: rapid speech accumulates, and detection fires during the next pause.
+
+#### Context Window Trimming
+
+After each LLM call, all unprocessed utterances move to `_contextWindow`. The context window is then trimmed to stay within `ContextWindowChars` (default 1500) using **FIFO eviction** — the oldest utterances are removed first.
+
+```
+Before trim:  [utt1, utt2, utt3, utt4, utt5]  → 1800 chars
+After trim:   [utt3, utt4, utt5]                → 1200 chars  (utt1, utt2 evicted)
+```
+
+This ensures the LLM always receives recent conversational context without unbounded memory growth.
+
+#### Deduplication
+
+Detected intents pass through two deduplication checks before being emitted:
+
+1. **Semantic fingerprinting** — Each intent's `SourceText` is reduced to a fingerprint (sorted significant words with stop words removed). The fingerprint is compared against previously detected fingerprints using Jaccard similarity (threshold 0.7). Duplicate fingerprints are suppressed.
+
+2. **Time-based suppression** — Even if a fingerprint is new, it is suppressed if the same fingerprint was detected within `DeduplicationWindowMs` (default 30000ms). Old entries are periodically cleaned up, with a hard cap of 50 tracked fingerprints.
+
+#### Rate Limiting
+
+A minimum interval of `RateLimitMs` (default 2000ms) is enforced between LLM API calls. If a trigger fires but the rate limit has not elapsed, the detection attempt is silently skipped. The next trigger or timeout will retry.
+
+#### LLM Prompt Structure
+
+The `OpenAiIntentDetector` sends two-part messages to the LLM:
+
+- **System prompt** — Defines the intent taxonomy (Question, Imperative, Statement), subtypes, and classification rules. Critically instructs the LLM to make detected text *self-contained* by resolving pronouns using the provided context.
+- **User message** — Contains "Previous context" (from `_contextWindow`) followed by "Current transcript to analyze" (from `_unprocessedUtterances`). The LLM returns JSON with an `intents` array.
+
+#### Configuration Reference
+
+All options are in `LlmDetectionOptions` (bound from `IntentDetection:Llm` in appsettings):
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `Model` | string | `"gpt-4o-mini"` | OpenAI model for intent classification |
+| `ApiKey` | string? | `null` (env var) | API key; falls back to `OPENAI_API_KEY` |
+| `ConfidenceThreshold` | double | `0.7` | Minimum LLM confidence to accept a detection |
+| `RateLimitMs` | int | `2000` | Minimum ms between LLM API calls |
+| `BufferMaxChars` | int | `800` | Max chars in unprocessed buffer before forced trigger |
+| `TriggerOnQuestionMark` | bool | `true` | Trigger detection on `?` in utterance text |
+| `TriggerOnPause` | bool | `true` | Trigger detection on `SignalPause()` |
+| `TriggerTimeoutMs` | int | `3000` | Trigger detection after this many ms of inactivity |
+| `EnablePreprocessing` | bool | `true` | Apply noise removal and technical term correction |
+| `EnableDeduplication` | bool | `true` | Enable semantic fingerprint deduplication |
+| `DeduplicationWindowMs` | int | `30000` | Time window for suppressing duplicate detections |
+| `ContextWindowChars` | int | `1500` | Max chars retained in processed context window |
+
 ### 5. ActionRouter
 **Responsibility:** Debounce and route final intents to action handlers.
 

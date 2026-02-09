@@ -56,12 +56,14 @@ Key design choices:
 - Configurable via `HeuristicDetectionOptions.MinConfidence`
 
 **2. LlmIntentStrategy**
-- Buffers utterances in a `StringBuilder` (max `BufferMaxChars`, default 2500)
-- Triggers LLM detection on: question mark in text, pause signal, or timeout (`TriggerTimeoutMs`)
-- Rate-limited (`RateLimitMs`, default 1500ms)
-- Deduplicates via semantic fingerprinting with time-based suppression windows
+- Uses a two-buffer sliding context window: `_unprocessedUtterances` (new text for classification, max `BufferMaxChars` default 800 chars) and `_contextWindow` (already-classified text for pronoun resolution, max `ContextWindowChars` default 1500 chars, FIFO-evicted)
+- Triggers LLM detection on: question mark in text, pause signal, buffer overflow, or inactivity timeout (`TriggerTimeoutMs`, default 3000ms)
+- Rate-limited (`RateLimitMs`, default 2000ms)
+- After each LLM call, unprocessed utterances move to the context window; context is trimmed to `ContextWindowChars`
+- Deduplicates via semantic fingerprinting (stop word removal + Jaccard similarity) with time-based suppression windows (`DeduplicationWindowMs`, default 30000ms)
 - Maps utterance IDs to LLM results via word overlap scoring
-- Accepts any `ILlmIntentDetector` (OpenAI `ChatGptIntentDetector` or `DeepgramIntentDetector`)
+- Accepts any `ILlmIntentDetector` (OpenAI `OpenAiIntentDetector` or `DeepgramIntentDetector`)
+- See [DESIGN-utterance-intent-pipeline.md § 4a](../design/DESIGN-utterance-intent-pipeline.md) for full details
 
 **3. ParallelIntentStrategy**
 - Phase 1: Runs heuristic synchronously, emits `OnIntentDetected` immediately

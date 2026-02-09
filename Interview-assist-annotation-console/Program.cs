@@ -1,4 +1,6 @@
-using Microsoft.Extensions.Configuration;
+using System.Text;
+using System.Text.Json;
+using InterviewAssist.Library.Pipeline.Recording;
 using Terminal.Gui;
 
 namespace InterviewAssist.AnnotationConsole;
@@ -7,99 +9,79 @@ public class Program
 {
     public static async Task<int> Main(string[] args)
     {
-        string? reviewFile = null;
+        string? recordingFile = null;
 
         for (int i = 0; i < args.Length; i++)
         {
-            if (args[i] == "--review" && i + 1 < args.Length)
+            if (args[i] == "--recording" && i + 1 < args.Length)
             {
-                reviewFile = args[i + 1];
+                recordingFile = args[i + 1];
                 i++;
             }
             else if (args[i] is "--help" or "-h")
             {
-                Console.WriteLine("Interview Assist - Ground Truth Annotation Tool");
+                Console.WriteLine("Interview Assist - Annotation Tool");
                 Console.WriteLine();
                 Console.WriteLine("Usage:");
-                Console.WriteLine("  dotnet run -- --review <evaluation.json>   Review and annotate ground truth");
-                Console.WriteLine("  dotnet run -- --help                       Show this help message");
+                Console.WriteLine("  dotnet run -- --recording <session.jsonl>   View transcript from a recording");
+                Console.WriteLine("  dotnet run -- --help                        Show this help message");
                 Console.WriteLine();
                 Console.WriteLine("Keyboard shortcuts:");
-                Console.WriteLine("  A          Accept current question");
-                Console.WriteLine("  X          Reject current question");
-                Console.WriteLine("  E          Edit question text");
-                Console.WriteLine("  S          Set subtype");
-                Console.WriteLine("  N          Next item");
-                Console.WriteLine("  P          Previous item");
-                Console.WriteLine("  M          Add missed question");
-                Console.WriteLine("  F          Finalise and save validated output");
-                Console.WriteLine("  Ctrl+Q     Quit without finalising");
-                Console.WriteLine();
-                Console.WriteLine("Session auto-saves after every decision to *-review.json.");
-                Console.WriteLine("Re-running with the same file resumes from last position.");
+                Console.WriteLine("  Up/Down    Scroll transcript");
+                Console.WriteLine("  PgUp/PgDn  Scroll by page");
+                Console.WriteLine("  Home/End   Jump to start/end");
+                Console.WriteLine("  Ctrl+Q     Quit");
                 return 0;
             }
         }
 
-        if (string.IsNullOrWhiteSpace(reviewFile))
+        if (string.IsNullOrWhiteSpace(recordingFile))
         {
-            Console.WriteLine("Error: --review <evaluation.json> is required.");
+            Console.WriteLine("Error: --recording <session.jsonl> is required.");
             Console.WriteLine("Run with --help for usage information.");
             return 1;
         }
 
-        if (!File.Exists(reviewFile))
+        if (!File.Exists(recordingFile))
         {
-            Console.WriteLine($"Error: File not found: {reviewFile}");
+            Console.WriteLine($"Error: File not found: {recordingFile}");
             return 1;
         }
 
-        // Load configuration
-        var configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
-            .Build();
-
-        var backgroundColorHex = configuration["UI:BackgroundColor"] ?? "#1E1E1E";
-
-        // Load evaluation data
-        Console.WriteLine($"Loading evaluation: {Path.GetFileName(reviewFile)}");
-        EvaluationData evaluation;
+        // Load events from JSONL
+        Console.WriteLine($"Loading recording: {Path.GetFileName(recordingFile)}");
+        List<RecordedEvent> events;
         try
         {
-            evaluation = await EvaluationLoader.LoadAsync(reviewFile);
+            events = await LoadEventsAsync(recordingFile);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading evaluation file: {ex.Message}");
+            Console.WriteLine($"Error loading recording: {ex.Message}");
             return 1;
         }
 
-        Console.WriteLine($"  Ground truth items: {evaluation.GroundTruth.Count}");
-        Console.WriteLine($"  Detected questions: {evaluation.DetectedQuestions.Count}");
-        Console.WriteLine($"  Transcript length: {evaluation.FullTranscript.Length:N0} chars");
+        Console.WriteLine($"  Loaded {events.Count} events");
 
-        // Create review session
-        var session = new ReviewSession(evaluation, Path.GetFullPath(reviewFile));
+        // Extract transcript from final ASR events (Deepgram's committed segments).
+        // These are non-overlapping, unlike UtteranceEvent.Final which contains
+        // duplicated text due to aggressive utterance boundary detection.
+        var transcript = ExtractTranscriptFromFinalAsrEvents(events);
+        Console.WriteLine($"  Transcript length: {transcript.Length:N0} chars");
 
-        // Check for existing review session (resume)
-        var resumed = await session.TryResumeAsync();
-        if (resumed)
+        if (string.IsNullOrWhiteSpace(transcript))
         {
-            Console.WriteLine($"  Resumed from existing review session (position {session.CurrentIndex + 1})");
-            Console.WriteLine($"  Progress: {session.AcceptedCount} accepted, {session.RejectedCount} rejected, " +
-                            $"{session.ModifiedCount} modified, {session.PendingCount} pending");
+            Console.WriteLine("Warning: No transcript content found in recording.");
         }
 
         Console.WriteLine();
-        Console.WriteLine("Starting annotation UI...");
+        Console.WriteLine("Starting UI...");
 
-        // Initialize Terminal.Gui
+        // Run Terminal.Gui
         Application.Init();
-
         try
         {
-            var app = new AnnotationApp(session, Path.GetFileName(reviewFile), backgroundColorHex);
+            var app = new AnnotationApp(transcript, Path.GetFileName(recordingFile));
             app.Run();
         }
         finally
@@ -108,5 +90,47 @@ public class Program
         }
 
         return 0;
+    }
+
+    private static string ExtractTranscriptFromFinalAsrEvents(List<RecordedEvent> events)
+    {
+        var finalTexts = events
+            .OfType<RecordedAsrEvent>()
+            .Where(e => e.Data.IsFinal && !string.IsNullOrWhiteSpace(e.Data.Text))
+            .Select(e => e.Data.Text.Trim());
+
+        return string.Join(" ", finalTexts);
+    }
+
+    private static async Task<List<RecordedEvent>> LoadEventsAsync(string filePath)
+    {
+        var events = new List<RecordedEvent>();
+        var jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+
+        using var reader = new StreamReader(filePath, Encoding.UTF8);
+        string? line;
+        int lineNumber = 0;
+
+        while ((line = await reader.ReadLineAsync()) != null)
+        {
+            lineNumber++;
+            if (string.IsNullOrWhiteSpace(line)) continue;
+
+            try
+            {
+                var evt = JsonSerializer.Deserialize<RecordedEvent>(line, jsonOptions);
+                if (evt != null)
+                    events.Add(evt);
+            }
+            catch (JsonException)
+            {
+                // Skip unparseable lines
+            }
+        }
+
+        return events;
     }
 }
