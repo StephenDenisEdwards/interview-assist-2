@@ -111,7 +111,7 @@ public sealed class QuestionDetector : IDisposable
                 },
                 response_format = new { type = "json_object" },
                 temperature = 0.1,
-                max_tokens = 512
+                max_completion_tokens = 512
             };
 
             var json = JsonSerializer.Serialize(requestBody);

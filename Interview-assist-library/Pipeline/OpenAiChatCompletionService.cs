@@ -97,7 +97,7 @@ public sealed class OpenAiChatCompletionService : IChatCompletionService
             tools = new[] { FunctionDefinition },
             tool_choice = new { type = "function", function = new { name = "report_technical_response" } },
             temperature = _temperature,
-            max_tokens = _maxTokens,
+            max_completion_tokens = _maxTokens,
             stream = true
         };
 

@@ -21,6 +21,11 @@
 ## Instructions
 - [Evaluation & Testing](instructions/EvaluationInstructions.md)
 
+## Ideas
+- [F# Candidate Components (2026-02-09)](ideas/2026-02-09-fsharp-candidate-components.md)
+- [Evaluation Visualisation and Improvements (2026-02-09)](ideas/2026-02-09-evaluation-visualisation-and-improvements.md)
+- [Ground Truth Annotation Tool (2026-02-09)](ideas/2026-02-09-ground-truth-annotation-tool.md)
+
 ## Development
 - [In-Progress Plans](plans/in-progress/)
   - [IMPROVEMENT-PLAN-0013: Deepgram Intent Recognition](plans/in-progress/IMPROVEMENT-PLAN-0013-deepgram-intent-recognition.md)

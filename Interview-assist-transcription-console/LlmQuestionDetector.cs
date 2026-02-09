@@ -475,7 +475,7 @@ public class LlmQuestionDetector : IQuestionDetector, IDisposable
                 },
                 response_format = new { type = "json_object" },
                 temperature = 0.1,
-                max_tokens = 1024
+                max_completion_tokens = 1024
             };
 
             var json = JsonSerializer.Serialize(requestBody);
