@@ -985,10 +985,13 @@ public partial class Program
 
         // Auto-generate session report
         var reportEvents = await SessionReportGenerator.LoadEventsAsync(outputPath);
+        string[]? logLines = File.Exists(logFileName) ? await File.ReadAllLinesAsync(logFileName) : null;
         var report = SessionReportGenerator.GenerateMarkdown(reportEvents,
             sourceFile: playbackFile, outputFile: outputPath,
-            logFile: logFileName, wallClockDuration: sw.Elapsed);
-        var reportPath = Path.ChangeExtension(outputPath, ".report.md");
+            logFile: logFileName, wallClockDuration: sw.Elapsed,
+            logLines: logLines);
+        var reportPath = SessionReportGenerator.GetReportPath(outputPath);
+        Directory.CreateDirectory("reports");
         await File.WriteAllTextAsync(reportPath, report);
         Log($"Report: {reportPath}");
 
@@ -1169,10 +1172,13 @@ public partial class Program
 
         // Auto-generate session report
         var reportEvents = await SessionReportGenerator.LoadEventsAsync(outputPath);
+        string[]? logLines = File.Exists(logFileName) ? await File.ReadAllLinesAsync(logFileName) : null;
         var report = SessionReportGenerator.GenerateMarkdown(reportEvents,
             sourceFile: playbackFile, outputFile: outputPath,
-            logFile: logFileName, wallClockDuration: sw.Elapsed);
-        var reportPath = Path.ChangeExtension(outputPath, ".report.md");
+            logFile: logFileName, wallClockDuration: sw.Elapsed,
+            logLines: logLines);
+        var reportPath = SessionReportGenerator.GetReportPath(outputPath);
+        Directory.CreateDirectory("reports");
         await File.WriteAllTextAsync(reportPath, report);
         log($"Report: {reportPath}");
 
@@ -1247,11 +1253,16 @@ public partial class Program
             return 1;
         }
 
-        var report = SessionReportGenerator.GenerateMarkdown(events, sourceFile: sessionFile);
-        var reportPath = Path.ChangeExtension(sessionFile, ".report.md");
+        var logPath = SessionReportGenerator.ResolveLogFile(sessionFile);
+        string[]? logLines = logPath != null ? await File.ReadAllLinesAsync(logPath) : null;
+        var report = SessionReportGenerator.GenerateMarkdown(events, sourceFile: sessionFile,
+            logFile: logPath, logLines: logLines);
+        var reportPath = SessionReportGenerator.GetReportPath(sessionFile);
+        Directory.CreateDirectory("reports");
         await File.WriteAllTextAsync(reportPath, report);
 
         Console.WriteLine($"Report:    {reportPath}");
+        Console.WriteLine($"Log:       {logPath ?? "(not found)"}");
         Console.WriteLine($"Events:    {events.Count}");
 
         var intents = events.OfType<RecordedIntentEvent>().Where(e => !e.Data.IsCandidate).ToList();

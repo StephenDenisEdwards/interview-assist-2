@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace InterviewAssist.Library.Pipeline.Recording;
 
@@ -44,6 +45,86 @@ public static class SessionReportGenerator
     }
 
     /// <summary>
+    /// Parsed summary of a session log file.
+    /// </summary>
+    public sealed record LogInsights
+    {
+        public int TotalLines { get; init; }
+        public int DeepgramConnections { get; init; }
+        public int SpeechStarts { get; init; }
+        public int UtteranceEnds { get; init; }
+        public int EndpointingEvents { get; init; }
+        public IReadOnlyList<string> Warnings { get; init; } = [];
+        public IReadOnlyList<string> Errors { get; init; } = [];
+    }
+
+    /// <summary>
+    /// Parse a log file and return a summary of operational events.
+    /// </summary>
+    public static LogInsights ParseLogFile(IReadOnlyList<string> logLines)
+    {
+        int connections = 0, speechStarts = 0, utteranceEnds = 0, endpointing = 0;
+        var warnings = new List<string>();
+        var errors = new List<string>();
+
+        foreach (var line in logLines)
+        {
+            if (line.Contains("[Deepgram] Connected to Deepgram"))
+                connections++;
+            else if (line.Contains("[Deepgram] Speech started"))
+                speechStarts++;
+            else if (line.Contains("[Deepgram] Utterance end detected"))
+                utteranceEnds++;
+            else if (line.Contains("Speech final (endpointing)"))
+                endpointing++;
+
+            if (line.Contains("WARNING", StringComparison.OrdinalIgnoreCase)
+                || line.Contains("Warn", StringComparison.Ordinal))
+                warnings.Add(line.TrimEnd());
+
+            if (line.Contains("Error", StringComparison.Ordinal))
+                errors.Add(line.TrimEnd());
+        }
+
+        return new LogInsights
+        {
+            TotalLines = logLines.Count,
+            DeepgramConnections = connections,
+            SpeechStarts = speechStarts,
+            UtteranceEnds = utteranceEnds,
+            EndpointingEvents = endpointing,
+            Warnings = warnings,
+            Errors = errors,
+        };
+    }
+
+    /// <summary>
+    /// Find the associated log file for a JSONL session file.
+    /// Maps session-YYYY-MM-DD-HHmmss.jsonl → logs/transcription-detection-YYYYMMDD-HHmmss.log
+    /// </summary>
+    public static string? ResolveLogFile(string jsonlPath, string logFolder = "logs")
+    {
+        var fileName = Path.GetFileNameWithoutExtension(jsonlPath);
+        // session-2026-02-10-171013 → extract timestamp parts
+        var match = Regex.Match(fileName, @"session-(\d{4})-(\d{2})-(\d{2})-(\d{6})");
+        if (!match.Success)
+            return null;
+
+        var logName = $"transcription-detection-{match.Groups[1].Value}{match.Groups[2].Value}{match.Groups[3].Value}-{match.Groups[4].Value}.log";
+        var logPath = Path.Combine(logFolder, logName);
+        return File.Exists(logPath) ? logPath : null;
+    }
+
+    /// <summary>
+    /// Get the report output path in the reports/ folder for a given JSONL path.
+    /// </summary>
+    public static string GetReportPath(string jsonlPath, string reportFolder = "reports")
+    {
+        var baseName = Path.GetFileNameWithoutExtension(jsonlPath);
+        return Path.Combine(reportFolder, baseName + ".report.md");
+    }
+
+    /// <summary>
     /// Generate a markdown report from recorded events.
     /// </summary>
     public static string GenerateMarkdown(
@@ -51,7 +132,8 @@ public static class SessionReportGenerator
         string? sourceFile = null,
         string? outputFile = null,
         string? logFile = null,
-        TimeSpan? wallClockDuration = null)
+        TimeSpan? wallClockDuration = null,
+        IReadOnlyList<string>? logLines = null)
     {
         var sb = new StringBuilder();
 
@@ -295,6 +377,43 @@ public static class SessionReportGenerator
                 sb.AppendLine($"- **Mean:** {latencies.Average():F0}ms");
                 sb.AppendLine($"- **Max:** {latencies.Last():F0}ms");
                 sb.AppendLine($"- **P95:** {GetPercentile(latencies, 95):F0}ms");
+                sb.AppendLine();
+            }
+        }
+
+        // ── Log Insights ──
+        if (logLines is { Count: > 0 })
+        {
+            var insights = ParseLogFile(logLines);
+
+            sb.AppendLine("## Log Insights");
+            sb.AppendLine();
+            sb.AppendLine($"- **Log lines:** {insights.TotalLines}");
+            sb.AppendLine();
+
+            sb.AppendLine("### Deepgram Events");
+            sb.AppendLine();
+            sb.AppendLine($"- **Connections:** {insights.DeepgramConnections}");
+            sb.AppendLine($"- **Speech starts:** {insights.SpeechStarts}");
+            sb.AppendLine($"- **Utterance ends:** {insights.UtteranceEnds}");
+            sb.AppendLine($"- **Endpointing:** {insights.EndpointingEvents}");
+            sb.AppendLine();
+
+            if (insights.Warnings.Count > 0)
+            {
+                sb.AppendLine($"### Warnings ({insights.Warnings.Count})");
+                sb.AppendLine();
+                foreach (var w in insights.Warnings)
+                    sb.AppendLine($"- `{Truncate(w, 200)}`");
+                sb.AppendLine();
+            }
+
+            if (insights.Errors.Count > 0)
+            {
+                sb.AppendLine($"### Errors ({insights.Errors.Count})");
+                sb.AppendLine();
+                foreach (var e in insights.Errors)
+                    sb.AppendLine($"- `{Truncate(e, 200)}`");
                 sb.AppendLine();
             }
         }
