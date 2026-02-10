@@ -181,13 +181,15 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
             if (_unprocessedUtterances.Count == 0)
                 return;
 
-            // Build context from already-processed utterances
+            // Build context from already-processed utterances (labeled)
             contextText = _contextWindow.Count > 0
-                ? string.Join(" ", _contextWindow.Select(u => u.Text))
+                ? TranscriptionPreprocessor.FormatLabeledUtterances(
+                    _contextWindow.Select(u => (u.Id, u.Text)).ToList())
                 : null;
 
-            // Build new text from unprocessed utterances
-            newText = string.Join(" ", _unprocessedUtterances.Select(u => u.Text));
+            // Build new text from unprocessed utterances (labeled)
+            newText = TranscriptionPreprocessor.FormatLabeledUtterances(
+                _unprocessedUtterances.Select(u => (u.Id, u.Text)).ToList());
             unprocessedSnapshot = _unprocessedUtterances.ToList();
 
             _hasTrigger = false;
@@ -241,8 +243,11 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
                 }
             }
 
-            // Find matching utterance
-            var matchedUtterance = FindBestMatchingUtterance(llmIntent.SourceText, pending);
+            // Prefer UtteranceId from LLM response for direct lookup; fall back to word-overlap
+            var matchedUtterance = llmIntent.UtteranceId != null
+                ? pending.FirstOrDefault(u => u.Id == llmIntent.UtteranceId)
+                : null;
+            matchedUtterance ??= FindBestMatchingUtterance(llmIntent.SourceText, pending);
             var utteranceId = matchedUtterance?.Id ?? pending.LastOrDefault()?.Id ?? "unknown";
 
             // Override OriginalText with the matched utterance's text (direct from pipeline, not LLM)

@@ -262,6 +262,23 @@ public static class TranscriptionPreprocessor
     }
 
     /// <summary>
+    /// Formats utterances with labeled IDs for structured LLM input.
+    /// Produces lines like: [utt_0001] Is Billie Eilish about to lose her house?
+    /// </summary>
+    public static string FormatLabeledUtterances(IReadOnlyList<(string Id, string Text)> utterances)
+    {
+        if (utterances.Count == 0)
+            return string.Empty;
+
+        var sb = new System.Text.StringBuilder();
+        foreach (var (id, text) in utterances)
+        {
+            sb.Append('[').Append(id).Append("] ").AppendLine(text);
+        }
+        return sb.ToString().TrimEnd();
+    }
+
+    /// <summary>
     /// Normalizes text for comparison.
     /// </summary>
     public static string Normalize(string text)

@@ -100,6 +100,8 @@ public sealed record DetectedIntent
     public required string SourceText { get; init; }
     /// <summary>Verbatim excerpt from the transcript, before any pronoun resolution or cleanup.</summary>
     public string? OriginalText { get; init; }
+    /// <summary>ID of the utterance this intent was detected from (set by LLM when using labeled input).</summary>
+    public string? UtteranceId { get; init; }
     public DateTime DetectedAtUtc { get; init; } = DateTime.UtcNow;
 }
 

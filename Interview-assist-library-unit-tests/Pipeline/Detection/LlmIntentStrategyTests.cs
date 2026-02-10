@@ -154,11 +154,12 @@ public class LlmIntentStrategyTests : IDisposable
 
         Assert.Equal(2, _llmCalls.Count);
 
-        // First call: only first utterance text
-        Assert.Equal("What is polymorphism?", _llmCalls[0].Text);
+        // First call: only first utterance text (with label prefix)
+        Assert.Contains("What is polymorphism?", _llmCalls[0].Text);
+        Assert.DoesNotContain("How does it work?", _llmCalls[0].Text);
 
         // Second call: only new utterance text (not re-processing the first)
-        Assert.Equal("How does it work?", _llmCalls[1].Text);
+        Assert.Contains("How does it work?", _llmCalls[1].Text);
         // The first utterance should be in context, not in the classification text
         Assert.DoesNotContain("What is polymorphism?", _llmCalls[1].Text);
     }
@@ -334,6 +335,76 @@ public class LlmIntentStrategyTests : IDisposable
 
     #endregion
 
+    #region UtteranceId Lookup
+
+    [Fact]
+    public async Task UtteranceId_DirectLookup_UsesMatchedUtterance()
+    {
+        SetupLlmReturns(new DetectedIntent
+        {
+            Type = IntentType.Question,
+            Confidence = 0.9,
+            SourceText = "What is polymorphism?",
+            UtteranceId = "utt-42"
+        });
+
+        var detectedEvents = new List<IntentEvent>();
+        using var strategy = CreateStrategy();
+        strategy.OnIntentDetected += e => detectedEvents.Add(e);
+
+        await strategy.ProcessUtteranceAsync(MakeUtterance("What is polymorphism?", "utt-42"));
+
+        Assert.Single(detectedEvents);
+        Assert.Equal("utt-42", detectedEvents[0].UtteranceId);
+        Assert.Equal("What is polymorphism?", detectedEvents[0].Intent.OriginalText);
+    }
+
+    [Fact]
+    public async Task UtteranceId_NullFallback_UsesWordOverlap()
+    {
+        SetupLlmReturns(new DetectedIntent
+        {
+            Type = IntentType.Question,
+            Confidence = 0.9,
+            SourceText = "What is polymorphism?",
+            UtteranceId = null  // LLM didn't provide utterance_id
+        });
+
+        var detectedEvents = new List<IntentEvent>();
+        using var strategy = CreateStrategy();
+        strategy.OnIntentDetected += e => detectedEvents.Add(e);
+
+        await strategy.ProcessUtteranceAsync(MakeUtterance("What is polymorphism?", "utt-99"));
+
+        Assert.Single(detectedEvents);
+        // Should fall back to word-overlap matching
+        Assert.Equal("utt-99", detectedEvents[0].UtteranceId);
+    }
+
+    [Fact]
+    public async Task UtteranceId_InvalidId_FallsBackToWordOverlap()
+    {
+        SetupLlmReturns(new DetectedIntent
+        {
+            Type = IntentType.Question,
+            Confidence = 0.9,
+            SourceText = "What is polymorphism?",
+            UtteranceId = "nonexistent-id"  // ID doesn't match any utterance
+        });
+
+        var detectedEvents = new List<IntentEvent>();
+        using var strategy = CreateStrategy();
+        strategy.OnIntentDetected += e => detectedEvents.Add(e);
+
+        await strategy.ProcessUtteranceAsync(MakeUtterance("What is polymorphism?", "utt-real"));
+
+        Assert.Single(detectedEvents);
+        // Should fall back to word-overlap since "nonexistent-id" doesn't match
+        Assert.Equal("utt-real", detectedEvents[0].UtteranceId);
+    }
+
+    #endregion
+
     #region Sliding Window Moves Utterances After Detection
 
     [Fact]
@@ -359,8 +430,9 @@ public class LlmIntentStrategyTests : IDisposable
         await strategy.ProcessUtteranceAsync(MakeUtterance("Another question?"));
 
         Assert.Equal(2, _llmCalls.Count);
-        // Second call text should only contain the new utterance
-        Assert.Equal("Another question?", _llmCalls[1].Text);
+        // Second call text should only contain the new utterance (with label prefix)
+        Assert.Contains("Another question?", _llmCalls[1].Text);
+        Assert.DoesNotContain("What is this?", _llmCalls[1].Text);
     }
 
     #endregion

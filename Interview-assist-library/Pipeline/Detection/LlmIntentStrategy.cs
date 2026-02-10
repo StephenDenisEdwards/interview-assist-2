@@ -152,13 +152,15 @@ public sealed class LlmIntentStrategy : IIntentDetectionStrategy
             if (_unprocessedUtterances.Count == 0)
                 return;
 
-            // Build context from already-processed utterances
+            // Build context from already-processed utterances (labeled)
             contextText = _contextWindow.Count > 0
-                ? string.Join(" ", _contextWindow.Select(u => u.Text))
+                ? TranscriptionPreprocessor.FormatLabeledUtterances(
+                    _contextWindow.Select(u => (u.Id, u.Text)).ToList())
                 : null;
 
-            // Build new text from unprocessed utterances
-            newText = string.Join(" ", _unprocessedUtterances.Select(u => u.Text));
+            // Build new text from unprocessed utterances (labeled)
+            newText = TranscriptionPreprocessor.FormatLabeledUtterances(
+                _unprocessedUtterances.Select(u => (u.Id, u.Text)).ToList());
             unprocessedSnapshot = _unprocessedUtterances.ToList();
 
             _hasTrigger = false;
@@ -200,8 +202,11 @@ public sealed class LlmIntentStrategy : IIntentDetectionStrategy
                 }
             }
 
-            // Find the best matching utterance ID
-            var utteranceId = FindBestMatchingUtterance(intent.SourceText, unprocessedSnapshot);
+            // Prefer UtteranceId from LLM response for direct lookup; fall back to word-overlap
+            var utteranceId = intent.UtteranceId != null
+                ? unprocessedSnapshot.FirstOrDefault(u => u.Id == intent.UtteranceId)?.Id
+                : null;
+            utteranceId ??= FindBestMatchingUtterance(intent.SourceText, unprocessedSnapshot);
 
             // Override OriginalText with the matched utterance's text (direct from pipeline, not LLM)
             var matchedUtterance = unprocessedSnapshot.FirstOrDefault(u => u.Id == utteranceId);
