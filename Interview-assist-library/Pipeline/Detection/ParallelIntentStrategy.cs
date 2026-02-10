@@ -168,6 +168,7 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
         string newText;
         string? contextText;
         List<TrackedUtterance> unprocessedSnapshot;
+        List<TrackedUtterance> contextSnapshot;
 
         lock (_lock)
         {
@@ -191,6 +192,7 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
             newText = TranscriptionPreprocessor.FormatLabeledUtterances(
                 _unprocessedUtterances.Select(u => (u.Id, u.Text)).ToList());
             unprocessedSnapshot = _unprocessedUtterances.ToList();
+            contextSnapshot = _contextWindow.ToList();
 
             _hasTrigger = false;
             _lastLlmDetection = DateTime.UtcNow;
@@ -200,7 +202,7 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
         var llmIntents = await _llm.DetectIntentsAsync(newText, contextText, ct);
 
         // Process LLM results and compare with heuristic
-        ProcessLlmResults(llmIntents, unprocessedSnapshot);
+        ProcessLlmResults(llmIntents, unprocessedSnapshot, contextSnapshot);
 
         // Move unprocessed → context window, trim context
         lock (_lock)
@@ -212,7 +214,7 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
         }
     }
 
-    private void ProcessLlmResults(IReadOnlyList<DetectedIntent> llmIntents, List<TrackedUtterance> pending)
+    private void ProcessLlmResults(IReadOnlyList<DetectedIntent> llmIntents, List<TrackedUtterance> pending, List<TrackedUtterance> context)
     {
         var matchedUtterances = new HashSet<string>();
 
@@ -243,11 +245,17 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
                 }
             }
 
-            // Prefer UtteranceId from LLM response for direct lookup; fall back to word-overlap
-            var matchedUtterance = llmIntent.UtteranceId != null
-                ? pending.FirstOrDefault(u => u.Id == llmIntent.UtteranceId)
-                : null;
-            matchedUtterance ??= FindBestMatchingUtterance(llmIntent.SourceText, pending);
+            // Prefer UtteranceId from LLM response for direct lookup; fall back to word-overlap.
+            // Search pending (unprocessed) first, then context window (the LLM may reference
+            // utterances from context that were provided for pronoun resolution).
+            TrackedUtterance? matchedUtterance = null;
+            if (llmIntent.UtteranceId != null)
+            {
+                matchedUtterance = pending.FirstOrDefault(u => u.Id == llmIntent.UtteranceId)
+                    ?? context.FirstOrDefault(u => u.Id == llmIntent.UtteranceId);
+            }
+            matchedUtterance ??= FindBestMatchingUtterance(llmIntent.SourceText, pending)
+                ?? FindBestMatchingUtterance(llmIntent.SourceText, context);
             var utteranceId = matchedUtterance?.Id ?? pending.LastOrDefault()?.Id ?? "unknown";
 
             // Override OriginalText with the matched utterance's text (direct from pipeline, not LLM)

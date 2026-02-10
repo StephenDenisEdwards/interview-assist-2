@@ -138,6 +138,7 @@ public sealed class LlmIntentStrategy : IIntentDetectionStrategy
         string newText;
         string? contextText;
         List<TrackedUtterance> unprocessedSnapshot;
+        List<TrackedUtterance> contextSnapshot;
 
         lock (_lock)
         {
@@ -162,6 +163,7 @@ public sealed class LlmIntentStrategy : IIntentDetectionStrategy
             newText = TranscriptionPreprocessor.FormatLabeledUtterances(
                 _unprocessedUtterances.Select(u => (u.Id, u.Text)).ToList());
             unprocessedSnapshot = _unprocessedUtterances.ToList();
+            contextSnapshot = _contextWindow.ToList();
 
             _hasTrigger = false;
             _lastDetection = DateTime.UtcNow;
@@ -202,14 +204,19 @@ public sealed class LlmIntentStrategy : IIntentDetectionStrategy
                 }
             }
 
-            // Prefer UtteranceId from LLM response for direct lookup; fall back to word-overlap
-            var utteranceId = intent.UtteranceId != null
-                ? unprocessedSnapshot.FirstOrDefault(u => u.Id == intent.UtteranceId)?.Id
-                : null;
-            utteranceId ??= FindBestMatchingUtterance(intent.SourceText, unprocessedSnapshot);
+            // Prefer UtteranceId from LLM response for direct lookup; fall back to word-overlap.
+            // Search unprocessed first, then context window (the LLM may reference utterances
+            // from context that were provided for pronoun resolution).
+            TrackedUtterance? matchedUtterance = null;
+            if (intent.UtteranceId != null)
+            {
+                matchedUtterance = unprocessedSnapshot.FirstOrDefault(u => u.Id == intent.UtteranceId)
+                    ?? contextSnapshot.FirstOrDefault(u => u.Id == intent.UtteranceId);
+            }
+            matchedUtterance ??= FindBestMatchingUtterance(intent.SourceText, unprocessedSnapshot)
+                ?? FindBestMatchingUtterance(intent.SourceText, contextSnapshot);
 
             // Override OriginalText with the matched utterance's text (direct from pipeline, not LLM)
-            var matchedUtterance = unprocessedSnapshot.FirstOrDefault(u => u.Id == utteranceId);
             var intentWithOriginal = intent with
             {
                 OriginalText = matchedUtterance?.Text ?? intent.OriginalText
@@ -218,7 +225,7 @@ public sealed class LlmIntentStrategy : IIntentDetectionStrategy
             var intentEvent = new IntentEvent
             {
                 Intent = intentWithOriginal,
-                UtteranceId = utteranceId ?? unprocessedSnapshot.LastOrDefault()?.Id ?? "unknown"
+                UtteranceId = matchedUtterance?.Id ?? unprocessedSnapshot.LastOrDefault()?.Id ?? "unknown"
             };
 
             OnIntentDetected?.Invoke(intentEvent);
@@ -254,22 +261,23 @@ public sealed class LlmIntentStrategy : IIntentDetectionStrategy
         return total;
     }
 
-    private string? FindBestMatchingUtterance(string intentText, List<TrackedUtterance> pending)
+    private static TrackedUtterance? FindBestMatchingUtterance(string intentText, List<TrackedUtterance> candidates)
     {
         // Find utterance that best matches the detected intent text
-        string? bestMatch = null;
+        TrackedUtterance? bestMatch = null;
         int bestScore = 0;
 
-        foreach (var p in pending)
+        var words = TranscriptionPreprocessor.GetSignificantWords(intentText);
+
+        foreach (var p in candidates)
         {
-            var words = TranscriptionPreprocessor.GetSignificantWords(intentText);
             var utteranceWords = TranscriptionPreprocessor.GetSignificantWords(p.Text);
             var overlap = words.Intersect(utteranceWords).Count();
 
             if (overlap > bestScore)
             {
                 bestScore = overlap;
-                bestMatch = p.Id;
+                bestMatch = p;
             }
         }
 
