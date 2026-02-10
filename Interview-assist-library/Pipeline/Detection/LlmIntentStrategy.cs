@@ -203,9 +203,16 @@ public sealed class LlmIntentStrategy : IIntentDetectionStrategy
             // Find the best matching utterance ID
             var utteranceId = FindBestMatchingUtterance(intent.SourceText, unprocessedSnapshot);
 
+            // Override OriginalText with the matched utterance's text (direct from pipeline, not LLM)
+            var matchedUtterance = unprocessedSnapshot.FirstOrDefault(u => u.Id == utteranceId);
+            var intentWithOriginal = intent with
+            {
+                OriginalText = matchedUtterance?.Text ?? intent.OriginalText
+            };
+
             var intentEvent = new IntentEvent
             {
-                Intent = intent,
+                Intent = intentWithOriginal,
                 UtteranceId = utteranceId ?? unprocessedSnapshot.LastOrDefault()?.Id ?? "unknown"
             };
 

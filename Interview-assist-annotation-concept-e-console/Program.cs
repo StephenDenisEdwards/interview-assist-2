@@ -273,7 +273,7 @@ public class Program
             }
         }
 
-        // Add LLM-discovered questions
+        // Add LLM-discovered questions, copying pre-computed positions from the correction event
         foreach (var added in addedQuestions)
         {
             result.Add(new RecordedIntentEvent
@@ -283,7 +283,9 @@ public class Program
                 {
                     Intent = added.Data.CorrectedIntent,
                     UtteranceId = added.Data.UtteranceId,
-                    IsCandidate = false
+                    IsCandidate = false,
+                    TranscriptCharStart = added.Data.TranscriptCharStart,
+                    TranscriptCharEnd = added.Data.TranscriptCharEnd
                 }
             });
         }
@@ -293,8 +295,8 @@ public class Program
 
     /// <summary>
     /// Map detected questions to transcript character offsets.
-    /// When AsrFinalOffsetMs is available (new recordings), matches each offset to ASR segments
-    /// for direct character position lookup. Falls back to time-range correlation for old recordings.
+    /// Primary path: use pre-computed TranscriptCharStart/TranscriptCharEnd from the recording.
+    /// Fallback (old recordings): time-range correlation via ASR segments and utterance info.
     /// </summary>
     internal static List<AnnotatedQuestion> MapQuestionsByTime(
         IReadOnlyList<RecordedIntentEvent> questions,
@@ -313,6 +315,23 @@ public class Program
 
             var label = sourceText[..Math.Min(50, sourceText.Length)];
 
+            // Primary path: pre-computed positions from SessionRecorder
+            if (q.Data.TranscriptCharStart is { } preStart && q.Data.TranscriptCharEnd is { } preEnd)
+            {
+                diagnostics?.Add($"MAP  [{q.Data.UtteranceId}] '{label}' — pre-computed [{preStart},{preEnd})");
+                result.Add(new AnnotatedQuestion(
+                    Id: nextId++,
+                    Text: sourceText,
+                    OriginalText: q.Data.Intent.OriginalText,
+                    Subtype: q.Data.Intent.Subtype,
+                    Confidence: q.Data.Intent.Confidence,
+                    TranscriptStartOffset: preStart,
+                    TranscriptEndOffset: preEnd,
+                    Source: QuestionSource.LlmDetected));
+                continue;
+            }
+
+            // Fallback: time-range correlation for old recordings
             if (!utteranceInfo.TryGetValue(q.Data.UtteranceId, out var info))
             {
                 diagnostics?.Add($"SKIP [{q.Data.UtteranceId}] '{label}' — no utterance info found");
@@ -323,7 +342,6 @@ public class Program
 
             if (info.AsrFinalOffsetMs is { Count: > 0 } offsets)
             {
-                // New path: direct offset matching with 50ms tolerance
                 diagnostics?.Add($"MAP  [{q.Data.UtteranceId}] '{label}' — direct offset match ({offsets.Count} offsets)");
                 matching = new List<AsrSegmentInfo>();
                 foreach (var offset in offsets)
@@ -336,7 +354,6 @@ public class Program
             }
             else
             {
-                // Fallback: time-range correlation for old recordings
                 diagnostics?.Add($"MAP  [{q.Data.UtteranceId}] '{label}' — time-range fallback: {info.StartMs}-{info.EndMs}ms");
                 matching = asrSegments
                     .Where(s => s.OffsetMs >= info.StartMs && s.OffsetMs <= info.EndMs)

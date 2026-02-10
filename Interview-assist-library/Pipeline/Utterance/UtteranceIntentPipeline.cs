@@ -140,7 +140,7 @@ public sealed class UtteranceIntentPipeline : IDisposable
             {
                 OnIntentCandidate?.Invoke(new IntentEvent
                 {
-                    Intent = candidate,
+                    Intent = candidate with { OriginalText = evt.StableText },
                     UtteranceId = evt.Id,
                     IsCandidate = true
                 });

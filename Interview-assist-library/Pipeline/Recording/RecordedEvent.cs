@@ -110,6 +110,11 @@ public sealed record IntentEventData
     public DetectedIntentData Intent { get; init; } = new();
     public string UtteranceId { get; init; } = "";
     public bool IsCandidate { get; init; }
+
+    /// <summary>Character offset (inclusive) in the running transcript. Null for old recordings.</summary>
+    public int? TranscriptCharStart { get; init; }
+    /// <summary>Character offset (exclusive) in the running transcript. Null for old recordings.</summary>
+    public int? TranscriptCharEnd { get; init; }
 }
 
 /// <summary>
@@ -171,4 +176,9 @@ public sealed record IntentCorrectionEventData
     public DetectedIntentData? OriginalIntent { get; init; }
     public DetectedIntentData CorrectedIntent { get; init; } = new();
     public string CorrectionType { get; init; } = ""; // Confirmed, TypeChanged, Added, Removed
+
+    /// <summary>Character offset (inclusive) in the running transcript. Null for old recordings.</summary>
+    public int? TranscriptCharStart { get; init; }
+    /// <summary>Character offset (exclusive) in the running transcript. Null for old recordings.</summary>
+    public int? TranscriptCharEnd { get; init; }
 }

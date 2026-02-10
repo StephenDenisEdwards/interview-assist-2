@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text;
 using System.Text.Json;
 using InterviewAssist.Library.Pipeline.Detection;
@@ -17,6 +18,11 @@ public sealed class SessionRecorder : IDisposable
     private DateTime _startTime;
     private bool _isRecording;
     private readonly object _lock = new();
+
+    // Running transcript state for computing intent positions
+    private readonly StringBuilder _runningTranscript = new();
+    private readonly List<(int CharStart, int CharEnd, long OffsetMs)> _transcriptSegments = new();
+    private readonly ConcurrentDictionary<string, (long StartMs, long EndMs)> _utteranceTimeRanges = new();
 
     public bool IsRecording => _isRecording;
     public string? CurrentFilePath { get; private set; }
@@ -52,6 +58,10 @@ public sealed class SessionRecorder : IDisposable
             _startTime = DateTime.UtcNow;
             _isRecording = true;
             CurrentFilePath = filePath;
+
+            _runningTranscript.Clear();
+            _transcriptSegments.Clear();
+            _utteranceTimeRanges.Clear();
 
             // Write metadata as first line
             WriteEvent(new RecordedSessionMetadata
@@ -115,7 +125,22 @@ public sealed class SessionRecorder : IDisposable
     }
 
     private void OnAsrPartial(AsrEvent evt) => WriteAsrEvent(evt);
-    private void OnAsrFinal(AsrEvent evt) => WriteAsrEvent(evt);
+
+    private void OnAsrFinal(AsrEvent evt)
+    {
+        WriteAsrEvent(evt);
+
+        if (evt.IsFinal && !string.IsNullOrWhiteSpace(evt.Text))
+        {
+            var text = evt.Text.Trim();
+            int charStart = _runningTranscript.Length;
+            _runningTranscript.Append(text);
+            int charEnd = _runningTranscript.Length;
+            _runningTranscript.Append(' ');
+
+            _transcriptSegments.Add((charStart, charEnd, GetOffsetMs()));
+        }
+    }
 
     private void WriteAsrEvent(AsrEvent evt)
     {
@@ -143,7 +168,18 @@ public sealed class SessionRecorder : IDisposable
 
     private void OnUtteranceOpen(UtteranceEvent evt) => WriteUtteranceEvent(evt);
     private void OnUtteranceUpdate(UtteranceEvent evt) => WriteUtteranceEvent(evt);
-    private void OnUtteranceFinal(UtteranceEvent evt) => WriteUtteranceEvent(evt);
+
+    private void OnUtteranceFinal(UtteranceEvent evt)
+    {
+        WriteUtteranceEvent(evt);
+
+        if (evt.Type == UtteranceEventType.Final)
+        {
+            long endMs = GetOffsetMs();
+            long startMs = endMs - (long)evt.Duration.TotalMilliseconds;
+            _utteranceTimeRanges[evt.Id] = (startMs, endMs);
+        }
+    }
 
     private void WriteUtteranceEvent(UtteranceEvent evt)
     {
@@ -170,6 +206,14 @@ public sealed class SessionRecorder : IDisposable
 
     private void WriteIntentEvent(IntentEvent evt, bool isCandidate)
     {
+        var (charStart, charEnd) = ComputeTranscriptPosition(
+            evt.Intent.OriginalText, evt.Intent.SourceText, evt.UtteranceId);
+
+        // Use transcript substring as OriginalText when position is known
+        string? transcriptOriginal = (charStart != null && charEnd != null)
+            ? _runningTranscript.ToString(charStart.Value, charEnd.Value - charStart.Value)
+            : null;
+
         WriteEvent(new RecordedIntentEvent
         {
             OffsetMs = GetOffsetMs(),
@@ -181,7 +225,7 @@ public sealed class SessionRecorder : IDisposable
                     Subtype = evt.Intent.Subtype?.ToString(),
                     Confidence = evt.Intent.Confidence,
                     SourceText = evt.Intent.SourceText,
-                    OriginalText = evt.Intent.OriginalText,
+                    OriginalText = transcriptOriginal ?? evt.Intent.OriginalText,
                     Slots = evt.Intent.Slots != null ? new IntentSlotsData
                     {
                         Topic = evt.Intent.Slots.Topic,
@@ -190,7 +234,9 @@ public sealed class SessionRecorder : IDisposable
                     } : null
                 },
                 UtteranceId = evt.UtteranceId,
-                IsCandidate = isCandidate
+                IsCandidate = isCandidate,
+                TranscriptCharStart = charStart,
+                TranscriptCharEnd = charEnd
             }
         });
     }
@@ -211,6 +257,14 @@ public sealed class SessionRecorder : IDisposable
 
     private void OnIntentCorrected(IntentCorrectionEvent evt)
     {
+        var (charStart, charEnd) = ComputeTranscriptPosition(
+            evt.CorrectedIntent.OriginalText, evt.CorrectedIntent.SourceText, evt.UtteranceId);
+
+        // Use transcript substring as OriginalText when position is known
+        string? transcriptOriginal = (charStart != null && charEnd != null)
+            ? _runningTranscript.ToString(charStart.Value, charEnd.Value - charStart.Value)
+            : null;
+
         WriteEvent(new RecordedIntentCorrectionEvent
         {
             OffsetMs = GetOffsetMs(),
@@ -237,7 +291,7 @@ public sealed class SessionRecorder : IDisposable
                     Subtype = evt.CorrectedIntent.Subtype?.ToString(),
                     Confidence = evt.CorrectedIntent.Confidence,
                     SourceText = evt.CorrectedIntent.SourceText,
-                    OriginalText = evt.CorrectedIntent.OriginalText,
+                    OriginalText = transcriptOriginal ?? evt.CorrectedIntent.OriginalText,
                     Slots = evt.CorrectedIntent.Slots != null ? new IntentSlotsData
                     {
                         Topic = evt.CorrectedIntent.Slots.Topic,
@@ -245,9 +299,89 @@ public sealed class SessionRecorder : IDisposable
                         Reference = evt.CorrectedIntent.Slots.Reference
                     } : null
                 },
-                CorrectionType = evt.CorrectionType.ToString()
+                CorrectionType = evt.CorrectionType.ToString(),
+                TranscriptCharStart = charStart,
+                TranscriptCharEnd = charEnd
             }
         });
+    }
+
+    private (int? Start, int? End) ComputeTranscriptPosition(
+        string? originalText, string? sourceText, string utteranceId)
+    {
+        if (_utteranceTimeRanges.TryGetValue(utteranceId, out var timeRange))
+        {
+            var result = ComputeTranscriptPosition(
+                originalText, sourceText, timeRange,
+                _runningTranscript, _transcriptSegments);
+            if (result.Start != null)
+                return result;
+        }
+
+        // Fallback: search the entire transcript
+        return SearchFullTranscript(originalText, sourceText);
+    }
+
+    private (int? Start, int? End) SearchFullTranscript(string? originalText, string? sourceText)
+    {
+        if (_runningTranscript.Length == 0)
+            return (null, null);
+
+        var transcript = _runningTranscript.ToString();
+
+        foreach (var searchText in new[] { sourceText, originalText })
+        {
+            if (string.IsNullOrWhiteSpace(searchText))
+                continue;
+
+            int idx = transcript.IndexOf(searchText, StringComparison.OrdinalIgnoreCase);
+            if (idx >= 0)
+                return (idx, idx + searchText.Length);
+        }
+
+        return (null, null);
+    }
+
+    /// <summary>
+    /// Compute the character range in a running transcript that corresponds to an intent's source text.
+    /// Uses the utterance's time range to narrow down to a bounded window of ASR segments,
+    /// then searches for the original/source text within that window.
+    /// </summary>
+    internal static (int? Start, int? End) ComputeTranscriptPosition(
+        string? originalText, string? sourceText,
+        (long StartMs, long EndMs) utteranceTimeRange,
+        StringBuilder runningTranscript,
+        List<(int CharStart, int CharEnd, long OffsetMs)> transcriptSegments)
+    {
+        // Find ASR segments within the utterance's time range (±2s tolerance)
+        long windowStart = utteranceTimeRange.StartMs - 2000;
+        long windowEnd = utteranceTimeRange.EndMs + 2000;
+
+        var matchingSegments = transcriptSegments
+            .Where(s => s.OffsetMs >= windowStart && s.OffsetMs <= windowEnd)
+            .ToList();
+
+        if (matchingSegments.Count == 0)
+            return (null, null);
+
+        int regionStart = matchingSegments.First().CharStart;
+        int regionEnd = matchingSegments.Last().CharEnd;
+        var region = runningTranscript.ToString(regionStart, regionEnd - regionStart);
+
+        // Try sourceText first (clean LLM-reformulated text gives a precise match),
+        // then originalText as fallback (for cases where LLM resolved pronouns)
+        foreach (var searchText in new[] { sourceText, originalText })
+        {
+            if (string.IsNullOrWhiteSpace(searchText))
+                continue;
+
+            int idx = region.IndexOf(searchText, StringComparison.OrdinalIgnoreCase);
+            if (idx >= 0)
+                return (regionStart + idx, regionStart + idx + searchText.Length);
+        }
+
+        // Text not found in region — return the full utterance region
+        return (regionStart, regionEnd);
     }
 
     private long GetOffsetMs() => (long)(DateTime.UtcNow - _startTime).TotalMilliseconds;

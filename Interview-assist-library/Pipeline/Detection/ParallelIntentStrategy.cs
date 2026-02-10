@@ -245,6 +245,12 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
             var matchedUtterance = FindBestMatchingUtterance(llmIntent.SourceText, pending);
             var utteranceId = matchedUtterance?.Id ?? pending.LastOrDefault()?.Id ?? "unknown";
 
+            // Override OriginalText with the matched utterance's text (direct from pipeline, not LLM)
+            var llmIntentWithOriginal = llmIntent with
+            {
+                OriginalText = matchedUtterance?.Text ?? llmIntent.OriginalText
+            };
+
             if (matchedUtterance != null)
                 matchedUtterances.Add(matchedUtterance.Id);
 
@@ -258,7 +264,7 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
             if (previousEmission != null)
             {
                 // Compare LLM result with heuristic result
-                var correctionType = DetermineCorrectionType(previousEmission.Intent, llmIntent);
+                var correctionType = DetermineCorrectionType(previousEmission.Intent, llmIntentWithOriginal);
 
                 if (correctionType == IntentCorrectionType.Confirmed)
                 {
@@ -271,7 +277,7 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
                 {
                     UtteranceId = utteranceId,
                     OriginalIntent = previousEmission.Intent,
-                    CorrectedIntent = llmIntent,
+                    CorrectedIntent = llmIntentWithOriginal,
                     CorrectionType = correctionType
                 });
             }
@@ -280,7 +286,7 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
                 // LLM found something heuristic missed
                 var intentEvent = new IntentEvent
                 {
-                    Intent = llmIntent,
+                    Intent = llmIntentWithOriginal,
                     UtteranceId = utteranceId
                 };
 
@@ -291,7 +297,7 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
                 {
                     UtteranceId = utteranceId,
                     OriginalIntent = null,
-                    CorrectedIntent = llmIntent,
+                    CorrectedIntent = llmIntentWithOriginal,
                     CorrectionType = IntentCorrectionType.Added
                 });
             }

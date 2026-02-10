@@ -61,7 +61,7 @@ public class StabilizerTests
     }
 
     [Fact]
-    public void CommitFinal_UpdatesStableText()
+    public void CommitFinal_ReturnsCommittedText_AndClearsStable()
     {
         var stabilizer = new Stabilizer();
 
@@ -70,8 +70,10 @@ public class StabilizerTests
 
         var result = stabilizer.CommitFinal("What is a lock statement");
 
+        // CommitFinal returns the committed text
         Assert.Equal("What is a lock statement", result);
-        Assert.Equal("What is a lock statement", stabilizer.StableText);
+        // StableText is cleared so next segment starts fresh
+        Assert.Equal("", stabilizer.StableText);
     }
 
     [Fact]
@@ -86,6 +88,26 @@ public class StabilizerTests
         stabilizer.Reset();
 
         Assert.Equal("", stabilizer.StableText);
+    }
+
+    [Fact]
+    public void CommitFinal_ClearsHypothesisWindow_NextAddHypothesisStartsFresh()
+    {
+        var stabilizer = new Stabilizer();
+
+        // Build up some stable text and commit
+        stabilizer.AddHypothesis("Hello world");
+        stabilizer.AddHypothesis("Hello world today");
+        stabilizer.CommitFinal("Hello world today");
+
+        // After commit, adding a single hypothesis should return "" (fresh start),
+        // not the stale "Hello world today"
+        var result = stabilizer.AddHypothesis("about");
+        Assert.Equal("", result);
+
+        // Two hypotheses should compute a new LCP from scratch
+        var result2 = stabilizer.AddHypothesis("about something");
+        Assert.Equal("about", result2);
     }
 
     [Fact]

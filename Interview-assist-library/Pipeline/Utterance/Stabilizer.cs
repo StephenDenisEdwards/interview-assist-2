@@ -65,23 +65,13 @@ public sealed class Stabilizer : IStabilizer
         // Final text is authoritative
         _committedText = finalText;
 
-        // Update stable to match final if it's an extension
-        if (finalText.StartsWith(_stableText))
-        {
-            _stableText = finalText;
-        }
-        else if (_stableText.StartsWith(finalText))
-        {
-            // Final is subset of stable (rare, but handle gracefully)
-            _stableText = finalText;
-        }
-        else
-        {
-            // Divergence - trust final
-            _stableText = finalText;
-        }
+        // Clear hypothesis window — old hypotheses belong to the committed segment.
+        // Without this, stale _stableText would persist and cause duplication
+        // when CombineText joins CommittedText with the next AddHypothesis result.
+        _hypotheses.Clear();
+        _stableText = "";
 
-        return _stableText;
+        return _committedText;
     }
 
     public void Reset()
