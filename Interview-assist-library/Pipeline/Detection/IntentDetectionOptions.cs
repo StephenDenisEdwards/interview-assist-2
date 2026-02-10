@@ -106,4 +106,11 @@ public class LlmDetectionOptions
     /// Maximum characters of processed context to retain for pronoun resolution.
     /// </summary>
     public int ContextWindowChars { get; set; } = 1500;
+
+    /// <summary>
+    /// Path to a text file containing the system prompt for LLM intent detection.
+    /// If null or empty, uses the built-in default prompt.
+    /// Relative paths are resolved from the application's base directory.
+    /// </summary>
+    public string? SystemPromptFile { get; set; }
 }

@@ -12,8 +12,13 @@ public sealed class WavFileAudioSource : IAudioCaptureService
     private readonly string _filePath;
     private readonly int _sampleRate;
     private readonly int _chunkDurationMs;
+    private readonly object _pauseLock = new();
+
     private CancellationTokenSource? _cts;
+    private CancellationTokenSource? _delayCts;
+    private TaskCompletionSource? _pauseTcs;
     private Task? _readTask;
+    private bool _isPaused;
 
     public event Action<byte[]>? OnAudioChunk;
 
@@ -21,6 +26,8 @@ public sealed class WavFileAudioSource : IAudioCaptureService
     /// Fires when the WAV file has been fully read.
     /// </summary>
     public event Action? OnPlaybackComplete;
+
+    public bool IsPaused => _isPaused;
 
     public WavFileAudioSource(string filePath, int sampleRate, int chunkDurationMs = 100)
     {
@@ -39,11 +46,47 @@ public sealed class WavFileAudioSource : IAudioCaptureService
 
     public void Stop()
     {
+        lock (_pauseLock)
+        {
+            _isPaused = false;
+            _pauseTcs?.TrySetResult();
+            _pauseTcs = null;
+        }
         _cts?.Cancel();
         try { _readTask?.Wait(); } catch { }
         _cts?.Dispose();
         _cts = null;
         _readTask = null;
+    }
+
+    public void Pause()
+    {
+        lock (_pauseLock)
+        {
+            if (_isPaused) return;
+            _isPaused = true;
+            _pauseTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            _delayCts?.Cancel();
+        }
+    }
+
+    public void Resume()
+    {
+        lock (_pauseLock)
+        {
+            if (!_isPaused) return;
+            _isPaused = false;
+            _pauseTcs?.TrySetResult();
+            _pauseTcs = null;
+        }
+    }
+
+    public void TogglePause()
+    {
+        if (_isPaused)
+            Resume();
+        else
+            Pause();
     }
 
     public void SetSource(AudioInputSource source)
@@ -93,6 +136,10 @@ public sealed class WavFileAudioSource : IAudioCaptureService
 
         while (!ct.IsCancellationRequested)
         {
+            // Block while paused
+            await WaitIfPausedAsync(ct);
+            ct.ThrowIfCancellationRequested();
+
             var bytesRead = reader.Read(buffer, 0, chunkBytes);
             if (bytesRead == 0) break;
 
@@ -100,7 +147,7 @@ public sealed class WavFileAudioSource : IAudioCaptureService
             Array.Copy(buffer, chunk, bytesRead);
             OnAudioChunk?.Invoke(chunk);
 
-            await Task.Delay(_chunkDurationMs, ct).ConfigureAwait(false);
+            await DelayWithPauseAsync(_chunkDurationMs, ct);
         }
     }
 
@@ -114,6 +161,10 @@ public sealed class WavFileAudioSource : IAudioCaptureService
 
         while (!ct.IsCancellationRequested)
         {
+            // Block while paused
+            await WaitIfPausedAsync(ct);
+            ct.ThrowIfCancellationRequested();
+
             var bytesRead = reader.Read(buffer, 0, sourceChunkBytes);
             if (bytesRead == 0) break;
 
@@ -123,7 +174,43 @@ public sealed class WavFileAudioSource : IAudioCaptureService
                 OnAudioChunk?.Invoke(resampled);
             }
 
-            await Task.Delay(_chunkDurationMs, ct).ConfigureAwait(false);
+            await DelayWithPauseAsync(_chunkDurationMs, ct);
         }
+    }
+
+    private async Task WaitIfPausedAsync(CancellationToken ct)
+    {
+        TaskCompletionSource? tcs;
+        lock (_pauseLock) { tcs = _pauseTcs; }
+        if (tcs != null)
+        {
+            using var reg = ct.Register(() => tcs.TrySetCanceled());
+            await tcs.Task;
+        }
+    }
+
+    private async Task DelayWithPauseAsync(int ms, CancellationToken ct)
+    {
+        using var delayCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        lock (_pauseLock)
+        {
+            _delayCts = delayCts;
+            if (_pauseTcs != null) delayCts.Cancel();
+        }
+        try
+        {
+            await Task.Delay(ms, delayCts.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (!ct.IsCancellationRequested)
+        {
+            // Interrupted by pause — not a real cancellation
+        }
+        finally
+        {
+            lock (_pauseLock) { _delayCts = null; }
+        }
+
+        // Re-check pause after delay
+        await WaitIfPausedAsync(ct);
     }
 }

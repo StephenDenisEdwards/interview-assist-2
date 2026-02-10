@@ -299,6 +299,10 @@ public partial class Program
         var backgroundColorHex = uiConfig["BackgroundColor"] ?? "#1E1E1E";
         var intentColorHex = uiConfig["IntentColor"] ?? "#FFFF00";
 
+        // Load logging settings
+        var loggingConfig = configuration.GetSection("Logging");
+        var logFolder = loggingConfig["Folder"] ?? "logs";
+
         // Load recording settings
         var recordingConfig = configuration.GetSection("Recording");
         var recordingOptions = new RecordingOptions
@@ -317,7 +321,7 @@ public partial class Program
             // Create the main UI and run
             var app = new TranscriptionApp(
                 source, sampleRate, deepgramOptions, diarizeEnabled, intentDetectionEnabled,
-                intentDetectionOptions, backgroundColorHex, intentColorHex, recordingOptions, playbackFile, playbackMode);
+                intentDetectionOptions, backgroundColorHex, intentColorHex, recordingOptions, logFolder, playbackFile, playbackMode);
             await app.RunAsync();
         }
         finally
@@ -754,11 +758,12 @@ public class TranscriptionApp
     private readonly string _backgroundColorHex;
     private readonly string _intentColorHex;
     private readonly RecordingOptions _recordingOptions;
+    private readonly string _logFolder;
     private readonly string? _playbackFile;
     private readonly string? _playbackModeOverride;
 
     // UI elements
-    private TextView _transcriptView = null!;
+    private HighlightTextView _transcriptView = null!;
     private TextView _intentView = null!;
     private FrameView _intentFrame = null!;
     private TextView _debugView = null!;
@@ -768,18 +773,28 @@ public class TranscriptionApp
     private readonly List<string> _debugLines = new();
     private readonly List<string> _intentLines = new();
     private int _intentCount;
+    private int _nextHighlightId = 1;
+    private readonly Dictionary<string, (int Start, int End)> _utterancePositions = new();
+    private readonly List<(string Id, int Start, int End, string Text)> _utterancePositionList = new();
+    private readonly List<(string UtteranceId, string? SourceText, string? OriginalText)> _pendingHighlights = new();
+    private int _transcriptCharCount;
+    private int _utteranceSearchFrom;
     private int? _currentSpeaker;
     private CancellationTokenSource? _cts;
     private DeepgramTranscriptionService? _deepgramService;
     private UtteranceIntentPipeline? _intentPipeline;
     private ColorScheme? _intentColorScheme;
+    private Terminal.Gui.Attribute _highlightAttr;
     private SessionRecorder? _recorder;
     private AudioFileRecorder? _audioRecorder;
-    private SessionPlayer? _player;
+    private SessionPlayer _player = new();
+    private WavFileAudioSource? _wavAudio;
     private bool _isTranscribing;
     private StatusItem _transcriptionStatusItem = null!;
     private StatusItem _detectionModeStatusItem = null!;
+    private StatusItem _playbackStatusItem = null!;
     private readonly object _pipelineGate = new();
+    private StreamWriter? _debugLogWriter;
 
     public TranscriptionApp(
         AudioInputSource audioSource,
@@ -791,6 +806,7 @@ public class TranscriptionApp
         string backgroundColorHex,
         string intentColorHex,
         RecordingOptions recordingOptions,
+        string logFolder,
         string? playbackFile,
         string? playbackModeOverride = null)
     {
@@ -803,6 +819,7 @@ public class TranscriptionApp
         _backgroundColorHex = backgroundColorHex;
         _intentColorHex = intentColorHex;
         _recordingOptions = recordingOptions;
+        _logFolder = logFolder;
         _playbackFile = playbackFile;
         _playbackModeOverride = playbackModeOverride;
     }
@@ -819,6 +836,11 @@ public class TranscriptionApp
         {
             Application.MainLoop?.Invoke(() => Application.RequestStop());
         };
+
+        // Open debug log file
+        Directory.CreateDirectory(_logFolder);
+        var logFileName = Path.Combine(_logFolder, $"transcription-detection-{DateTime.Now:yyyyMMdd-HHmmss}.log");
+        _debugLogWriter = new StreamWriter(logFileName, append: false) { AutoFlush = true };
 
         // Parse background color and create color scheme
         var backgroundColor = ParseHexColor(_backgroundColorHex);
@@ -843,6 +865,9 @@ public class TranscriptionApp
             HotFocus = Terminal.Gui.Attribute.Make(intentColor, backgroundColor),
             Disabled = Terminal.Gui.Attribute.Make(intentColor, backgroundColor)
         };
+
+        // Highlight attribute for transcript: colored background so highlights are clearly visible
+        _highlightAttr = Terminal.Gui.Attribute.Make(Color.Black, Color.BrightYellow);
 
         // Create the main window
         var windowTitle = _playbackFile != null
@@ -878,14 +903,13 @@ public class TranscriptionApp
             Height = Dim.Percent(70)
         };
 
-        _transcriptView = new TextView()
+        _transcriptView = new HighlightTextView()
         {
             X = 0,
             Y = 0,
             Width = Dim.Fill(),
             Height = Dim.Fill(),
-            ReadOnly = true,
-            WordWrap = true
+            NormalAttribute = colorScheme.Normal
         };
         transcriptFrame.Add(_transcriptView);
 
@@ -936,6 +960,7 @@ public class TranscriptionApp
         _recordingStatusItem = new StatusItem(Key.Null, "", null);
         _transcriptionStatusItem = new StatusItem(Key.Null, "", null);
         _detectionModeStatusItem = new StatusItem(Key.Null, "", null);
+        _playbackStatusItem = new StatusItem(Key.Null, "PLAYING", null);
 
         StatusBar statusBar;
         if (_playbackFile != null)
@@ -943,7 +968,8 @@ public class TranscriptionApp
             statusBar = new StatusBar(new StatusItem[]
             {
                 new StatusItem(Key.Q | Key.CtrlMask, "~Ctrl+Q~ Quit", () => Application.RequestStop()),
-                new StatusItem(Key.Null, "PLAYBACK MODE", null),
+                new StatusItem(Key.Null, "~Space~ Pause/Resume", null),
+                _playbackStatusItem,
                 _detectionModeStatusItem
             });
         }
@@ -962,10 +988,25 @@ public class TranscriptionApp
         }
 
         mainWindow.Add(topContainer, bottomFrame);
+
+        // Handle Space for playback pause/resume at the window level
+        if (_playbackFile != null)
+        {
+            mainWindow.KeyPress += e =>
+            {
+                if (e.KeyEvent.Key == Key.Space)
+                {
+                    TogglePlaybackPause();
+                    e.Handled = true;
+                }
+            };
+        }
+
         Application.Top.Add(mainWindow, statusBar);
 
         // Start transcription or playback in background
         _cts = new CancellationTokenSource();
+        _player.OnInfo += msg => Application.MainLoop?.Invoke(() => AddDebug($"[Playback] {msg}"));
         if (_playbackFile != null)
         {
             _ = Task.Run(() => StartPlaybackAsync(_cts.Token));
@@ -983,13 +1024,30 @@ public class TranscriptionApp
         _recorder?.Stop();
         _audioRecorder?.Stop();
         _audioRecorder?.Dispose();
-        _player?.Stop();
+        _player.Stop();
         if (_deepgramService != null)
         {
             await _deepgramService.StopAsync();
             await _deepgramService.DisposeAsync();
         }
         _intentPipeline?.Dispose();
+        _debugLogWriter?.Dispose();
+    }
+
+    private void TogglePlaybackPause()
+    {
+        if (_wavAudio != null)
+        {
+            _wavAudio.TogglePause();
+            _playbackStatusItem.Title = _wavAudio.IsPaused ? "PAUSED" : "PLAYING";
+            AddDebug($"[Pause] {(_wavAudio.IsPaused ? "Paused" : "Resumed")}");
+        }
+        else
+        {
+            _player.TogglePause();
+            _playbackStatusItem.Title = _player.IsPaused ? "PAUSED" : "PLAYING";
+            AddDebug($"[Pause] {(_player.IsPaused ? "Paused" : "Resumed")}");
+        }
     }
 
     private void ToggleRecording()
@@ -1077,9 +1135,6 @@ public class TranscriptionApp
         {
             AddDebug($"Loading playback file: {_playbackFile}");
 
-            _player = new SessionPlayer();
-            _player.OnInfo += msg => Application.MainLoop?.Invoke(() => AddDebug($"[Playback] {msg}"));
-
             await _player.LoadAsync(_playbackFile!, ct);
 
             // Use command-line override, then recorded mode, then fall back to current settings
@@ -1127,11 +1182,7 @@ public class TranscriptionApp
                         if (_diarizeEnabled && asr.Data.SpeakerId != null)
                         {
                             var speaker = int.TryParse(asr.Data.SpeakerId, out var s) ? s : 0;
-                            if (speaker != _currentSpeaker)
-                            {
-                                _currentSpeaker = speaker;
-                                AddTranscript($"\n[Speaker {speaker}] ");
-                            }
+                            _currentSpeaker = speaker;
                         }
                         AddTranscript(asr.Data.Text + " ");
                     });
@@ -1160,6 +1211,7 @@ public class TranscriptionApp
 
             // Create file-based audio source
             var wavAudio = new WavFileAudioSource(_playbackFile!, _sampleRate);
+            _wavAudio = wavAudio;
 
             // Create Deepgram transcription service with WAV audio source
             _deepgramService = new DeepgramTranscriptionService(wavAudio, _deepgramOptions);
@@ -1307,11 +1359,10 @@ public class TranscriptionApp
         {
             Application.MainLoop?.Invoke(() =>
             {
-                // Handle speaker change for diarization
-                if (_diarizeEnabled && args.Speaker.HasValue && args.Speaker != _currentSpeaker)
+                // Track speaker for intent panel display
+                if (_diarizeEnabled && args.Speaker.HasValue)
                 {
                     _currentSpeaker = args.Speaker;
-                    AddTranscript($"\n[Speaker {args.Speaker.Value}] ");
                 }
 
                 AddTranscript(args.Text + " ");
@@ -1427,6 +1478,8 @@ public class TranscriptionApp
                     var originalText = evt.Intent.OriginalText;
                     AddIntent($"  Original:     {originalText ?? "(not available)"}");
                     AddIntent("");
+
+                    AddTranscriptHighlight(evt.UtteranceId, evt.Intent.SourceText, evt.Intent.OriginalText);
                 }
             });
         };
@@ -1435,7 +1488,35 @@ public class TranscriptionApp
         {
             Application.MainLoop?.Invoke(() =>
             {
+                // Record utterance position in transcript for highlight mapping
+                var transcript = _transcriptView.Text;
+                if (!string.IsNullOrEmpty(evt.StableText) && !string.IsNullOrEmpty(transcript))
+                {
+                    // Search forward from last known position (avoids matching earlier similar text)
+                    var searchFrom = Math.Min(_utteranceSearchFrom, transcript.Length);
+                    var idx = transcript.IndexOf(evt.StableText, searchFrom, StringComparison.OrdinalIgnoreCase);
+                    // Fallback: search from beginning if forward scan failed
+                    if (idx < 0)
+                        idx = transcript.LastIndexOf(evt.StableText, StringComparison.OrdinalIgnoreCase);
+
+                    if (idx >= 0)
+                    {
+                        var endPos = idx + evt.StableText.Length;
+                        _utterancePositions[evt.Id] = (idx, endPos);
+                        _utterancePositionList.Add((evt.Id, idx, endPos, evt.StableText));
+                        _utteranceSearchFrom = endPos;
+                        AddDebug($"[Position] {evt.Id}: [{idx}..{endPos}] \"{Truncate(evt.StableText, 40)}\"");
+                    }
+                    else
+                    {
+                        // Position not found — text may not be in transcript yet; pending highlights will retry
+                    }
+                }
+
                 AddDebug($"[Utterance.final] {evt.Id}: \"{Truncate(evt.StableText, 40)}\" ({evt.CloseReason})");
+
+                // Try to resolve pending highlights now that we have a new position
+                ResolvePendingHighlights();
             });
         };
 
@@ -1474,6 +1555,8 @@ public class TranscriptionApp
                     var corrOriginalText = evt.CorrectedIntent.OriginalText;
                     AddIntent($"  Original:     {corrOriginalText ?? "(not available)"}");
                     AddIntent("");
+
+                    AddTranscriptHighlight(evt.UtteranceId, evt.CorrectedIntent.SourceText, evt.CorrectedIntent.OriginalText);
                 }
             });
         };
@@ -1481,12 +1564,176 @@ public class TranscriptionApp
 
     private void AddTranscript(string text)
     {
-        // Append to existing text
-        var existingText = _transcriptView.Text?.ToString() ?? "";
-        _transcriptView.Text = existingText + text;
+        _transcriptView.AppendText(text);
+        _transcriptCharCount += text.Length;
+        if (_pendingHighlights.Count > 0)
+            ResolvePendingHighlights();
+    }
 
-        // Auto-scroll to bottom
-        _transcriptView.MoveEnd();
+    private void AddTranscriptHighlight(string utteranceId, string? sourceText, string? originalText)
+    {
+        var transcript = _transcriptView.Text ?? "";
+
+        int start = -1;
+        int end = -1;
+        string matchMethod = "";
+
+        // First: try utterance position lookup by exact ID
+        if (_utterancePositions.TryGetValue(utteranceId, out var range))
+        {
+            start = range.Start;
+            end = range.End;
+            matchMethod = "id-lookup";
+        }
+
+        // Fallback 2: find the best matching recorded utterance by text similarity
+        if (start < 0 && !string.IsNullOrWhiteSpace(originalText))
+        {
+            var bestMatch = FindBestUtteranceMatch(originalText);
+            if (bestMatch.HasValue)
+            {
+                start = bestMatch.Value.Start;
+                end = bestMatch.Value.End;
+                matchMethod = "utterance-text-match";
+            }
+        }
+
+        // Fallback 3: direct text search with originalText then sourceText
+        if (start < 0)
+        {
+            if (!string.IsNullOrWhiteSpace(originalText))
+            {
+                var idx = transcript.LastIndexOf(originalText, StringComparison.OrdinalIgnoreCase);
+                if (idx >= 0) { start = idx; end = idx + originalText.Length; matchMethod = "originalText-search"; }
+            }
+
+            if (start < 0 && !string.IsNullOrWhiteSpace(sourceText))
+            {
+                var idx = transcript.LastIndexOf(sourceText, StringComparison.OrdinalIgnoreCase);
+                if (idx >= 0) { start = idx; end = idx + sourceText.Length; matchMethod = "sourceText-search"; }
+            }
+        }
+
+        if (start < 0)
+        {
+            // Text not in transcript yet — queue for later resolution
+            _pendingHighlights.Add((utteranceId, sourceText, originalText));
+            AddDebug($"[Highlight] Queued pending for {utteranceId} (text not in transcript yet)");
+            return;
+        }
+
+        var highlightId = _nextHighlightId++;
+        AddDebug($"[Highlight] Added #{highlightId} for {utteranceId} [{start}..{end}] via {matchMethod}");
+        _transcriptView.AddHighlight(new HighlightRegion
+        {
+            Id = highlightId,
+            Start = start,
+            End = end,
+            Attr = _highlightAttr
+        });
+    }
+
+    private (int Start, int End)? FindBestUtteranceMatch(string intentText)
+    {
+        var intentWords = intentText.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .Select(w => w.ToLowerInvariant().Trim('.', '?', '!', ','))
+            .Where(w => w.Length > 2)
+            .ToHashSet();
+
+        if (intentWords.Count == 0) return null;
+
+        (int Start, int End)? bestMatch = null;
+        double bestScore = 0;
+
+        foreach (var pos in _utterancePositionList)
+        {
+            var uttWords = pos.Text.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                .Select(w => w.ToLowerInvariant().Trim('.', '?', '!', ','))
+                .Where(w => w.Length > 2)
+                .ToHashSet();
+
+            if (uttWords.Count == 0) continue;
+
+            var overlap = intentWords.Intersect(uttWords).Count();
+            var score = (double)overlap / Math.Max(intentWords.Count, uttWords.Count);
+
+            if (score > bestScore && score >= 0.4)
+            {
+                bestScore = score;
+                bestMatch = (pos.Start, pos.End);
+            }
+        }
+
+        return bestMatch;
+    }
+
+    private void ResolvePendingHighlights()
+    {
+        if (_pendingHighlights.Count == 0) return;
+
+        var resolved = new List<int>();
+        for (int i = 0; i < _pendingHighlights.Count; i++)
+        {
+            var (utteranceId, sourceText, originalText) = _pendingHighlights[i];
+
+            int start = -1;
+            int end = -1;
+            string matchMethod = "";
+
+            // Try utterance position lookup by exact ID
+            if (_utterancePositions.TryGetValue(utteranceId, out var range))
+            {
+                start = range.Start;
+                end = range.End;
+                matchMethod = "deferred-id-lookup";
+            }
+
+            // Try text similarity match against recorded utterances
+            if (start < 0 && !string.IsNullOrWhiteSpace(originalText))
+            {
+                var bestMatch = FindBestUtteranceMatch(originalText);
+                if (bestMatch.HasValue)
+                {
+                    start = bestMatch.Value.Start;
+                    end = bestMatch.Value.End;
+                    matchMethod = "deferred-utterance-text-match";
+                }
+            }
+
+            // Try direct transcript search
+            if (start < 0)
+            {
+                var transcript = _transcriptView.Text;
+                if (!string.IsNullOrWhiteSpace(originalText))
+                {
+                    var idx = transcript.LastIndexOf(originalText, StringComparison.OrdinalIgnoreCase);
+                    if (idx >= 0) { start = idx; end = idx + originalText.Length; matchMethod = "deferred-originalText-search"; }
+                }
+                if (start < 0 && !string.IsNullOrWhiteSpace(sourceText))
+                {
+                    var idx = transcript.LastIndexOf(sourceText, StringComparison.OrdinalIgnoreCase);
+                    if (idx >= 0) { start = idx; end = idx + sourceText.Length; matchMethod = "deferred-sourceText-search"; }
+                }
+            }
+
+            if (start >= 0)
+            {
+                var highlightId = _nextHighlightId++;
+                AddDebug($"[Highlight] Resolved pending #{highlightId} for {utteranceId} [{start}..{end}] via {matchMethod}");
+                _transcriptView.AddHighlight(new HighlightRegion
+                {
+                    Id = highlightId,
+                    Start = start,
+                    End = end,
+                    Attr = _highlightAttr
+                });
+                resolved.Add(i);
+            }
+        }
+
+        // Remove resolved items (reverse order to preserve indices)
+        for (int i = resolved.Count - 1; i >= 0; i--)
+            _pendingHighlights.RemoveAt(resolved[i]);
     }
 
     private void AddIntent(string intent)
@@ -1516,6 +1763,9 @@ public class TranscriptionApp
 
         // Auto-scroll to bottom
         _debugView.MoveEnd();
+
+        // Write to log file
+        try { _debugLogWriter?.WriteLine(line); } catch { /* ignore write errors */ }
     }
 
     private static string FormatSubtypeLabel(IntentSubtype? subtype) => subtype switch
@@ -1583,15 +1833,41 @@ public class TranscriptionApp
         };
     }
 
+    private string? LoadSystemPrompt()
+    {
+        var promptFile = _intentDetectionOptions.Llm.SystemPromptFile;
+        if (string.IsNullOrWhiteSpace(promptFile))
+            return null;
+
+        // Resolve relative paths from app base directory
+        if (!Path.IsPathRooted(promptFile))
+            promptFile = Path.Combine(AppContext.BaseDirectory, promptFile);
+
+        if (!File.Exists(promptFile))
+        {
+            AddDebug($"[Warn] System prompt file not found: {promptFile} — using default");
+            return null;
+        }
+
+        var text = File.ReadAllText(promptFile).Trim();
+        AddDebug($"[Config] Loaded system prompt from {promptFile} ({text.Length} chars)");
+        return text;
+    }
+
     private LlmIntentStrategy CreateLlmStrategy()
     {
         var apiKey = _intentDetectionOptions.Llm.ApiKey
             ?? throw new InvalidOperationException("OpenAI API key is required for LLM detection mode. Set OPENAI_API_KEY environment variable.");
 
+        var systemPrompt = LoadSystemPrompt();
+
         var detector = new OpenAiIntentDetector(
             apiKey,
             _intentDetectionOptions.Llm.Model,
-            _intentDetectionOptions.Llm.ConfidenceThreshold);
+            _intentDetectionOptions.Llm.ConfidenceThreshold,
+            systemPrompt);
+
+        WireLlmRequestLogging(detector);
 
         return new LlmIntentStrategy(detector, _intentDetectionOptions.Llm);
     }
@@ -1601,10 +1877,15 @@ public class TranscriptionApp
         var apiKey = _intentDetectionOptions.Llm.ApiKey
             ?? throw new InvalidOperationException("OpenAI API key is required for Parallel detection mode. Set OPENAI_API_KEY environment variable.");
 
+        var systemPrompt = LoadSystemPrompt();
+
         var llmDetector = new OpenAiIntentDetector(
             apiKey,
             _intentDetectionOptions.Llm.Model,
-            _intentDetectionOptions.Llm.ConfidenceThreshold);
+            _intentDetectionOptions.Llm.ConfidenceThreshold,
+            systemPrompt);
+
+        WireLlmRequestLogging(llmDetector);
 
         return new ParallelIntentStrategy(
             llmDetector,
@@ -1622,6 +1903,29 @@ public class TranscriptionApp
         // Reuse LlmIntentStrategy with Deepgram as the detector backend.
         // LLM options control buffering, rate limiting, triggers, and deduplication.
         return new LlmIntentStrategy(detector, _intentDetectionOptions.Llm);
+    }
+
+    private void WireLlmRequestLogging(OpenAiIntentDetector detector)
+    {
+        // Log system prompt once to file
+        try
+        {
+            _debugLogWriter?.WriteLine("═══ LLM System Prompt ═══");
+            _debugLogWriter?.WriteLine(detector.SystemPrompt);
+            _debugLogWriter?.WriteLine("═══ End System Prompt ═══");
+            _debugLogWriter?.WriteLine();
+        }
+        catch { /* ignore write errors */ }
+
+        detector.OnRequestSending += (userMessage) =>
+        {
+            Application.MainLoop?.Invoke(() =>
+            {
+                AddDebug("─── LLM Request ───");
+                AddDebug($"[User Message]\n{userMessage}");
+                AddDebug("─── End Request ───");
+            });
+        };
     }
 
     private static Color ParseHexColor(string hex)

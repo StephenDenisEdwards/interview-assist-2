@@ -12,10 +12,11 @@ public sealed class OpenAiIntentDetector : ILlmIntentDetector
     private readonly HttpClient _http;
     private readonly string _model;
     private readonly double _confidenceThreshold;
+    private readonly string _systemPrompt;
 
     private const string ChatCompletionsUrl = "https://api.openai.com/v1/chat/completions";
 
-    private const string SystemPrompt = """
+    public const string DefaultSystemPrompt = """
         You are an intent detection system analyzing real-time speech transcripts.
         Detect questions, imperatives, and other intents directed at a listener.
 
@@ -62,13 +63,24 @@ public sealed class OpenAiIntentDetector : ILlmIntentDetector
         If no intents found, return: {"intents": []}
         """;
 
-    public OpenAiIntentDetector(string apiKey, string model = "gpt-4o-mini", double confidenceThreshold = 0.7)
+    /// <summary>
+    /// Fires before each API call with the user message content.
+    /// </summary>
+    public event Action<string>? OnRequestSending;
+
+    /// <summary>
+    /// The system prompt in use.
+    /// </summary>
+    public string SystemPrompt => _systemPrompt;
+
+    public OpenAiIntentDetector(string apiKey, string model = "gpt-4o-mini", double confidenceThreshold = 0.7, string? systemPrompt = null)
     {
         if (string.IsNullOrWhiteSpace(apiKey))
             throw new ArgumentNullException(nameof(apiKey));
 
         _model = model;
         _confidenceThreshold = confidenceThreshold;
+        _systemPrompt = string.IsNullOrWhiteSpace(systemPrompt) ? DefaultSystemPrompt : systemPrompt;
         _http = new HttpClient();
         _http.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
     }
@@ -85,12 +97,14 @@ public sealed class OpenAiIntentDetector : ILlmIntentDetector
         {
             var userMessage = BuildUserMessage(text, previousContext);
 
+            OnRequestSending?.Invoke(userMessage);
+
             var requestBody = new
             {
                 model = _model,
                 messages = new object[]
                 {
-                    new { role = "system", content = SystemPrompt },
+                    new { role = "system", content = _systemPrompt },
                     new { role = "user", content = userMessage }
                 },
                 response_format = new { type = "json_object" },

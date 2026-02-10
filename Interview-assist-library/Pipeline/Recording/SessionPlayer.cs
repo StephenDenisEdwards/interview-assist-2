@@ -11,9 +11,13 @@ public sealed class SessionPlayer
 {
     private readonly List<RecordedEvent> _events = new();
     private readonly JsonSerializerOptions _jsonOptions;
+    private readonly object _pauseLock = new();
 
     private CancellationTokenSource? _cts;
+    private CancellationTokenSource? _delayCts; // cancelled on pause to interrupt current delay
+    private TaskCompletionSource? _pauseTcs; // non-null while paused; completed on resume
     private bool _isPlaying;
+    private bool _isPaused;
 
     public event Action<RecordedEvent>? OnEventPlayed;
     public event Action<string>? OnInfo;
@@ -21,6 +25,7 @@ public sealed class SessionPlayer
 
     public SessionConfig? SessionConfig { get; private set; }
     public bool IsPlaying => _isPlaying;
+    public bool IsPaused => _isPaused;
     public int TotalEvents => _events.Count;
     public int CurrentEventIndex { get; private set; }
 
@@ -101,11 +106,52 @@ public sealed class SessionPlayer
                     continue;
                 }
 
+                // Block while paused (async-friendly)
+                TaskCompletionSource? tcs;
+                lock (_pauseLock) { tcs = _pauseTcs; }
+                if (tcs != null)
+                {
+                    // Wait until resumed or cancelled
+                    using var reg = token.Register(() => tcs.TrySetCanceled());
+                    await tcs.Task;
+                }
+
+                token.ThrowIfCancellationRequested();
+
                 // Wait for appropriate delay to simulate realtime
                 var delayMs = evt.OffsetMs - previousOffsetMs;
                 if (delayMs > 0)
                 {
-                    await Task.Delay((int)delayMs, token);
+                    using var delayCts = CancellationTokenSource.CreateLinkedTokenSource(token);
+                    lock (_pauseLock)
+                    {
+                        _delayCts = delayCts;
+                        // Close race: if Pause() was called between the check above and here,
+                        // cancel immediately so we don't sleep through the pause request
+                        if (_pauseTcs != null) delayCts.Cancel();
+                    }
+                    try
+                    {
+                        await Task.Delay((int)delayMs, delayCts.Token);
+                    }
+                    catch (OperationCanceledException) when (!token.IsCancellationRequested)
+                    {
+                        // Delay interrupted by pause — wait on the pause gate
+                    }
+                    finally
+                    {
+                        lock (_pauseLock) { _delayCts = null; }
+                    }
+
+                    // Re-check pause after delay (handles both race and interrupt cases)
+                    TaskCompletionSource? tcs2;
+                    lock (_pauseLock) { tcs2 = _pauseTcs; }
+                    if (tcs2 != null)
+                    {
+                        using var reg = token.Register(() => tcs2.TrySetCanceled());
+                        await tcs2.Task;
+                    }
+                    token.ThrowIfCancellationRequested();
                 }
                 previousOffsetMs = evt.OffsetMs;
 
@@ -155,10 +201,59 @@ public sealed class SessionPlayer
     }
 
     /// <summary>
+    /// Pause playback. Interrupts the current delay for immediate effect.
+    /// </summary>
+    public void Pause()
+    {
+        if (!_isPlaying || _isPaused) return;
+
+        lock (_pauseLock)
+        {
+            _isPaused = true;
+            _pauseTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            _delayCts?.Cancel(); // interrupt current delay so pause takes effect immediately
+        }
+        OnInfo?.Invoke("Playback paused");
+    }
+
+    /// <summary>
+    /// Resume paused playback.
+    /// </summary>
+    public void Resume()
+    {
+        if (!_isPaused) return;
+
+        lock (_pauseLock)
+        {
+            _isPaused = false;
+            _pauseTcs?.TrySetResult();
+            _pauseTcs = null;
+        }
+        OnInfo?.Invoke("Playback resumed");
+    }
+
+    /// <summary>
+    /// Toggle between paused and playing.
+    /// </summary>
+    public void TogglePause()
+    {
+        if (_isPaused)
+            Resume();
+        else
+            Pause();
+    }
+
+    /// <summary>
     /// Stop playback.
     /// </summary>
     public void Stop()
     {
+        lock (_pauseLock)
+        {
+            _isPaused = false;
+            _pauseTcs?.TrySetResult(); // unblock if paused so cancellation can proceed
+            _pauseTcs = null;
+        }
         _cts?.Cancel();
     }
 }
