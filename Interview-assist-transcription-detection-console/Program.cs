@@ -30,6 +30,7 @@ public partial class Program
         string? baselineVersion = null;
         string? datasetFile = null;
         string? generateTestsFile = null;
+        bool headless = false;
 
         for (int i = 0; i < args.Length; i++)
         {
@@ -108,6 +109,10 @@ public partial class Program
                 generateTestsFile = args[i + 1];
                 i++;
             }
+            else if (args[i] == "--headless")
+            {
+                headless = true;
+            }
             else if (args[i] == "--help" || args[i] == "-h")
             {
                 Console.WriteLine("Interview Assist - Transcription & Detection Console");
@@ -115,6 +120,7 @@ public partial class Program
                 Console.WriteLine("Usage:");
                 Console.WriteLine("  dotnet run                                Normal mode (live audio)");
                 Console.WriteLine("  dotnet run -- --playback <file>           Playback mode (from recorded session)");
+                Console.WriteLine("  dotnet run -- --playback <file> --headless  Headless playback (no UI, console summary)");
                 Console.WriteLine("  dotnet run -- --evaluate <file>           Evaluate question detection accuracy");
                 Console.WriteLine("  dotnet run -- --compare <file>            Compare all detection strategies");
                 Console.WriteLine("  dotnet run -- --tune-threshold <file>     Find optimal confidence threshold");
@@ -140,6 +146,7 @@ public partial class Program
                 Console.WriteLine("  --model <model>         Model for ground truth extraction (default: gpt-4o)");
                 Console.WriteLine("  --output <file>         Output file for evaluation report (.json)");
                 Console.WriteLine("  --analyze-errors <file> Analyze false positive patterns from evaluation report");
+                Console.WriteLine("  --headless              Run playback without Terminal.Gui UI (headless mode)");
                 Console.WriteLine("  --help, -h              Show this help message");
                 Console.WriteLine();
                 Console.WriteLine("Keyboard shortcuts in normal mode:");
@@ -207,6 +214,12 @@ public partial class Program
         {
             var output = evaluateOutput ?? Path.ChangeExtension(generateTestsFile, ".generated.jsonl");
             return await RunGenerateTestsModeAsync(generateTestsFile, output);
+        }
+
+        // Handle headless playback mode (non-interactive)
+        if (playbackFile != null && headless)
+        {
+            return await RunHeadlessPlaybackAsync(playbackFile, playbackMode);
         }
 
         // Build configuration
@@ -742,6 +755,521 @@ public partial class Program
 
         return 0;
     }
+
+    /// <summary>
+    /// Creates an intent detection strategy from a mode string and options.
+    /// Used by both TranscriptionApp and headless playback.
+    /// </summary>
+    internal static IIntentDetectionStrategy? CreateDetectionStrategyForMode(
+        string? modeStr, IntentDetectionOptions options, Action<string>? log = null)
+    {
+        var mode = modeStr?.ToLowerInvariant() switch
+        {
+            "heuristic" => IntentDetectionMode.Heuristic,
+            "llm" => IntentDetectionMode.Llm,
+            "parallel" => IntentDetectionMode.Parallel,
+            "deepgram" => IntentDetectionMode.Deepgram,
+            _ => options.Mode
+        };
+
+        return mode switch
+        {
+            IntentDetectionMode.Heuristic => new HeuristicIntentStrategy(options.Heuristic),
+            IntentDetectionMode.Llm => CreateLlmStrategyStatic(options, log),
+            IntentDetectionMode.Parallel => CreateParallelStrategyStatic(options, log),
+            IntentDetectionMode.Deepgram => CreateDeepgramStrategyStatic(options),
+            _ => new HeuristicIntentStrategy(options.Heuristic)
+        };
+    }
+
+    private static LlmIntentStrategy CreateLlmStrategyStatic(IntentDetectionOptions options, Action<string>? log = null)
+    {
+        var apiKey = options.Llm.ApiKey
+            ?? throw new InvalidOperationException("OpenAI API key is required for LLM detection mode.");
+
+        var systemPrompt = LoadSystemPromptStatic(options.Llm.SystemPromptFile, log);
+
+        var detector = new OpenAiIntentDetector(
+            apiKey, options.Llm.Model, options.Llm.ConfidenceThreshold, systemPrompt);
+
+        return new LlmIntentStrategy(detector, options.Llm);
+    }
+
+    private static ParallelIntentStrategy CreateParallelStrategyStatic(IntentDetectionOptions options, Action<string>? log = null)
+    {
+        var apiKey = options.Llm.ApiKey
+            ?? throw new InvalidOperationException("OpenAI API key is required for Parallel detection mode.");
+
+        var systemPrompt = LoadSystemPromptStatic(options.Llm.SystemPromptFile, log);
+
+        var llmDetector = new OpenAiIntentDetector(
+            apiKey, options.Llm.Model, options.Llm.ConfidenceThreshold, systemPrompt);
+
+        return new ParallelIntentStrategy(llmDetector, options.Heuristic, options.Llm);
+    }
+
+    private static LlmIntentStrategy CreateDeepgramStrategyStatic(IntentDetectionOptions options)
+    {
+        var apiKey = options.Deepgram.ApiKey
+            ?? throw new InvalidOperationException("Deepgram API key is required for Deepgram detection mode.");
+
+        var detector = new DeepgramIntentDetector(apiKey, options.Deepgram);
+        return new LlmIntentStrategy(detector, options.Llm);
+    }
+
+    private static string? LoadSystemPromptStatic(string? promptFile, Action<string>? log)
+    {
+        if (string.IsNullOrWhiteSpace(promptFile))
+            return null;
+
+        if (!Path.IsPathRooted(promptFile))
+            promptFile = Path.Combine(AppContext.BaseDirectory, promptFile);
+
+        if (!File.Exists(promptFile))
+        {
+            log?.Invoke($"System prompt file not found: {promptFile} — using default");
+            return null;
+        }
+
+        var text = File.ReadAllText(promptFile).Trim();
+        log?.Invoke($"Loaded system prompt from {promptFile} ({text.Length} chars)");
+        return text;
+    }
+
+    private static async Task<int> RunHeadlessPlaybackAsync(string playbackFile, string? modeOverride)
+    {
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+
+        // Build configuration
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+            .AddEnvironmentVariables()
+            .AddUserSecrets<Program>(optional: true)
+            .Build();
+
+        // Load intent detection options
+        var intentConfig = configuration.GetSection("Transcription:IntentDetection");
+        var intentDetectionOptions = LoadIntentDetectionOptions(intentConfig, configuration);
+
+        // Logging setup
+        var loggingConfig = configuration.GetSection("Logging");
+        var logFolder = loggingConfig["Folder"] ?? "logs";
+        Directory.CreateDirectory(logFolder);
+        var logFileName = Path.Combine(logFolder, $"transcription-detection-{DateTime.Now:yyyyMMdd-HHmmss}.log");
+        await using var logWriter = new StreamWriter(logFileName, append: false) { AutoFlush = true };
+
+        void Log(string msg)
+        {
+            var line = $"[{DateTime.Now:HH:mm:ss.fff}] {msg}";
+            Console.WriteLine(line);
+            try { logWriter.WriteLine(line); } catch { }
+        }
+
+        // Recording setup
+        var recordingConfig = configuration.GetSection("Recording");
+        var recordingOptions = new RecordingOptions
+        {
+            Folder = recordingConfig["Folder"] ?? "recordings",
+            FileNamePattern = recordingConfig["FileNamePattern"] ?? "session-{timestamp}.jsonl"
+        };
+
+        var extension = Path.GetExtension(playbackFile).ToLowerInvariant();
+        var isWav = extension == ".wav";
+
+        Log($"Headless playback: {playbackFile}");
+
+        // Stats collectors
+        var stats = new HeadlessPlaybackStats();
+
+        if (isWav)
+        {
+            return await RunHeadlessWavPlaybackAsync(
+                playbackFile, modeOverride, configuration, intentDetectionOptions,
+                recordingOptions, logFileName, Log, sw, stats);
+        }
+
+        // ── JSONL playback ──
+        var player = new SessionPlayer();
+        player.OnInfo += msg => Log($"[Playback] {msg}");
+
+        Log("Loading session...");
+        await player.LoadAsync(playbackFile);
+        stats.TotalEvents = player.TotalEvents;
+
+        // Determine effective detection mode
+        var recordedMode = player.SessionConfig?.IntentDetectionMode;
+        var effectiveMode = modeOverride ?? recordedMode;
+
+        // Check API key availability
+        var requiresOpenAiKey = effectiveMode?.ToLowerInvariant() is "llm" or "parallel";
+        var requiresDeepgramKey = effectiveMode?.ToLowerInvariant() is "deepgram";
+
+        if (requiresOpenAiKey && string.IsNullOrWhiteSpace(intentDetectionOptions.Llm.ApiKey))
+        {
+            Log($"WARNING: {effectiveMode} mode requires OpenAI API key. Falling back to Heuristic mode.");
+            effectiveMode = "Heuristic";
+        }
+        else if (requiresDeepgramKey && string.IsNullOrWhiteSpace(intentDetectionOptions.Deepgram.ApiKey))
+        {
+            Log($"WARNING: {effectiveMode} mode requires Deepgram API key. Falling back to Heuristic mode.");
+            effectiveMode = "Heuristic";
+        }
+
+        var strategy = CreateDetectionStrategyForMode(effectiveMode, intentDetectionOptions, Log);
+        using var pipeline = new UtteranceIntentPipeline(detectionStrategy: strategy);
+        var modeName = pipeline.DetectionModeName;
+
+        Log($"Detection mode: {modeName} (override={modeOverride ?? "none"}, recorded={recordedMode ?? "none"})");
+
+        // Wire recorder
+        var recorder = new SessionRecorder(pipeline);
+        recorder.OnInfo += msg => Log($"[Recording] {msg}");
+        var outputPath = recordingOptions.GenerateFilePath();
+        var sessionConfig = new SessionConfig
+        {
+            IntentDetectionEnabled = true,
+            IntentDetectionMode = modeName,
+            AudioSource = "Playback"
+        };
+        recorder.Start(outputPath, sessionConfig);
+
+        // Wire pipeline events for stats
+        WireHeadlessPipelineEvents(pipeline, Log, stats);
+
+        pipeline.OnUtteranceFinal += evt =>
+        {
+            if (!stats.IntentTimestamps.ContainsKey(evt.Id))
+                stats.IntentTimestamps[evt.Id] = evt.StartTime;
+        };
+
+        stats.TotalEvents = player.TotalEvents;
+
+        // Play
+        Log($"Starting playback ({stats.TotalEvents} events)...");
+        using var cts = new CancellationTokenSource();
+        Console.CancelKeyPress += (_, e) => { e.Cancel = true; cts.Cancel(); };
+
+        try
+        {
+            await player.PlayAsync(pipeline, cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            Log("Playback cancelled.");
+        }
+
+        // Wait for in-flight LLM calls
+        if (modeName is "LLM" or "Parallel")
+        {
+            Log("Waiting for in-flight LLM calls...");
+            await Task.Delay(5000);
+        }
+
+        recorder.Stop();
+        sw.Stop();
+
+        PrintHeadlessSummary(playbackFile, outputPath, logFileName, modeName, sw.Elapsed, stats);
+
+        return 0;
+    }
+
+    private static async Task<int> RunHeadlessWavPlaybackAsync(
+        string playbackFile, string? modeOverride,
+        IConfiguration configuration, IntentDetectionOptions intentDetectionOptions,
+        RecordingOptions recordingOptions, string logFileName,
+        Action<string> log, System.Diagnostics.Stopwatch sw,
+        HeadlessPlaybackStats stats)
+    {
+        // Load Deepgram settings
+        var transcriptionConfig = configuration.GetSection("Transcription");
+        var deepgramConfig = transcriptionConfig.GetSection("Deepgram");
+        var sampleRate = transcriptionConfig.GetValue("SampleRate", 16000);
+        var language = transcriptionConfig["Language"] ?? "en";
+
+        var deepgramApiKey = GetFirstNonEmpty(
+            configuration["Deepgram:ApiKey"],
+            Environment.GetEnvironmentVariable("DEEPGRAM_API_KEY"));
+
+        if (string.IsNullOrWhiteSpace(deepgramApiKey))
+        {
+            Console.WriteLine("Error: Deepgram API key required for WAV playback.");
+            Console.WriteLine("Set DEEPGRAM_API_KEY environment variable or add Deepgram:ApiKey to appsettings.json.");
+            return 1;
+        }
+
+        var deepgramOptions = new DeepgramOptions
+        {
+            ApiKey = deepgramApiKey,
+            Model = deepgramConfig["Model"] ?? "nova-2",
+            Language = language,
+            SampleRate = sampleRate,
+            InterimResults = deepgramConfig.GetValue("InterimResults", true),
+            Punctuate = deepgramConfig.GetValue("Punctuate", true),
+            SmartFormat = deepgramConfig.GetValue("SmartFormat", true),
+            EndpointingMs = deepgramConfig.GetValue("EndpointingMs", 300),
+            UtteranceEndMs = deepgramConfig.GetValue("UtteranceEndMs", 1000),
+            Keywords = deepgramConfig["Keywords"],
+            Vad = deepgramConfig.GetValue("Vad", true),
+            Diarize = deepgramConfig.GetValue("Diarize", false)
+        };
+
+        // Determine detection mode
+        var effectiveMode = modeOverride;
+        if (effectiveMode == null)
+        {
+            var modeStr = transcriptionConfig["IntentDetection:Mode"] ?? "Heuristic";
+            effectiveMode = modeStr;
+        }
+
+        var requiresOpenAiKey = effectiveMode.ToLowerInvariant() is "llm" or "parallel";
+        if (requiresOpenAiKey && string.IsNullOrWhiteSpace(intentDetectionOptions.Llm.ApiKey))
+        {
+            log($"WARNING: {effectiveMode} mode requires OpenAI API key. Falling back to Heuristic mode.");
+            effectiveMode = "Heuristic";
+        }
+
+        var strategy = CreateDetectionStrategyForMode(effectiveMode, intentDetectionOptions, log);
+        using var pipeline = new UtteranceIntentPipeline(detectionStrategy: strategy);
+        var modeName = pipeline.DetectionModeName;
+
+        log($"Detection mode: {modeName}");
+
+        // Wire recorder
+        var recorder = new SessionRecorder(pipeline);
+        recorder.OnInfo += msg => log($"[Recording] {msg}");
+        var outputPath = recordingOptions.GenerateFilePath();
+        var sessionConfig = new SessionConfig
+        {
+            DeepgramModel = deepgramOptions.Model,
+            IntentDetectionEnabled = true,
+            IntentDetectionMode = modeName,
+            AudioSource = "WAV Playback",
+            SampleRate = sampleRate
+        };
+        recorder.Start(outputPath, sessionConfig);
+
+        // Wire pipeline events for stats
+        WireHeadlessPipelineEvents(pipeline, log, stats);
+
+        pipeline.OnUtteranceFinal += evt =>
+        {
+            if (!stats.IntentTimestamps.ContainsKey(evt.Id))
+                stats.IntentTimestamps[evt.Id] = evt.StartTime;
+        };
+
+        // Create audio source and Deepgram service
+        var wavAudio = new WavFileAudioSource(playbackFile, sampleRate);
+        var deepgramService = new DeepgramTranscriptionService(wavAudio, deepgramOptions);
+
+        // Wire Deepgram events to pipeline
+        var eventCount = 0;
+        deepgramService.OnStableText += args =>
+        {
+            Interlocked.Increment(ref eventCount);
+            pipeline.ProcessAsrEvent(new AsrEvent
+            {
+                Text = args.Text,
+                IsFinal = true,
+                SpeakerId = args.Speaker?.ToString()
+            });
+        };
+
+        deepgramService.OnProvisionalText += args =>
+        {
+            if (!string.IsNullOrWhiteSpace(args.Text))
+            {
+                pipeline.ProcessAsrEvent(new AsrEvent
+                {
+                    Text = args.Text,
+                    IsFinal = false,
+                    SpeakerId = args.Speaker?.ToString()
+                });
+            }
+        };
+
+        deepgramService.OnInfo += msg =>
+        {
+            if (msg.Contains("Utterance end"))
+                pipeline.SignalUtteranceEnd();
+            log($"[Deepgram] {msg}");
+        };
+
+        deepgramService.OnWarning += msg => log($"[Deepgram.Warn] {msg}");
+        deepgramService.OnError += ex => log($"[Deepgram.Error] {ex.Message}");
+
+        // Wait for playback to complete
+        var playbackComplete = new TaskCompletionSource();
+        wavAudio.OnPlaybackComplete += () =>
+        {
+            _ = Task.Run(async () =>
+            {
+                log("WAV playback complete, waiting for final results...");
+                await Task.Delay(3000);
+                playbackComplete.TrySetResult();
+            });
+        };
+
+        log($"Starting WAV playback via Deepgram (model: {deepgramOptions.Model})...");
+        using var cts = new CancellationTokenSource();
+        Console.CancelKeyPress += (_, e) => { e.Cancel = true; cts.Cancel(); playbackComplete.TrySetResult(); };
+
+        try
+        {
+            // StartAsync runs until Deepgram connection closes or cancellation
+            var deepgramTask = deepgramService.StartAsync(cts.Token);
+
+            // Wait for playback to finish (with WAV complete callback)
+            await playbackComplete.Task;
+
+            // Stop Deepgram
+            await deepgramService.StopAsync();
+        }
+        catch (OperationCanceledException)
+        {
+            log("WAV playback cancelled.");
+        }
+
+        // Wait for in-flight LLM calls
+        if (modeName is "LLM" or "Parallel")
+        {
+            log("Waiting for in-flight LLM calls...");
+            await Task.Delay(5000);
+        }
+
+        stats.TotalEvents = eventCount;
+
+        recorder.Stop();
+        await deepgramService.DisposeAsync();
+        wavAudio.Dispose();
+        sw.Stop();
+
+        PrintHeadlessSummary(playbackFile, outputPath, logFileName, modeName, sw.Elapsed, stats);
+
+        return 0;
+    }
+
+    private static void WireHeadlessPipelineEvents(
+        UtteranceIntentPipeline pipeline, Action<string> log, HeadlessPlaybackStats stats)
+    {
+        pipeline.OnIntentCandidate += evt =>
+        {
+            Interlocked.Increment(ref stats.CandidateCount);
+            log($"[Intent.candidate] {evt.Intent.Type}/{evt.Intent.Subtype} conf={evt.Intent.Confidence:F2} utt={evt.UtteranceId}");
+        };
+
+        pipeline.OnIntentFinal += evt =>
+        {
+            if (evt.Intent.Type == IntentType.Question)
+            {
+                var latencyMs = 0L;
+                if (stats.IntentTimestamps.TryGetValue(evt.UtteranceId, out var startTime))
+                    latencyMs = (long)(evt.Timestamp - startTime).TotalMilliseconds;
+
+                var index = stats.FinalIntents.Count + 1;
+                stats.FinalIntents.Add((index, evt.UtteranceId, evt.Intent, latencyMs));
+
+                log($"[Intent.final] #{index} {evt.Intent.Type}/{evt.Intent.Subtype} conf={evt.Intent.Confidence:F2} latency={latencyMs}ms");
+                log($"  Source: \"{evt.Intent.SourceText}\"");
+                log($"  Original: \"{evt.Intent.OriginalText ?? "(not available)"}\"");
+            }
+        };
+
+        pipeline.OnIntentCorrected += evt =>
+        {
+            if (evt.CorrectedIntent.Type == IntentType.Question)
+            {
+                var latencyMs = 0L;
+                if (stats.IntentTimestamps.TryGetValue(evt.UtteranceId, out var startTime))
+                    latencyMs = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
+
+                var index = stats.FinalIntents.Count + 1;
+                stats.FinalIntents.Add((index, evt.UtteranceId, evt.CorrectedIntent, latencyMs));
+
+                log($"[Intent.corrected] #{index} {evt.CorrectionType}: conf={evt.CorrectedIntent.Confidence:F2} latency={latencyMs}ms");
+                log($"  Source: \"{evt.CorrectedIntent.SourceText}\"");
+                log($"  Original: \"{evt.CorrectedIntent.OriginalText ?? "(not available)"}\"");
+            }
+        };
+
+        pipeline.OnUtteranceFinal += evt =>
+        {
+            log($"[Utterance.final] {evt.Id}: \"{Truncate(evt.StableText, 60)}\" ({evt.CloseReason})");
+        };
+    }
+
+    private static void PrintHeadlessSummary(
+        string sourceFile, string outputFile, string logFile, string modeName,
+        TimeSpan duration, HeadlessPlaybackStats stats)
+    {
+        Console.WriteLine();
+        Console.WriteLine("═══ Headless Playback Summary ═══");
+        Console.WriteLine($"Source:    {sourceFile}");
+        Console.WriteLine($"Output:    {outputFile}");
+        Console.WriteLine($"Log:       {logFile}");
+        Console.WriteLine($"Mode:      {modeName}");
+        Console.WriteLine($"Duration:  {duration.TotalSeconds:F1}s ({stats.TotalEvents} events)");
+        Console.WriteLine();
+
+        Console.WriteLine("Intents Detected:");
+        Console.WriteLine($"  Candidates: {stats.CandidateCount}");
+        Console.WriteLine($"  Finals:     {stats.FinalIntents.Count}");
+        Console.WriteLine();
+
+        if (stats.FinalIntents.Count > 0)
+        {
+            Console.WriteLine("Final Intent Details:");
+            var exactMatches = 0;
+
+            foreach (var (index, uttId, intent, latencyMs) in stats.FinalIntents)
+            {
+                Console.WriteLine($"  #{index} [{uttId}] {intent.Subtype} conf={intent.Confidence:F2} latency={latencyMs}ms");
+                Console.WriteLine($"     Source:   \"{Truncate(intent.SourceText, 80)}\"");
+                Console.WriteLine($"     Original: \"{Truncate(intent.OriginalText ?? "(not available)", 80)}\"");
+
+                var isMatch = intent.OriginalText != null &&
+                    string.Equals(intent.SourceText.Trim(), intent.OriginalText.Trim(), StringComparison.OrdinalIgnoreCase);
+                Console.WriteLine($"     Match: {(isMatch ? "YES" : "NO")}");
+                if (isMatch) exactMatches++;
+            }
+
+            Console.WriteLine();
+            var total = stats.FinalIntents.Count;
+            Console.WriteLine($"originalText Accuracy: {exactMatches}/{total} ({(total > 0 ? 100.0 * exactMatches / total : 0):F1}%) exact match");
+            Console.WriteLine();
+
+            // Latency stats
+            var latencies = stats.FinalIntents.Where(f => f.LatencyMs > 0).Select(f => f.LatencyMs).OrderBy(l => l).ToList();
+            if (latencies.Count > 0)
+            {
+                Console.WriteLine("Latency (finals):");
+                Console.WriteLine($"  Min:    {latencies.First()}ms");
+                Console.WriteLine($"  Median: {latencies[latencies.Count / 2]}ms");
+                Console.WriteLine($"  Mean:   {(long)latencies.Average()}ms");
+                Console.WriteLine($"  Max:    {latencies.Last()}ms");
+            }
+        }
+
+        Console.WriteLine("═══════════════════════════════════");
+    }
+
+    private static string Truncate(string text, int maxLength)
+    {
+        if (string.IsNullOrEmpty(text) || text.Length <= maxLength)
+            return text;
+        return text[..maxLength] + "...";
+    }
+}
+
+/// <summary>
+/// Mutable stats container for headless playback (avoids ref parameter issues in async methods).
+/// </summary>
+internal class HeadlessPlaybackStats
+{
+    public int CandidateCount;
+    public int TotalEvents;
+    public readonly List<(int Index, string UtteranceId, DetectedIntent Intent, long LatencyMs)> FinalIntents = new();
+    public readonly Dictionary<string, DateTime> IntentTimestamps = new();
 }
 
 /// <summary>
