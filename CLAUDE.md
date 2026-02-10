@@ -31,6 +31,9 @@ dotnet run --project Interview-assist-transcription-detection-console/Interview-
 
 # Run headless WAV playback (re-transcribes via Deepgram, no UI)
 dotnet run --project Interview-assist-transcription-detection-console/Interview-assist-transcription-detection-console.csproj -- --playback recordings/session.wav --headless
+
+# Generate report from existing session JSONL (no audio/API required)
+dotnet run --project Interview-assist-transcription-detection-console/Interview-assist-transcription-detection-console.csproj -- --analyze recordings/session.jsonl
 ```
 
 ## Test Commands

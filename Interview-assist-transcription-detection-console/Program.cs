@@ -30,6 +30,7 @@ public partial class Program
         string? baselineVersion = null;
         string? datasetFile = null;
         string? generateTestsFile = null;
+        string? analyzeSessionFile = null;
         bool headless = false;
 
         for (int i = 0; i < args.Length; i++)
@@ -109,6 +110,11 @@ public partial class Program
                 generateTestsFile = args[i + 1];
                 i++;
             }
+            else if (args[i] == "--analyze" && i + 1 < args.Length)
+            {
+                analyzeSessionFile = args[i + 1];
+                i++;
+            }
             else if (args[i] == "--headless")
             {
                 headless = true;
@@ -121,6 +127,7 @@ public partial class Program
                 Console.WriteLine("  dotnet run                                Normal mode (live audio)");
                 Console.WriteLine("  dotnet run -- --playback <file>           Playback mode (from recorded session)");
                 Console.WriteLine("  dotnet run -- --playback <file> --headless  Headless playback (no UI, console summary)");
+                Console.WriteLine("  dotnet run -- --analyze <file>            Generate report from existing session JSONL");
                 Console.WriteLine("  dotnet run -- --evaluate <file>           Evaluate question detection accuracy");
                 Console.WriteLine("  dotnet run -- --compare <file>            Compare all detection strategies");
                 Console.WriteLine("  dotnet run -- --tune-threshold <file>     Find optimal confidence threshold");
@@ -146,6 +153,7 @@ public partial class Program
                 Console.WriteLine("  --model <model>         Model for ground truth extraction (default: gpt-4o)");
                 Console.WriteLine("  --output <file>         Output file for evaluation report (.json)");
                 Console.WriteLine("  --analyze-errors <file> Analyze false positive patterns from evaluation report");
+                Console.WriteLine("  --analyze <file>        Generate markdown report from existing session JSONL");
                 Console.WriteLine("  --headless              Run playback without Terminal.Gui UI (headless mode)");
                 Console.WriteLine("  --help, -h              Show this help message");
                 Console.WriteLine();
@@ -214,6 +222,12 @@ public partial class Program
         {
             var output = evaluateOutput ?? Path.ChangeExtension(generateTestsFile, ".generated.jsonl");
             return await RunGenerateTestsModeAsync(generateTestsFile, output);
+        }
+
+        // Handle analyze mode (non-interactive)
+        if (analyzeSessionFile != null)
+        {
+            return await RunAnalyzeSessionAsync(analyzeSessionFile);
         }
 
         // Handle headless playback mode (non-interactive)
@@ -969,7 +983,16 @@ public partial class Program
         recorder.Stop();
         sw.Stop();
 
-        PrintHeadlessSummary(playbackFile, outputPath, logFileName, modeName, sw.Elapsed, stats);
+        // Auto-generate session report
+        var reportEvents = await SessionReportGenerator.LoadEventsAsync(outputPath);
+        var report = SessionReportGenerator.GenerateMarkdown(reportEvents,
+            sourceFile: playbackFile, outputFile: outputPath,
+            logFile: logFileName, wallClockDuration: sw.Elapsed);
+        var reportPath = Path.ChangeExtension(outputPath, ".report.md");
+        await File.WriteAllTextAsync(reportPath, report);
+        Log($"Report: {reportPath}");
+
+        PrintHeadlessSummary(playbackFile, outputPath, logFileName, modeName, sw.Elapsed, stats, reportPath);
 
         return 0;
     }
@@ -1144,7 +1167,16 @@ public partial class Program
         wavAudio.Dispose();
         sw.Stop();
 
-        PrintHeadlessSummary(playbackFile, outputPath, logFileName, modeName, sw.Elapsed, stats);
+        // Auto-generate session report
+        var reportEvents = await SessionReportGenerator.LoadEventsAsync(outputPath);
+        var report = SessionReportGenerator.GenerateMarkdown(reportEvents,
+            sourceFile: playbackFile, outputFile: outputPath,
+            logFile: logFileName, wallClockDuration: sw.Elapsed);
+        var reportPath = Path.ChangeExtension(outputPath, ".report.md");
+        await File.WriteAllTextAsync(reportPath, report);
+        log($"Report: {reportPath}");
+
+        PrintHeadlessSummary(playbackFile, outputPath, logFileName, modeName, sw.Elapsed, stats, reportPath);
 
         return 0;
     }
@@ -1198,15 +1230,48 @@ public partial class Program
         };
     }
 
+    private static async Task<int> RunAnalyzeSessionAsync(string sessionFile)
+    {
+        if (!File.Exists(sessionFile))
+        {
+            Console.WriteLine($"Error: File not found: {sessionFile}");
+            return 1;
+        }
+
+        Console.WriteLine($"Analyzing: {sessionFile}");
+
+        var events = await SessionReportGenerator.LoadEventsAsync(sessionFile);
+        if (events.Count == 0)
+        {
+            Console.WriteLine("Error: No events found in file.");
+            return 1;
+        }
+
+        var report = SessionReportGenerator.GenerateMarkdown(events, sourceFile: sessionFile);
+        var reportPath = Path.ChangeExtension(sessionFile, ".report.md");
+        await File.WriteAllTextAsync(reportPath, report);
+
+        Console.WriteLine($"Report:    {reportPath}");
+        Console.WriteLine($"Events:    {events.Count}");
+
+        var intents = events.OfType<RecordedIntentEvent>().Where(e => !e.Data.IsCandidate).ToList();
+        var corrections = events.OfType<RecordedIntentCorrectionEvent>().ToList();
+        Console.WriteLine($"Intents:   {intents.Count} final, {corrections.Count} corrections");
+
+        return 0;
+    }
+
     private static void PrintHeadlessSummary(
         string sourceFile, string outputFile, string logFile, string modeName,
-        TimeSpan duration, HeadlessPlaybackStats stats)
+        TimeSpan duration, HeadlessPlaybackStats stats, string? reportPath = null)
     {
         Console.WriteLine();
         Console.WriteLine("═══ Headless Playback Summary ═══");
         Console.WriteLine($"Source:    {sourceFile}");
         Console.WriteLine($"Output:    {outputFile}");
         Console.WriteLine($"Log:       {logFile}");
+        if (reportPath != null)
+            Console.WriteLine($"Report:    {reportPath}");
         Console.WriteLine($"Mode:      {modeName}");
         Console.WriteLine($"Duration:  {duration.TotalSeconds:F1}s ({stats.TotalEvents} events)");
         Console.WriteLine();
