@@ -44,6 +44,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "decisions", "decisions", "{
 		documentation\docs\architecture\decisions\ADR-006-deepgram-intent-recognition.md = documentation\docs\architecture\decisions\ADR-006-deepgram-intent-recognition.md
 		documentation\docs\architecture\decisions\ADR-007-multi-strategy-intent-detection.md = documentation\docs\architecture\decisions\ADR-007-multi-strategy-intent-detection.md
 		documentation\docs\architecture\decisions\ADR-008-utterance-segmentation.md = documentation\docs\architecture\decisions\ADR-008-utterance-segmentation.md
+		documentation\docs\architecture\decisions\ADR-009-logging-action-callback.md = documentation\docs\architecture\decisions\ADR-009-logging-action-callback.md
 		documentation\docs\architecture\decisions\README.md = documentation\docs\architecture\decisions\README.md
 	EndProjectSection
 EndProject
