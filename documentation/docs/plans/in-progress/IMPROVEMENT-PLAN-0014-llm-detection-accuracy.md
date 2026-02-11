@@ -83,6 +83,21 @@ Test `gpt-4o` instead of `gpt-4o-mini`. The `ILlmIntentDetector` abstraction mak
 
 Apply `ThresholdTuner` results. Analyze whether a single threshold works or if adaptive thresholding is needed per-recording characteristics.
 
+## Progress Tracker
+
+| Step | Description | Status | Notes |
+|------|-------------|--------|-------|
+| 1 | Sliding Context Window | Done | Fully implemented in `LlmIntentStrategy.cs` with utterance lists and context window separation |
+| 2 | Error Patterns in Prompt | Not Started | `ErrorAnalyzer` exists but patterns not yet injected into LLM prompt |
+| 3 | Human-Labeled Ground Truth | Not Started | No human-labeled JSON files created yet |
+| 4 | Two-Pass Classification | Not Started | Still single-pass in `OpenAiIntentDetector` |
+| 5 | Rhetorical Question Filter | Not Started | No post-filter implemented |
+| 6 | Buffer Size Experiment | Not Started | Infrastructure is configurable (`BufferMaxChars`), default still 800 |
+| 7 | Model Upgrade (gpt-4o) | Not Started | Latency test exists in `QuickLatencyTests.cs`, not deployed |
+| 8 | Threshold Tuning | Not Started | `ThresholdTuner` tool built, results not applied |
+
+**Last updated:** 2026-02-11
+
 ## Implementation Priority
 
 | Priority | Step | Description |

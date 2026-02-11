@@ -1,0 +1,85 @@
+Interview Assist - Transcription & Detection Console
+
+Usage:
+  dotnet run                                Normal mode (live audio)
+  dotnet run -- --playback <file>           Playback mode (from recorded session)
+  dotnet run -- --playback <file> --headless  Headless playback (no UI, console summary)
+  dotnet run -- --analyze <file>            Generate report from existing session JSONL
+  dotnet run -- --evaluate <file>           Evaluate question detection accuracy
+  dotnet run -- --compare <file>            Compare all detection strategies
+  dotnet run -- --tune-threshold <file>     Find optimal confidence threshold
+  dotnet run -- --regression <baseline>     Test for quality regressions
+  dotnet run -- --create-baseline <file>    Create baseline from session data
+  dotnet run -- --dataset <file>            Evaluate against curated dataset
+  dotnet run -- --generate-tests <seed>     Generate synthetic test cases
+  dotnet run -- --analyze-errors <file>     Analyze error patterns from report
+
+Options:
+  --playback <file>       Play back a recorded session (.jsonl or .wav)
+  --mode <mode>           Override detection mode for playback (Heuristic, Llm, Parallel)
+  --evaluate <file>       Evaluate detection against LLM-extracted ground truth
+  --compare <file>        Compare Heuristic, LLM, and Parallel strategies
+  --tune-threshold <file> Find optimal confidence threshold for detection
+  --optimize <target>     Optimization target: f1, precision, recall (default: f1)
+  --regression <baseline> Test against baseline for regressions
+  --data <file>           Session data file for regression test
+  --create-baseline <out> Create new baseline file
+  --version <ver>         Version string for baseline (default: 1.0)
+  --dataset <file>        Evaluate detection against curated dataset
+  --generate-tests <seed> Generate synthetic tests from seed file
+  --model <model>         Model for ground truth extraction (default: gpt-4o)
+  --output <file>         Output file for evaluation report (.json)
+  --analyze-errors <file> Analyze false positive patterns from evaluation report
+  --analyze <file>        Generate markdown report from existing session JSONL
+  --headless              Run playback without Terminal.Gui UI (headless mode)
+  --help, -h              Show this help message
+
+Keyboard shortcuts in normal mode:
+  Ctrl+S    Stop transcription
+  Ctrl+R    Toggle recording (or use AutoStart in appsettings.json)
+  Ctrl+Q    Quit
+
+Keyboard shortcuts in playback mode:
+  Space     Pause/resume WAV playback
+  Ctrl+Q    Quit
+
+Examples:
+  # Live transcription (Deepgram + LLM intent detection)
+  dotnet run --project Interview-assist-transcription-detection-console/Interview-assist-transcription-detection-console.csproj
+
+  # Replay a JSONL recording with full UI
+  dotnet run --project Interview-assist-transcription-detection-console/Interview-assist-transcription-detection-console.csproj -- --playback recordings/session.jsonl
+
+  # Replay with detection mode override
+  dotnet run --project Interview-assist-transcription-detection-console/Interview-assist-transcription-detection-console.csproj -- --playback recordings/session.jsonl --mode Llm
+
+  # Re-transcribe a WAV recording via Deepgram
+  dotnet run --project Interview-assist-transcription-detection-console/Interview-assist-transcription-detection-console.csproj -- --playback recordings/session.wav
+
+  # Headless playback (console summary + markdown report)
+  dotnet run --project Interview-assist-transcription-detection-console/Interview-assist-transcription-detection-console.csproj -- --playback recordings/session.jsonl --headless
+
+  # Generate report from existing session data
+  dotnet run --project Interview-assist-transcription-detection-console/Interview-assist-transcription-detection-console.csproj -- --analyze recordings/session.jsonl
+
+  # Evaluate detection accuracy
+  dotnet run --project Interview-assist-transcription-detection-console/Interview-assist-transcription-detection-console.csproj -- --evaluate recordings/session.jsonl --output report.json --model gpt-4o
+
+  # Compare all detection strategies
+  dotnet run --project Interview-assist-transcription-detection-console/Interview-assist-transcription-detection-console.csproj -- --compare recordings/session.jsonl
+
+  # Find optimal confidence threshold
+  dotnet run --project Interview-assist-transcription-detection-console/Interview-assist-transcription-detection-console.csproj -- --tune-threshold recordings/session.jsonl --optimize f1
+
+  # Create a baseline and test for regressions
+  dotnet run --project Interview-assist-transcription-detection-console/Interview-assist-transcription-detection-console.csproj -- --create-baseline baseline.json --data recordings/session.jsonl --version 1.0
+  dotnet run --project Interview-assist-transcription-detection-console/Interview-assist-transcription-detection-console.csproj -- --regression baseline.json --data recordings/session.jsonl
+
+  # Evaluate against curated dataset
+  dotnet run --project Interview-assist-transcription-detection-console/Interview-assist-transcription-detection-console.csproj -- --dataset evaluations/datasets/questions.jsonl
+
+  # Generate synthetic test cases
+  dotnet run --project Interview-assist-transcription-detection-console/Interview-assist-transcription-detection-console.csproj -- --generate-tests seed.jsonl
+
+  # Analyze error patterns from evaluation report
+  dotnet run --project Interview-assist-transcription-detection-console/Interview-assist-transcription-detection-console.csproj -- --analyze-errors evaluation-report.json

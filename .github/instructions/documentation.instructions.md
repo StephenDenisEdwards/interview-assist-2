@@ -125,6 +125,15 @@ What becomes easier or more difficult to do because of this change?
 ## Goal
 Brief description of what this plan accomplishes.
 
+## Progress Tracker
+
+| Step | Description | Status | Notes |
+| ---- | ----------- | ------ | ----- |
+| 1 | Task description | Not Started / In Progress / Done | Implementation details or blockers |
+| 2 | Task description | Not Started | |
+
+**Last updated:** YYYY-MM-DD
+
 ## Tasks
 
 ### Phase 1: Description
@@ -141,6 +150,12 @@ Brief description of what this plan accomplishes.
 ## Implementation Summary
 (Add after completion)
 ```
+
+**Progress Tracker guidelines:**
+- Every improvement plan **must** include a Progress Tracker table
+- Update the table and "Last updated" date as work progresses
+- Use statuses: `Not Started`, `In Progress`, `Done`
+- Add brief notes for completed or blocked steps (what was done, what file, or what's blocking)
 
 **Lifecycle:**
 1. Create in `plans/in-progress/` with next available number

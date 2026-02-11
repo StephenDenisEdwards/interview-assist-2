@@ -6,6 +6,9 @@
 # VS Code
 .vscode/
 
+# JetBrains Rider/IntelliJ
+.idea/
+
 # Windows reserved device names (created accidentally by Unix shells)
 nul
 
