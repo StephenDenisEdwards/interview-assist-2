@@ -105,7 +105,7 @@ public sealed class StreamingHypothesisService : IStreamingTranscriptionService
         try { _audio?.Stop(); } catch { }
         if (_audioHandler != null)
         {
-            try { _audio.OnAudioChunk -= _audioHandler; } catch { }
+            try { if (_audio != null) _audio.OnAudioChunk -= _audioHandler; } catch { }
             _audioHandler = null;
         }
         try { _audioChannel?.Writer.TryComplete(); } catch { }
