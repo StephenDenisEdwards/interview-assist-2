@@ -54,16 +54,18 @@ dotnet test --filter "FullyQualifiedName~TestMethodName"
 
 ## Architecture Overview
 
-This is a real-time interview assistance application that captures audio and integrates with OpenAI's Realtime API for live transcription and AI-powered responses.
+This is a real-time interview assistance application that captures audio and uses Deepgram's streaming API for live transcription, with LLM-based intent detection via OpenAI. Legacy mode uses OpenAI's Realtime API directly.
 
 ### Project Structure
 
-- **Interview-assist-library**: Core abstractions and OpenAI Realtime API implementation (net8.0)
+- **Interview-assist-library**: Core abstractions, Deepgram transcription, intent detection pipeline, recording/playback, evaluation framework (net8.0)
 - **interview-assist-audio-windows**: Windows-specific audio capture using NAudio (net8.0)
 - **Interview-assist-pipeline**: Pipeline-based STT + semantic question detection (net8.0)
 - **Interview-assist-transcription-console**: Console app for transcription testing
-- **Interview-assist-transcription-detection-console**: Console app with Terminal.Gui UI, supports playback mode
+- **Interview-assist-transcription-detection-console**: Main console app with Terminal.Gui UI, supports live transcription, JSONL/WAV playback, headless mode, and session report generation
 - **Interview-assist-pipeline-console**: Console app for pipeline mode
+- **Interview-assist-annotation-console**: Ground truth annotation console for reviewing evaluation results
+- **Interview-assist-annotation-concept-e-console**: Transcript-centric annotation tool with interactive text selection
 - **Interview-assist-library-unit-tests**: xUnit tests for the core library
 - **Interview-assist-library-integration-tests**: Integration tests requiring API access
 
@@ -92,11 +94,14 @@ Audio is buffered to minimum 100ms chunks before sending. Silence padding applie
 ### Configuration
 
 - `appsettings.json` in console projects for defaults
-- Environment variable `OPENAI_API_KEY` for API authentication
+- Environment variable `OPENAI_API_KEY` for LLM intent detection
+- Environment variable `DEEPGRAM_API_KEY` for Deepgram transcription
 - User secrets supported (see csproj UserSecretsId)
 - `RealtimeApiOptions` record type configures: model, voice, VAD settings, reconnection behavior
 - `PipelineApiOptions` record type configures: transcription, response generation settings
-- `QuestionDetectionOptions` record type configures: detection model, confidence threshold
+- `IntentDetectionOptions` record type configures: detection mode (Heuristic/Llm/Parallel/Deepgram), LLM model, thresholds
+- `RecordingOptions` record type configures: recording folder, auto-start, WAV audio saving
+- `QuestionDetectionOptions` record type configures: detection model, confidence threshold (Legacy mode)
 
 ### Question Detection (Optional)
 

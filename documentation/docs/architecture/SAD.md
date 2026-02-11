@@ -2,7 +2,7 @@
 
 **Project:** Interview Assist
 **Version:** 1.0
-**Last Updated:** 2026-01-29
+**Last Updated:** 2026-02-11
 **Template:** arc42 lite
 
 ---
@@ -11,7 +11,7 @@
 
 ### 1.1 Purpose
 
-Interview Assist is a real-time interview assistance application that captures audio from microphone and system loopback, transcribes speech using OpenAI's Realtime API, and provides AI-powered responses to help users during technical interviews.
+Interview Assist is a real-time interview assistance application that captures audio from microphone and system loopback, transcribes speech using Deepgram's streaming API (or OpenAI's Realtime API in legacy mode), detects intents/questions via LLM classification, and provides AI-powered responses to help users during technical interviews.
 
 ### 1.2 Quality Goals
 
@@ -39,8 +39,9 @@ Interview Assist is a real-time interview assistance application that captures a
 |------------|-----------|
 | .NET 8.0+ runtime | Modern C# features, cross-platform potential |
 | Windows-only audio capture | NAudio library dependency for low-level audio APIs |
-| OpenAI API dependency | Realtime API provides transcription + AI response |
-| WebSocket protocol | Required by OpenAI Realtime API |
+| Deepgram API dependency | Streaming WebSocket API provides primary transcription |
+| OpenAI API dependency | LLM intent classification and legacy Realtime API mode |
+| WebSocket protocol | Required by Deepgram streaming and OpenAI Realtime API |
 
 ### 2.2 Organizational Constraints
 
@@ -73,9 +74,12 @@ C4Context
 
 | Interface | Protocol | Data Format |
 |-----------|----------|-------------|
+| Deepgram Streaming API | WebSocket (wss://) | JSON messages, raw PCM audio |
 | OpenAI Realtime API | WebSocket (wss://) | JSON messages, Base64 audio |
+| OpenAI Chat API | HTTPS REST | JSON (intent classification) |
 | Audio Capture | NAudio events | 16kHz mono PCM16 |
 | UI Events | .NET events | Strongly-typed delegates |
+| Terminal.Gui | TUI framework | In-process rendering |
 
 ---
 
@@ -89,6 +93,8 @@ C4Context
 | Audio Capture | NAudio library for Windows | [ADR-002](decisions/ADR-002-audio-capture-naudio.md) |
 | Question Detection | LLM-based detection using GPT models | [ADR-003](decisions/ADR-003-question-detection-llm.md) |
 | Streaming Transcription | Multi-mode stability tracking | [ADR-005](decisions/ADR-005-streaming-transcription-modes.md) |
+| Intent Detection | Multi-strategy (Heuristic + LLM + Deepgram) | [ADR-007](decisions/ADR-007-multi-strategy-intent-detection.md) |
+| Utterance Segmentation | Streaming ASR to coherent utterances | [ADR-008](decisions/ADR-008-utterance-segmentation.md) |
 
 ### 4.2 Technology Stack
 
@@ -96,8 +102,9 @@ C4Context
 |-------|------------|
 | Core Library | .NET 8.0, System.Net.WebSockets |
 | Audio Capture | NAudio (Windows-specific) |
-| Pipeline | Whisper STT + GPT-4 Chat API |
-| Console UI | .NET Console App |
+| Transcription | Deepgram WebSocket streaming (primary), Whisper STT (legacy) |
+| Intent Detection | OpenAI Chat API (GPT-4o-mini / GPT-4o) |
+| Console UI | Terminal.Gui (TUI framework) |
 | Testing | xUnit, Moq |
 
 ---
@@ -109,8 +116,10 @@ C4Context
 ```mermaid
 graph TB
     subgraph UI["UI Layer"]
+        DetectionConsole[Interview-assist-transcription-detection-console]
         TransConsole[Interview-assist-transcription-console]
         PipelineConsole[Interview-assist-pipeline-console]
+        AnnotationConsole[Interview-assist-annotation-console]
     end
 
     subgraph Core["Core Library"]
@@ -127,6 +136,8 @@ graph TB
         Integration[Interview-assist-library-integration-tests]
     end
 
+    DetectionConsole --> Lib
+    DetectionConsole --> Audio
     TransConsole --> Lib
     TransConsole --> Audio
     PipelineConsole --> Pipeline
@@ -284,7 +295,37 @@ stateDiagram-v2
 | `PipelineApiOptions` | Runtime configuration for Pipeline mode |
 | `QuestionDetectionOptions` | Question detection settings (when enabled) |
 
-### 7.4 Question Detection (Optional)
+### 7.4 Utterance-Intent Pipeline (Deepgram Mode)
+
+When `Mode: "Deepgram"` is selected, the application uses a streaming pipeline architecture:
+
+```
+Deepgram WS → AsrEventSource → Stabilizer → UtteranceBuilder → IntentDetector → ActionRouter
+```
+
+See [DESIGN-utterance-intent-pipeline.md](../design/DESIGN-utterance-intent-pipeline.md) for detailed design.
+
+### 7.5 Session Recording, Playback & Reporting
+
+The application supports recording, playback, and analysis of sessions:
+
+| Component | Purpose |
+|-----------|---------|
+| `SessionRecorder` | Records all pipeline events (ASR, utterances, intents, actions) to JSONL |
+| `AudioFileRecorder` | Optionally saves raw audio to WAV alongside JSONL |
+| `SessionPlayer` | Replays JSONL recordings with original timing for UI review |
+| `WavFileAudioSource` | Re-transcribes WAV files via Deepgram for testing |
+| `SessionReportGenerator` | Generates markdown reports from JSONL data |
+
+**Playback modes:**
+- `--playback <file.jsonl>` — Replays recorded events in Terminal.Gui UI
+- `--playback <file.wav>` — Re-transcribes audio via Deepgram with UI
+- `--playback <file> --headless` — Non-interactive, outputs console summary + report
+- `--analyze <file.jsonl>` — Generates markdown report without playback
+
+Reports are saved to the `reports/` folder as `{session-name}.report.md` and include event distribution, utterance analysis, intent detection results, latency statistics, and log insights.
+
+### 7.6 Question Detection (Legacy Mode, Optional)
 
 Question detection is an **optional feature** controlled via dependency injection. If `IQuestionDetectionService` is not registered, detection is disabled and only transcription occurs.
 
@@ -445,9 +486,12 @@ See the [decisions/](decisions/) directory for Architecture Decision Records (AD
 |-----|-------|--------|
 | [ADR-001](decisions/ADR-001-realtime-api-websocket.md) | Realtime API via WebSocket | Accepted |
 | [ADR-002](decisions/ADR-002-audio-capture-naudio.md) | Audio Capture with NAudio | Accepted |
-| [ADR-003](decisions/ADR-003-question-detection-llm.md) | LLM-based Question Detection | Accepted |
+| [ADR-003](decisions/ADR-003-question-detection-llm.md) | LLM-based Question Detection | Superseded by ADR-007 |
 | [ADR-004](decisions/ADR-004-pipeline-vs-realtime.md) | Pipeline vs Realtime Implementation | Accepted |
-| [ADR-005](decisions/ADR-005-streaming-transcription-modes.md) | Streaming Transcription Modes | Accepted |
+| [ADR-005](decisions/ADR-005-streaming-transcription-modes.md) | Streaming Transcription Modes | Superseded |
+| [ADR-006](decisions/ADR-006-deepgram-intent-recognition.md) | Deepgram Intent Recognition | Evaluated (unsuitable) |
+| [ADR-007](decisions/ADR-007-multi-strategy-intent-detection.md) | Multi-Strategy Intent Detection | Accepted |
+| [ADR-008](decisions/ADR-008-utterance-segmentation.md) | Utterance Segmentation from Streaming ASR | Accepted |
 
 ---
 
@@ -456,8 +500,9 @@ See the [decisions/](decisions/) directory for Architecture Decision Records (AD
 | Risk/Debt | Impact | Mitigation |
 |-----------|--------|------------|
 | Windows-only audio | Limits platform reach | IAudioCaptureService abstraction allows future implementations |
-| OpenAI API dependency | Single vendor lock-in | IRealtimeApi abstraction could support alternative providers |
-| No offline mode | Requires internet | Out of scope for v1 |
+| Deepgram API dependency | Transcription requires Deepgram | JSONL playback mode works offline; WAV files can be re-transcribed |
+| OpenAI API dependency | LLM intent detection requires OpenAI | Heuristic detection mode works without API; configurable model |
+| No offline mode | Live transcription requires internet | Playback and analysis modes work offline with recorded data |
 
 ---
 
