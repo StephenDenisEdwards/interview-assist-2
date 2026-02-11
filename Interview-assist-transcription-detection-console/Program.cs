@@ -851,6 +851,9 @@ public partial class Program
         var detector = new OpenAiIntentDetector(
             apiKey, options.Llm.Model, options.Llm.ConfidenceThreshold, systemPrompt);
 
+        if (log != null)
+            WireDetectorRequestLogging(detector, log);
+
         return new LlmIntentStrategy(detector, options.Llm);
     }
 
@@ -864,6 +867,9 @@ public partial class Program
         var llmDetector = new OpenAiIntentDetector(
             apiKey, options.Llm.Model, options.Llm.ConfidenceThreshold, systemPrompt);
 
+        if (log != null)
+            WireDetectorRequestLogging(llmDetector, log);
+
         return new ParallelIntentStrategy(llmDetector, options.Heuristic, options.Llm);
     }
 
@@ -874,6 +880,20 @@ public partial class Program
 
         var detector = new DeepgramIntentDetector(apiKey, options.Deepgram);
         return new LlmIntentStrategy(detector, options.Llm);
+    }
+
+    private static void WireDetectorRequestLogging(OpenAiIntentDetector detector, Action<string> log)
+    {
+        log("═══ LLM System Prompt ═══");
+        log(detector.SystemPrompt);
+        log("═══ End System Prompt ═══");
+
+        detector.OnRequestSending += userMessage =>
+        {
+            log("─── LLM Request ───");
+            log($"[User Message]\n{userMessage}");
+            log("─── End Request ───");
+        };
     }
 
     private static string? LoadSystemPromptStatic(string? promptFile, Action<string>? log)
@@ -1243,36 +1263,49 @@ public partial class Program
 
         pipeline.OnIntentFinal += evt =>
         {
+            var latencyMs = 0L;
+            if (stats.IntentTimestamps.TryGetValue(evt.UtteranceId, out var startTime))
+                latencyMs = (long)(evt.Timestamp - startTime).TotalMilliseconds;
+
+            // Track Questions in stats
             if (evt.Intent.Type == IntentType.Question)
             {
-                var latencyMs = 0L;
-                if (stats.IntentTimestamps.TryGetValue(evt.UtteranceId, out var startTime))
-                    latencyMs = (long)(evt.Timestamp - startTime).TotalMilliseconds;
-
                 var index = stats.FinalIntents.Count + 1;
                 stats.FinalIntents.Add((index, evt.UtteranceId, evt.Intent, latencyMs));
-
                 log($"[Intent.final] #{index} {evt.Intent.Type}/{evt.Intent.Subtype} conf={evt.Intent.Confidence:F2} latency={latencyMs}ms");
-                log($"  Source: \"{evt.Intent.SourceText}\"");
-                log($"  Original: \"{evt.Intent.OriginalText ?? "(not available)"}\"");
             }
+            else
+            {
+                log($"[Intent.final] {evt.Intent.Type}/{evt.Intent.Subtype} conf={evt.Intent.Confidence:F2} latency={latencyMs}ms");
+            }
+            log($"  Source: \"{evt.Intent.SourceText}\"");
+            log($"  Original: \"{evt.Intent.OriginalText ?? "(not available)"}\"");
         };
 
         pipeline.OnIntentCorrected += evt =>
         {
+            var latencyMs = 0L;
+            if (stats.IntentTimestamps.TryGetValue(evt.UtteranceId, out var startTime))
+                latencyMs = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
+
+            // Track Questions in stats
             if (evt.CorrectedIntent.Type == IntentType.Question)
             {
-                var latencyMs = 0L;
-                if (stats.IntentTimestamps.TryGetValue(evt.UtteranceId, out var startTime))
-                    latencyMs = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
-
                 var index = stats.FinalIntents.Count + 1;
                 stats.FinalIntents.Add((index, evt.UtteranceId, evt.CorrectedIntent, latencyMs));
-
                 log($"[Intent.corrected] #{index} {evt.CorrectionType}: conf={evt.CorrectedIntent.Confidence:F2} latency={latencyMs}ms");
-                log($"  Source: \"{evt.CorrectedIntent.SourceText}\"");
-                log($"  Original: \"{evt.CorrectedIntent.OriginalText ?? "(not available)"}\"");
             }
+            else
+            {
+                log($"[Intent.corrected] {evt.CorrectionType}: {evt.CorrectedIntent.Type}/{evt.CorrectedIntent.Subtype} conf={evt.CorrectedIntent.Confidence:F2} latency={latencyMs}ms");
+            }
+            log($"  Source: \"{evt.CorrectedIntent.SourceText}\"");
+            log($"  Original: \"{evt.CorrectedIntent.OriginalText ?? "(not available)"}\"");
+        };
+
+        pipeline.OnActionTriggered += evt =>
+        {
+            log($"[Action] {evt.ActionName} (debounced={evt.WasDebounced})");
         };
 
         pipeline.OnUtteranceFinal += evt =>
