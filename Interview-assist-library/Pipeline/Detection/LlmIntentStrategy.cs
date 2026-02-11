@@ -175,7 +175,10 @@ public sealed class LlmIntentStrategy : IIntentDetectionStrategy
         }
 
         // Call LLM with new text and context
+        var apiSw = System.Diagnostics.Stopwatch.StartNew();
         var detectedIntents = await _llm.DetectIntentsAsync(newText, contextText, ct);
+        apiSw.Stop();
+        var apiTimeMs = apiSw.ElapsedMilliseconds;
 
         // Process results
         foreach (var intent in detectedIntents)
@@ -230,7 +233,8 @@ public sealed class LlmIntentStrategy : IIntentDetectionStrategy
             var intentEvent = new IntentEvent
             {
                 Intent = intentWithOriginal,
-                UtteranceId = matchedUtterance?.Id ?? unprocessedSnapshot.LastOrDefault()?.Id ?? "unknown"
+                UtteranceId = matchedUtterance?.Id ?? unprocessedSnapshot.LastOrDefault()?.Id ?? "unknown",
+                ApiTimeMs = apiTimeMs
             };
 
             OnIntentDetected?.Invoke(intentEvent);

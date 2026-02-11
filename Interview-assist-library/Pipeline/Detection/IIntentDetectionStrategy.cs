@@ -68,6 +68,9 @@ public record IntentCorrectionEvent
     /// Timestamp of the correction.
     /// </summary>
     public DateTime CorrectedAt { get; init; } = DateTime.UtcNow;
+
+    /// <summary>LLM API call duration in milliseconds (0 if not applicable).</summary>
+    public long ApiTimeMs { get; init; }
 }
 
 /// <summary>

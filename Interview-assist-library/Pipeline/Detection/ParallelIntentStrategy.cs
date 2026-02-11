@@ -204,10 +204,13 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
         }
 
         // Call LLM with new text and context
+        var apiSw = System.Diagnostics.Stopwatch.StartNew();
         var llmIntents = await _llm.DetectIntentsAsync(newText, contextText, ct);
+        apiSw.Stop();
+        var apiTimeMs = apiSw.ElapsedMilliseconds;
 
         // Process LLM results and compare with heuristic
-        ProcessLlmResults(llmIntents, unprocessedSnapshot, contextSnapshot);
+        ProcessLlmResults(llmIntents, unprocessedSnapshot, contextSnapshot, apiTimeMs);
 
         // Move unprocessed → context window, trim context
         lock (_lock)
@@ -219,7 +222,7 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
         }
     }
 
-    private void ProcessLlmResults(IReadOnlyList<DetectedIntent> llmIntents, List<TrackedUtterance> pending, List<TrackedUtterance> context)
+    private void ProcessLlmResults(IReadOnlyList<DetectedIntent> llmIntents, List<TrackedUtterance> pending, List<TrackedUtterance> context, long apiTimeMs)
     {
         var matchedUtterances = new HashSet<string>();
 
@@ -296,7 +299,8 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
                     UtteranceId = utteranceId,
                     OriginalIntent = previousEmission.Intent,
                     CorrectedIntent = llmIntentWithOriginal,
-                    CorrectionType = correctionType
+                    CorrectionType = correctionType,
+                    ApiTimeMs = apiTimeMs
                 });
             }
             else
@@ -305,7 +309,8 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
                 var intentEvent = new IntentEvent
                 {
                     Intent = llmIntentWithOriginal,
-                    UtteranceId = utteranceId
+                    UtteranceId = utteranceId,
+                    ApiTimeMs = apiTimeMs
                 };
 
                 OnIntentDetected?.Invoke(intentEvent);
@@ -316,7 +321,8 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
                     UtteranceId = utteranceId,
                     OriginalIntent = null,
                     CorrectedIntent = llmIntentWithOriginal,
-                    CorrectionType = IntentCorrectionType.Added
+                    CorrectionType = IntentCorrectionType.Added,
+                    ApiTimeMs = apiTimeMs
                 });
             }
         }
@@ -349,7 +355,8 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
                         SourceText = emission.Intent.SourceText,
                         OriginalText = emission.Intent.OriginalText
                     },
-                    CorrectionType = IntentCorrectionType.Removed
+                    CorrectionType = IntentCorrectionType.Removed,
+                    ApiTimeMs = apiTimeMs
                 });
             }
         }

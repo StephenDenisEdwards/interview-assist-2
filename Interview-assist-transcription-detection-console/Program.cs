@@ -1270,16 +1270,18 @@ public partial class Program
             if (stats.IntentTimestamps.TryGetValue(evt.UtteranceId, out var startTime))
                 latencyMs = (long)(evt.Timestamp - startTime).TotalMilliseconds;
 
+            var apiTimeMs = evt.ApiTimeMs;
+
             // Track Questions in stats
             if (evt.Intent.Type == IntentType.Question)
             {
                 var index = stats.FinalIntents.Count + 1;
-                stats.FinalIntents.Add((index, evt.UtteranceId, evt.Intent, latencyMs));
-                log($"[Intent.final] #{index} {evt.Intent.Type}/{evt.Intent.Subtype} conf={evt.Intent.Confidence:F2} latency={latencyMs}ms");
+                stats.FinalIntents.Add((index, evt.UtteranceId, evt.Intent, latencyMs, apiTimeMs));
+                log($"[Intent.final] #{index} {evt.Intent.Type}/{evt.Intent.Subtype} conf={evt.Intent.Confidence:F2} latency={latencyMs}ms (api={apiTimeMs}ms)");
             }
             else
             {
-                log($"[Intent.final] {evt.Intent.Type}/{evt.Intent.Subtype} conf={evt.Intent.Confidence:F2} latency={latencyMs}ms");
+                log($"[Intent.final] {evt.Intent.Type}/{evt.Intent.Subtype} conf={evt.Intent.Confidence:F2} latency={latencyMs}ms (api={apiTimeMs}ms)");
             }
             log($"  Source: \"{evt.Intent.SourceText}\"");
             log($"  Original: \"{evt.Intent.OriginalText ?? "(not available)"}\"");
@@ -1291,16 +1293,18 @@ public partial class Program
             if (stats.IntentTimestamps.TryGetValue(evt.UtteranceId, out var startTime))
                 latencyMs = (long)(DateTime.UtcNow - startTime).TotalMilliseconds;
 
+            var apiTimeMs = evt.ApiTimeMs;
+
             // Track Questions in stats
             if (evt.CorrectedIntent.Type == IntentType.Question)
             {
                 var index = stats.FinalIntents.Count + 1;
-                stats.FinalIntents.Add((index, evt.UtteranceId, evt.CorrectedIntent, latencyMs));
-                log($"[Intent.corrected] #{index} {evt.CorrectionType}: conf={evt.CorrectedIntent.Confidence:F2} latency={latencyMs}ms");
+                stats.FinalIntents.Add((index, evt.UtteranceId, evt.CorrectedIntent, latencyMs, apiTimeMs));
+                log($"[Intent.corrected] #{index} {evt.CorrectionType}: conf={evt.CorrectedIntent.Confidence:F2} latency={latencyMs}ms (api={apiTimeMs}ms)");
             }
             else
             {
-                log($"[Intent.corrected] {evt.CorrectionType}: {evt.CorrectedIntent.Type}/{evt.CorrectedIntent.Subtype} conf={evt.CorrectedIntent.Confidence:F2} latency={latencyMs}ms");
+                log($"[Intent.corrected] {evt.CorrectionType}: {evt.CorrectedIntent.Type}/{evt.CorrectedIntent.Subtype} conf={evt.CorrectedIntent.Confidence:F2} latency={latencyMs}ms (api={apiTimeMs}ms)");
             }
             log($"  Source: \"{evt.CorrectedIntent.SourceText}\"");
             log($"  Original: \"{evt.CorrectedIntent.OriginalText ?? "(not available)"}\"");
@@ -1378,9 +1382,9 @@ public partial class Program
             Console.WriteLine("Final Intent Details:");
             var exactMatches = 0;
 
-            foreach (var (index, uttId, intent, latencyMs) in stats.FinalIntents)
+            foreach (var (index, uttId, intent, latencyMs, apiTimeMs) in stats.FinalIntents)
             {
-                Console.WriteLine($"  #{index} [{uttId}] {intent.Subtype} conf={intent.Confidence:F2} latency={latencyMs}ms");
+                Console.WriteLine($"  #{index} [{uttId}] {intent.Subtype} conf={intent.Confidence:F2} latency={latencyMs}ms (api={apiTimeMs}ms)");
                 Console.WriteLine($"     Source:   \"{Truncate(intent.SourceText, 80)}\"");
                 Console.WriteLine($"     Original: \"{Truncate(intent.OriginalText ?? "(not available)", 80)}\"");
 
@@ -1397,14 +1401,28 @@ public partial class Program
 
             // Latency stats
             var latencies = stats.FinalIntents.Where(f => f.LatencyMs > 0).Select(f => f.LatencyMs).OrderBy(l => l).ToList();
+            var apiTimes = stats.FinalIntents.Where(f => f.ApiTimeMs > 0).Select(f => f.ApiTimeMs).OrderBy(t => t).ToList();
             if (latencies.Count > 0)
             {
-                Console.WriteLine("Latency (finals):");
+                Console.WriteLine("End-to-end Latency (utterance open -> intent detected):");
                 Console.WriteLine($"  Min:    {latencies.First()}ms");
                 Console.WriteLine($"  Median: {latencies[latencies.Count / 2]}ms");
                 Console.WriteLine($"  Mean:   {(long)latencies.Average()}ms");
                 Console.WriteLine($"  Max:    {latencies.Last()}ms");
             }
+            if (apiTimes.Count > 0)
+            {
+                Console.WriteLine("LLM API Time (HTTP request only):");
+                Console.WriteLine($"  Min:    {apiTimes.First()}ms");
+                Console.WriteLine($"  Median: {apiTimes[apiTimes.Count / 2]}ms");
+                Console.WriteLine($"  Mean:   {(long)apiTimes.Average()}ms");
+                Console.WriteLine($"  Max:    {apiTimes.Last()}ms");
+            }
+            Console.WriteLine();
+            Console.WriteLine("Note: End-to-end latency measures the full pipeline from when the utterance");
+            Console.WriteLine("was first opened to when the intent was detected. This includes transcription,");
+            Console.WriteLine("utterance assembly, silence gap detection, buffering, rate limiting, and the");
+            Console.WriteLine("LLM API call. LLM API time is just the HTTP request to the model.");
         }
 
         Console.WriteLine("═══════════════════════════════════");
@@ -1439,7 +1457,7 @@ internal class HeadlessPlaybackStats
 {
     public int CandidateCount;
     public int TotalEvents;
-    public readonly List<(int Index, string UtteranceId, DetectedIntent Intent, long LatencyMs)> FinalIntents = new();
+    public readonly List<(int Index, string UtteranceId, DetectedIntent Intent, long LatencyMs, long ApiTimeMs)> FinalIntents = new();
     public readonly Dictionary<string, DateTime> IntentTimestamps = new();
 }
 

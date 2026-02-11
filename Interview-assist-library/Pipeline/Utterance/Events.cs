@@ -153,6 +153,9 @@ public sealed record IntentEvent
     public required string UtteranceId { get; init; }
     public bool IsCandidate { get; init; }
     public DateTime Timestamp { get; init; } = DateTime.UtcNow;
+
+    /// <summary>LLM API call duration in milliseconds (0 if not applicable).</summary>
+    public long ApiTimeMs { get; init; }
 }
 
 /// <summary>
