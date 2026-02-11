@@ -1050,7 +1050,7 @@ public partial class Program
 
         // Auto-generate session report
         var reportEvents = await SessionReportGenerator.LoadEventsAsync(outputPath);
-        string[]? logLines = File.Exists(logFileName) ? await File.ReadAllLinesAsync(logFileName) : null;
+        string[]? logLines = File.Exists(logFileName) ? await ReadAllLinesSharedAsync(logFileName) : null;
         var report = SessionReportGenerator.GenerateMarkdown(reportEvents,
             sourceFile: playbackFile, outputFile: outputPath,
             logFile: logFileName, wallClockDuration: sw.Elapsed,
@@ -1237,7 +1237,7 @@ public partial class Program
 
         // Auto-generate session report
         var reportEvents = await SessionReportGenerator.LoadEventsAsync(outputPath);
-        string[]? logLines = File.Exists(logFileName) ? await File.ReadAllLinesAsync(logFileName) : null;
+        string[]? logLines = File.Exists(logFileName) ? await ReadAllLinesSharedAsync(logFileName) : null;
         var report = SessionReportGenerator.GenerateMarkdown(reportEvents,
             sourceFile: playbackFile, outputFile: outputPath,
             logFile: logFileName, wallClockDuration: sw.Elapsed,
@@ -1412,6 +1412,20 @@ public partial class Program
         if (string.IsNullOrEmpty(text) || text.Length <= maxLength)
             return text;
         return text[..maxLength] + "...";
+    }
+
+    /// <summary>
+    /// Reads all lines from a file using FileShare.ReadWrite so it can be read
+    /// while another process (the log writer) still holds the file open.
+    /// </summary>
+    private static async Task<string[]> ReadAllLinesSharedAsync(string path)
+    {
+        var lines = new List<string>();
+        using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        using var reader = new StreamReader(stream);
+        while (await reader.ReadLineAsync() is { } line)
+            lines.Add(line);
+        return lines.ToArray();
     }
 }
 
