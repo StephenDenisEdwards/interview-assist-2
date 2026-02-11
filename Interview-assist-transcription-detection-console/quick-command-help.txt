@@ -1,5 +1,12 @@
 Interview Assist - Transcription & Detection Console
 
+
+
+dotnet run -- --playback ../recordings/session-2026-02-09-155932.wav
+dotnet run -- --playback ../recordings/session-2026-02-09-155932.wav --headless
+
+
+
 Usage:
   dotnet run                                Normal mode (live audio)
   dotnet run -- --playback <file>           Playback mode (from recorded session)
