@@ -1,25 +1,112 @@
 # Application Settings Reference
 
-This document describes all configuration options available in `appsettings.json` for the Interview Assist transcription console application.
+This document describes all configuration options available in `appsettings.json` for the Interview Assist transcription-detection console application.
 
 ## Quick Reference
 
 ```json
 {
+  "UI": { "BackgroundColor": "#1E1E1E", "IntentColor": "#FFFF00" },
+  "Logging": { "Folder": "logs" },
+  "Recording": { "Folder": "recordings", "AutoStart": true, "SaveAudio": true },
   "Transcription": {
-    "Mode": "Legacy",
+    "Mode": "Deepgram",
     "AudioSource": "Loopback",
-    "SampleRate": 16000,
-    "BatchMs": 1500,
-    "Language": "en",
-    ...
+    "Deepgram": { "Model": "nova-2", ... },
+    "IntentDetection": {
+      "Enabled": true,
+      "Mode": "Llm",
+      "Llm": { "Model": "gpt-4o-mini", ... }
+    }
   },
-  "QuestionDetection": {
-    "Enabled": false,
-    ...
-  }
+  "Deepgram": { "ApiKey": "" },
+  "QuestionDetection": { "Enabled": false, ... },
+  "Evaluation": { ... }
 }
 ```
+
+---
+
+## UI Settings
+
+```json
+"UI": {
+  "BackgroundColor": "#1E1E1E",
+  "IntentColor": "#FFFF00"
+}
+```
+
+### UI.BackgroundColor
+
+**Type:** `string`
+**Default:** `"#1E1E1E"`
+
+Hex color code for the Terminal.Gui background.
+
+### UI.IntentColor
+
+**Type:** `string`
+**Default:** `"#FFFF00"`
+
+Hex color code for highlighting detected intents in the transcript view.
+
+---
+
+## Logging Settings
+
+```json
+"Logging": {
+  "Folder": "logs"
+}
+```
+
+### Logging.Folder
+
+**Type:** `string`
+**Default:** `"logs"`
+
+Directory for application log files. Log files are named `transcription-detection-YYYYMMDD-HHmmss.log`.
+
+---
+
+## Recording Settings
+
+```json
+"Recording": {
+  "Folder": "recordings",
+  "FileNamePattern": "session-{timestamp}.jsonl",
+  "AutoStart": true,
+  "SaveAudio": true
+}
+```
+
+### Recording.Folder
+
+**Type:** `string`
+**Default:** `"recordings"`
+
+Directory where session JSONL recordings are saved.
+
+### Recording.FileNamePattern
+
+**Type:** `string`
+**Default:** `"session-{timestamp}.jsonl"`
+
+Filename pattern for recordings. `{timestamp}` is replaced with `yyyy-MM-dd-HHmmss`.
+
+### Recording.AutoStart
+
+**Type:** `boolean`
+**Default:** `false`
+
+When enabled, recording begins automatically when the application starts.
+
+### Recording.SaveAudio
+
+**Type:** `boolean`
+**Default:** `false`
+
+When enabled, saves a WAV audio file alongside the JSONL recording. The WAV file uses the same base name as the JSONL file.
 
 ---
 
@@ -29,7 +116,7 @@ This document describes all configuration options available in `appsettings.json
 
 **Type:** `string`
 **Default:** `"Legacy"`
-**Values:** `Legacy`, `Basic`, `Revision`, `Hypothesis`
+**Values:** `Legacy`, `Basic`, `Revision`, `Hypothesis`, `Deepgram`
 
 Controls the transcription engine and stability tracking behavior.
 
@@ -39,6 +126,7 @@ Controls the transcription engine and stability tracking behavior.
 | `Basic` | Streaming transcription where all text is immediately stable. Uses context prompting for continuity. | Simple applications, high-quality audio |
 | `Revision` | Overlapping batches with local agreement policy. Text becomes stable after appearing consistently across multiple transcription passes. | High accuracy requirements |
 | `Hypothesis` | Rapid hypothesis updates with stability tracking. Text becomes stable after remaining unchanged for N iterations or a timeout. | Lowest latency real-time display |
+| `Deepgram` | Real-time streaming via Deepgram WebSocket API with utterance segmentation and intent detection pipeline. | Primary mode for live transcription with intent detection |
 
 ### AudioSource
 
@@ -59,7 +147,7 @@ Specifies the audio input source.
 **Default:** `16000`
 **Unit:** Hz
 
-Audio sample rate. Whisper API expects 16kHz, so this is the recommended value. Higher values will be resampled.
+Audio sample rate. Both Whisper and Deepgram expect 16kHz, so this is the recommended value. Higher values will be resampled.
 
 ### BatchMs
 
@@ -241,7 +329,272 @@ Cooldown period to prevent rapid provisional text updates, reducing visual flick
 
 ---
 
-## Question Detection Settings
+## Deepgram Transcription Settings
+
+Settings specific to `Mode: "Deepgram"`. Nested under `Transcription.Deepgram`.
+
+```json
+"Deepgram": {
+  "Model": "nova-2",
+  "InterimResults": true,
+  "Punctuate": true,
+  "SmartFormat": true,
+  "EndpointingMs": 300,
+  "UtteranceEndMs": 1000,
+  "Keywords": "",
+  "Vad": true,
+  "Diarize": true
+}
+```
+
+### Deepgram.Model
+
+**Type:** `string`
+**Default:** `"nova-2"`
+
+Deepgram speech recognition model. Options include `nova-2`, `nova`, `enhanced`, `base`.
+
+### Deepgram.InterimResults
+
+**Type:** `boolean`
+**Default:** `true`
+
+Enables interim (partial) transcription results streamed before final results. Required for real-time display.
+
+### Deepgram.Punctuate
+
+**Type:** `boolean`
+**Default:** `true`
+
+Enables automatic punctuation in transcription output.
+
+### Deepgram.SmartFormat
+
+**Type:** `boolean`
+**Default:** `true`
+
+Enables smart formatting (e.g., converting numbers to digits, formatting dates).
+
+### Deepgram.EndpointingMs
+
+**Type:** `integer`
+**Default:** `300`
+**Unit:** milliseconds
+
+Duration of silence before Deepgram considers a speech segment final. Lower values produce faster finalization but may split utterances.
+
+### Deepgram.UtteranceEndMs
+
+**Type:** `integer`
+**Default:** `1000`
+**Unit:** milliseconds
+
+Duration of silence before Deepgram sends an `UtteranceEnd` signal, indicating a natural pause boundary.
+
+### Deepgram.Keywords
+
+**Type:** `string`
+**Default:** `""`
+
+Comma-separated keywords to boost recognition of specific terms.
+
+### Deepgram.Vad
+
+**Type:** `boolean`
+**Default:** `true`
+
+Enables Voice Activity Detection to filter out non-speech audio.
+
+### Deepgram.Diarize
+
+**Type:** `boolean`
+**Default:** `false`
+
+Enables speaker diarization to distinguish between different speakers.
+
+---
+
+## Intent Detection Settings
+
+Settings for the utterance-intent detection pipeline. Nested under `Transcription.IntentDetection`. Active in `Deepgram` mode.
+
+```json
+"IntentDetection": {
+  "Enabled": true,
+  "Mode": "Llm",
+  "Heuristic": { "MinConfidence": 0.4 },
+  "Llm": {
+    "Model": "gpt-4o-mini",
+    "ConfidenceThreshold": 0.7,
+    "SystemPromptFile": "system-prompt.txt",
+    ...
+  },
+  "Deepgram": {
+    "ConfidenceThreshold": 0.3,
+    "CustomIntents": "ask a question,request clarification,...",
+    ...
+  }
+}
+```
+
+### IntentDetection.Enabled
+
+**Type:** `boolean`
+**Default:** `true`
+
+Enables or disables the intent detection pipeline.
+
+### IntentDetection.Mode
+
+**Type:** `string`
+**Default:** `"Heuristic"`
+**Values:** `Heuristic`, `Llm`, `Parallel`, `Deepgram`
+
+Detection strategy to use.
+
+| Mode | Description |
+|------|-------------|
+| `Heuristic` | Pattern matching and linguistic rules. Fast and free. |
+| `Llm` | LLM-based classification. More accurate but has API costs. |
+| `Parallel` | Runs both Heuristic and LLM in parallel, merges results. |
+| `Deepgram` | Uses Deepgram's `/v1/read` endpoint for intent recognition. |
+
+### IntentDetection.Heuristic.MinConfidence
+
+**Type:** `double`
+**Default:** `0.4`
+**Range:** `0.0` - `1.0`
+
+Minimum confidence threshold for heuristic-based detections.
+
+### IntentDetection.Llm.Model
+
+**Type:** `string`
+**Default:** `"gpt-4o-mini"`
+
+OpenAI model for LLM-based intent classification.
+
+### IntentDetection.Llm.ApiKey
+
+**Type:** `string?`
+**Default:** `null`
+
+API key for LLM calls. Falls back to `OPENAI_API_KEY` environment variable if not set.
+
+### IntentDetection.Llm.ConfidenceThreshold
+
+**Type:** `double`
+**Default:** `0.7`
+**Range:** `0.0` - `1.0`
+
+Minimum LLM confidence to accept a detection.
+
+### IntentDetection.Llm.RateLimitMs
+
+**Type:** `integer`
+**Default:** `2000`
+**Unit:** milliseconds
+
+Minimum interval between LLM API calls.
+
+### IntentDetection.Llm.BufferMaxChars
+
+**Type:** `integer`
+**Default:** `800`
+
+Maximum characters in the unprocessed utterance buffer before a forced detection trigger.
+
+### IntentDetection.Llm.ContextWindowChars
+
+**Type:** `integer`
+**Default:** `1500`
+
+Maximum characters retained in the processed context window for pronoun resolution.
+
+### IntentDetection.Llm.TriggerOnQuestionMark
+
+**Type:** `boolean`
+**Default:** `true`
+
+Trigger LLM detection when a `?` appears in utterance text.
+
+### IntentDetection.Llm.TriggerOnPause
+
+**Type:** `boolean`
+**Default:** `true`
+
+Trigger LLM detection when a speech pause is signaled.
+
+### IntentDetection.Llm.TriggerTimeoutMs
+
+**Type:** `integer`
+**Default:** `3000`
+**Unit:** milliseconds
+
+Trigger detection after this many milliseconds of inactivity.
+
+### IntentDetection.Llm.EnablePreprocessing
+
+**Type:** `boolean`
+**Default:** `true`
+
+Apply noise removal and technical term correction before sending text to LLM.
+
+### IntentDetection.Llm.EnableDeduplication
+
+**Type:** `boolean`
+**Default:** `true`
+
+Enable semantic fingerprint deduplication to prevent duplicate detections.
+
+### IntentDetection.Llm.DeduplicationWindowMs
+
+**Type:** `integer`
+**Default:** `30000`
+**Unit:** milliseconds
+
+Time window for suppressing duplicate intent detections.
+
+### IntentDetection.Llm.SystemPromptFile
+
+**Type:** `string?`
+**Default:** `null`
+
+Path to a custom system prompt file for LLM intent detection. Relative paths are resolved from the application base directory. When `null`, uses the built-in default prompt. The file `system-prompt.txt` ships with the application and can be customized.
+
+### IntentDetection.Deepgram.ConfidenceThreshold
+
+**Type:** `double`
+**Default:** `0.3`
+**Range:** `0.0` - `1.0`
+
+Minimum confidence threshold for Deepgram intent recognition results.
+
+### IntentDetection.Deepgram.CustomIntents
+
+**Type:** `string`
+
+Comma-separated list of custom intents for Deepgram's `/v1/read` endpoint.
+
+### IntentDetection.Deepgram.CustomIntentMode
+
+**Type:** `string`
+**Default:** `"extended"`
+**Values:** `strict`, `extended`
+
+Controls whether Deepgram uses only custom intents (`strict`) or also its built-in intents (`extended`).
+
+### IntentDetection.Deepgram.TimeoutMs
+
+**Type:** `integer`
+**Default:** `5000`
+**Unit:** milliseconds
+
+Timeout for Deepgram intent recognition REST API calls.
+
+---
+
+## Question Detection Settings (Legacy Mode)
 
 Settings for automatic question detection. Only active in Legacy mode.
 
@@ -334,22 +687,124 @@ Filters out noise phrases (filler words, false starts) before question detection
 
 ---
 
+## Evaluation Settings
+
+Settings for the offline evaluation framework.
+
+```json
+"Evaluation": {
+  "Model": "gpt-4o",
+  "MatchThreshold": 0.7,
+  "DeduplicationThreshold": 0.8,
+  "OutputFolder": "evaluations",
+  "DatasetsFolder": "evaluations/datasets",
+  "BaselinesFolder": "evaluations/baselines",
+  "ThresholdRange": { "Min": 0.3, "Max": 0.95, "Step": 0.05 },
+  "PromptVariants": []
+}
+```
+
+### Evaluation.Model
+
+**Type:** `string`
+**Default:** `"gpt-4o"`
+
+OpenAI model used for evaluation matching.
+
+### Evaluation.MatchThreshold
+
+**Type:** `double`
+**Default:** `0.7`
+
+Similarity threshold for matching detected intents against ground truth.
+
+### Evaluation.DeduplicationThreshold
+
+**Type:** `double`
+**Default:** `0.8`
+
+Jaccard similarity threshold for deduplicating evaluation results.
+
+### Evaluation.OutputFolder
+
+**Type:** `string`
+**Default:** `"evaluations"`
+
+Directory for evaluation output files.
+
+### Evaluation.DatasetsFolder
+
+**Type:** `string`
+**Default:** `"evaluations/datasets"`
+
+Directory containing evaluation dataset JSONL files.
+
+### Evaluation.BaselinesFolder
+
+**Type:** `string`
+**Default:** `"evaluations/baselines"`
+
+Directory containing baseline evaluation results for regression testing.
+
+---
+
+## Deepgram API Configuration
+
+```json
+"Deepgram": {
+  "ApiKey": ""
+}
+```
+
+### Deepgram.ApiKey
+
+**Type:** `string`
+
+Deepgram API key for transcription. Can also be set via the `DEEPGRAM_API_KEY` environment variable.
+
+---
+
 ## Environment Variables
 
 ### OPENAI_API_KEY
 
-**Required.** OpenAI API key for transcription and question detection.
+**Required for LLM intent detection and evaluation.** OpenAI API key.
 
 Can be set via:
 - Environment variable: `OPENAI_API_KEY`
 - appsettings.json: `"OpenAI": { "ApiKey": "sk-..." }`
 - User secrets (recommended for development)
 
+### DEEPGRAM_API_KEY
+
+**Required for Deepgram transcription mode.** Deepgram API key.
+
+Can be set via:
+- Environment variable: `DEEPGRAM_API_KEY`
+- appsettings.json: `"Deepgram": { "ApiKey": "..." }`
+- User secrets (recommended for development)
+
 ---
 
-## Command Line Overrides
+## Command Line Options
 
-Configuration can be overridden via command line arguments:
+### Playback & Analysis
+
+```bash
+# Replay a recorded JSONL session (no audio/API required)
+--playback <file.jsonl>
+
+# Re-transcribe a WAV recording via Deepgram
+--playback <file.wav>
+
+# Headless mode: no Terminal.Gui UI, outputs console summary + session report
+--playback <file> --headless
+
+# Generate a markdown report from an existing JSONL file (no playback)
+--analyze <file.jsonl>
+```
+
+### Audio & Transcription Overrides
 
 ```bash
 # Audio source
@@ -357,7 +812,7 @@ Configuration can be overridden via command line arguments:
 --loopback, -l         # Use system audio loopback
 
 # Transcription mode
---mode <mode>          # Set mode: legacy, basic, revision, hypothesis
+--mode <mode>          # Set mode: legacy, basic, revision, hypothesis, deepgram
 
 # Legacy mode options
 --batch, -b <ms>       # Batch interval in milliseconds
@@ -371,18 +826,27 @@ Configuration can be overridden via command line arguments:
 --detection-model <model>       # LLM model for detection
 ```
 
-**Examples:**
+### Examples
 
 ```bash
-# Basic mode with microphone
-Interview-assist-transcription-console --mode basic --mic
+# Live transcription with Deepgram and LLM intent detection
+dotnet run --project Interview-assist-transcription-detection-console/Interview-assist-transcription-detection-console.csproj
 
-# Revision mode with vocabulary
-Interview-assist-transcription-console --mode revision --vocab "C#, async"
+# Replay a JSONL recording with full UI
+dotnet run --project Interview-assist-transcription-detection-console/Interview-assist-transcription-detection-console.csproj -- --playback recordings/session.jsonl
 
-# Hypothesis mode for real-time
-Interview-assist-transcription-console --mode hypothesis
+# Headless analysis of a WAV recording
+dotnet run --project Interview-assist-transcription-detection-console/Interview-assist-transcription-detection-console.csproj -- --playback recordings/session.wav --headless
 
-# Legacy mode with LLM question detection
-Interview-assist-transcription-console --detection llm
+# Generate report from existing session data
+dotnet run --project Interview-assist-transcription-detection-console/Interview-assist-transcription-detection-console.csproj -- --analyze recordings/session.jsonl
 ```
+
+### Output Locations
+
+| Mode | Output |
+|------|--------|
+| Live transcription | Terminal.Gui UI, JSONL recording in `recordings/`, optional WAV file |
+| `--playback` (interactive) | Terminal.Gui UI with replay |
+| `--playback --headless` | Console summary + markdown report in `reports/` |
+| `--analyze` | Markdown report in `reports/` |
