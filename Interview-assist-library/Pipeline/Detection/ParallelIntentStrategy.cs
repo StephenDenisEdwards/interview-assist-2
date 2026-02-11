@@ -87,6 +87,7 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
                 text,
                 DateTime.UtcNow,
                 heuristicIntent));
+            DeduplicateProgressiveRefinements(_unprocessedUtterances);
 
             // Check for trigger
             if (_llmOptions.TriggerOnQuestionMark && text.Contains('?'))
@@ -181,6 +182,10 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
 
             if (_unprocessedUtterances.Count == 0)
                 return;
+
+            // Remove progressive refinements (where one utterance is a prefix of its neighbor)
+            DeduplicateProgressiveRefinements(_contextWindow);
+            DeduplicateProgressiveRefinements(_unprocessedUtterances);
 
             // Build context from already-processed utterances (labeled)
             contextText = _contextWindow.Count > 0
@@ -380,6 +385,26 @@ public sealed class ParallelIntentStrategy : IIntentDetectionStrategy
         }
 
         return bestMatch;
+    }
+
+    /// <summary>
+    /// Removes adjacent entries where one text is a prefix of its neighbor, keeping the later
+    /// (more refined) entry. Handles progressive Deepgram refinements where successive utterances
+    /// extend the same speech segment (e.g. "Take a" → "Take a look at Billie Eilish").
+    /// </summary>
+    private static void DeduplicateProgressiveRefinements(List<TrackedUtterance> utterances)
+    {
+        for (int i = utterances.Count - 1; i > 0; i--)
+        {
+            var prev = utterances[i - 1].Text;
+            var curr = utterances[i].Text;
+
+            if (curr.StartsWith(prev, StringComparison.OrdinalIgnoreCase) ||
+                prev.StartsWith(curr, StringComparison.OrdinalIgnoreCase))
+            {
+                utterances.RemoveAt(i - 1);
+            }
+        }
     }
 
     private void TrimContextWindow()

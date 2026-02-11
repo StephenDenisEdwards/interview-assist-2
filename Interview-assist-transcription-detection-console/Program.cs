@@ -1154,6 +1154,9 @@ public partial class Program
         var deepgramService = new DeepgramTranscriptionService(wavAudio, deepgramOptions);
 
         // Wire Deepgram events to pipeline
+        // Note: provisionals are NOT forwarded — they cause duplicate utterances from
+        // progressive refinements. Stables (from endpointing + PromoteProvisionalToStable)
+        // already cover all confirmed text.
         var eventCount = 0;
         deepgramService.OnStableText += args =>
         {
@@ -1164,19 +1167,6 @@ public partial class Program
                 IsFinal = true,
                 SpeakerId = args.Speaker?.ToString()
             });
-        };
-
-        deepgramService.OnProvisionalText += args =>
-        {
-            if (!string.IsNullOrWhiteSpace(args.Text))
-            {
-                pipeline.ProcessAsrEvent(new AsrEvent
-                {
-                    Text = args.Text,
-                    IsFinal = false,
-                    SpeakerId = args.Speaker?.ToString()
-                });
-            }
         };
 
         deepgramService.OnInfo += msg =>
@@ -2051,6 +2041,9 @@ public class TranscriptionApp
     {
         if (_deepgramService == null) return;
 
+        // Note: provisionals are NOT forwarded to the pipeline — they cause duplicate
+        // utterances from progressive refinements. Stables (from endpointing +
+        // PromoteProvisionalToStable) already cover all confirmed text.
         _deepgramService.OnStableText += args =>
         {
             Application.MainLoop?.Invoke(() =>
@@ -2062,41 +2055,27 @@ public class TranscriptionApp
                 }
 
                 AddTranscript(args.Text + " ");
-
-                // Feed to intent pipeline
-                EnqueuePipelineEvent(pipeline => pipeline.ProcessAsrEvent(new AsrEvent
-                {
-                    Text = args.Text,
-                    IsFinal = true,
-                    SpeakerId = args.Speaker?.ToString()
-                }));
             });
-        };
 
-        _deepgramService.OnProvisionalText += args =>
-        {
-            // Feed provisional to intent pipeline for early detection (no display)
-            if (!string.IsNullOrWhiteSpace(args.Text))
+            // Feed to intent pipeline
+            EnqueuePipelineEvent(pipeline => pipeline.ProcessAsrEvent(new AsrEvent
             {
-                EnqueuePipelineEvent(pipeline => pipeline.ProcessAsrEvent(new AsrEvent
-                {
-                    Text = args.Text,
-                    IsFinal = false,
-                    SpeakerId = args.Speaker?.ToString()
-                }));
-            }
+                Text = args.Text,
+                IsFinal = true,
+                SpeakerId = args.Speaker?.ToString()
+            }));
         };
 
         _deepgramService.OnInfo += msg =>
         {
+            // Signal utterance end to intent pipeline
+            if (msg.Contains("Utterance end"))
+            {
+                EnqueuePipelineEvent(pipeline => pipeline.SignalUtteranceEnd());
+            }
+
             Application.MainLoop?.Invoke(() =>
             {
-                // Signal utterance end to intent pipeline
-                if (msg.Contains("Utterance end"))
-                {
-                    EnqueuePipelineEvent(pipeline => pipeline.SignalUtteranceEnd());
-                }
-
                 AddDebug($"[Info] {msg}");
             });
         };
