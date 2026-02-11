@@ -6,6 +6,9 @@
 # VS Code
 .vscode/
 
+# Windows reserved device names (created accidentally by Unix shells)
+nul
+
 # User-specific files
 *.rsuser
 *.suo
