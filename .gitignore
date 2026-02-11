@@ -364,8 +364,9 @@ FodyWeavers.xsd
 # Claude Code local settings
 .claude/settings.local.json
 
-# Recorded sessions and evaluation results
+# Recorded sessions, reports, and evaluation results
 recordings/
+reports/
 evaluations/
 old_recordings/
 old_evaluations/
