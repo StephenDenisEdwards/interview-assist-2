@@ -76,6 +76,11 @@ public sealed class OpenAiIntentDetector : ILlmIntentDetector
     public event Action<string>? OnRequestSending;
 
     /// <summary>
+    /// Fires after each API call completes with the elapsed time in milliseconds.
+    /// </summary>
+    public event Action<long>? OnRequestCompleted;
+
+    /// <summary>
     /// The system prompt in use.
     /// </summary>
     public string SystemPrompt => _systemPrompt;
@@ -122,7 +127,10 @@ public sealed class OpenAiIntentDetector : ILlmIntentDetector
             var json = JsonSerializer.Serialize(requestBody);
             using var content = new StringContent(json, Encoding.UTF8, "application/json");
 
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             using var response = await _http.PostAsync(ChatCompletionsUrl, content, ct).ConfigureAwait(false);
+            stopwatch.Stop();
+            OnRequestCompleted?.Invoke(stopwatch.ElapsedMilliseconds);
 
             if (!response.IsSuccessStatusCode)
             {

@@ -888,11 +888,24 @@ public partial class Program
         log(detector.SystemPrompt);
         log("═══ End System Prompt ═══");
 
+        void LogYellow(string msg)
+        {
+            var prev = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            log(msg);
+            Console.ForegroundColor = prev;
+        }
+
         detector.OnRequestSending += userMessage =>
         {
-            log("─── LLM Request ───");
-            log($"[User Message]\n{userMessage}");
-            log("─── End Request ───");
+            LogYellow("─── LLM Request ───");
+            LogYellow($"[User Message]\n{userMessage}");
+        };
+
+        detector.OnRequestCompleted += elapsedMs =>
+        {
+            LogYellow($"[LLM completed in {elapsedMs}ms]");
+            LogYellow("─── End Request ───");
         };
     }
 
@@ -2598,6 +2611,14 @@ public class TranscriptionApp
             {
                 AddDebug("─── LLM Request ───");
                 AddDebug($"[User Message]\n{userMessage}");
+            });
+        };
+
+        detector.OnRequestCompleted += (elapsedMs) =>
+        {
+            Application.MainLoop?.Invoke(() =>
+            {
+                AddDebug($"[LLM completed in {elapsedMs}ms]");
                 AddDebug("─── End Request ───");
             });
         };
