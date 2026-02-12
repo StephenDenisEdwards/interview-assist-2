@@ -29,7 +29,9 @@ public sealed record RecordingOptions
     public string GenerateFilePath()
     {
         var timestamp = DateTime.Now.ToString("yyyy-MM-dd-HHmmss");
-        var fileName = FileNamePattern.Replace("{timestamp}", timestamp);
+        var fileName = FileNamePattern
+            .Replace("{timestamp}", timestamp)
+            .Replace("{pid}", Environment.ProcessId.ToString());
         return Path.Combine(Folder, fileName);
     }
 }

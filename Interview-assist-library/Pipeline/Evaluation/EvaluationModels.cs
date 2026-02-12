@@ -10,11 +10,17 @@ public sealed record ExtractedQuestion(
     int ApproximatePosition);
 
 /// <summary>
+/// Indicates how the ground truth was produced.
+/// </summary>
+public sealed record GroundTruthSource(string Method, string? Model, string? File = null);
+
+/// <summary>
 /// Result of ground truth extraction, including parsed questions and the raw LLM response.
 /// </summary>
 public sealed record GroundTruthResult(
     IReadOnlyList<ExtractedQuestion> Questions,
-    string RawLlmResponse);
+    string RawLlmResponse,
+    GroundTruthSource Source);
 
 /// <summary>
 /// Result of comparing detected questions against ground truth.
@@ -118,4 +124,10 @@ public sealed record EvaluationOptions
     /// Output folder for evaluation reports.
     /// </summary>
     public string OutputFolder { get; init; } = "evaluations";
+
+    /// <summary>
+    /// Optional path to a human-labeled ground truth JSON file.
+    /// When set, skips LLM extraction and loads ground truth from this file.
+    /// </summary>
+    public string? GroundTruthFile { get; init; }
 }

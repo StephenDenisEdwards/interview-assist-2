@@ -71,8 +71,10 @@ public sealed class GroundTruthExtractor : IDisposable
         string fullTranscript,
         CancellationToken ct = default)
     {
+        var source = new GroundTruthSource("LLM", _model);
+
         if (string.IsNullOrWhiteSpace(fullTranscript))
-            return new GroundTruthResult(Array.Empty<ExtractedQuestion>(), string.Empty);
+            return new GroundTruthResult(Array.Empty<ExtractedQuestion>(), string.Empty, source);
 
         try
         {
@@ -100,13 +102,13 @@ public sealed class GroundTruthExtractor : IDisposable
             {
                 var error = await response.Content.ReadAsStringAsync(ct);
                 Console.Error.WriteLine($"[GroundTruth Error] {response.StatusCode}: {error}");
-                return new GroundTruthResult(Array.Empty<ExtractedQuestion>(), string.Empty);
+                return new GroundTruthResult(Array.Empty<ExtractedQuestion>(), string.Empty, source);
             }
 
             var responseJson = await response.Content.ReadAsStringAsync(ct).ConfigureAwait(false);
             var rawContent = ExtractContentFromResponse(responseJson);
             var questions = ParseResponse(responseJson);
-            return new GroundTruthResult(questions, rawContent);
+            return new GroundTruthResult(questions, rawContent, source);
         }
         catch (OperationCanceledException)
         {
@@ -115,7 +117,7 @@ public sealed class GroundTruthExtractor : IDisposable
         catch (Exception ex)
         {
             Console.Error.WriteLine($"[GroundTruth Error] {ex.Message}");
-            return new GroundTruthResult(Array.Empty<ExtractedQuestion>(), string.Empty);
+            return new GroundTruthResult(Array.Empty<ExtractedQuestion>(), string.Empty, source);
         }
     }
 

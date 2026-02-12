@@ -60,17 +60,26 @@ public sealed class EvaluationRunner
         Console.WriteLine($"  Unique questions: {deduplicated.Count}");
         Console.WriteLine();
 
-        // Extract ground truth using LLM
-        Console.WriteLine($"Extracting ground truth using {_options.Model}...");
-        if (string.IsNullOrWhiteSpace(_options.ApiKey))
+        // Extract ground truth
+        GroundTruthResult groundTruthResult;
+        if (!string.IsNullOrWhiteSpace(_options.GroundTruthFile))
         {
-            Console.WriteLine("Error: OpenAI API key required for ground truth extraction.");
-            Console.WriteLine("Set OPENAI_API_KEY environment variable or add Evaluation:ApiKey to appsettings.json.");
-            return 1;
+            Console.WriteLine($"Loading human-labeled ground truth from {_options.GroundTruthFile}...");
+            groundTruthResult = await LoadGroundTruthFileAsync(_options.GroundTruthFile, ct);
         }
+        else
+        {
+            Console.WriteLine($"Extracting ground truth using LLM ({_options.Model})...");
+            if (string.IsNullOrWhiteSpace(_options.ApiKey))
+            {
+                Console.WriteLine("Error: OpenAI API key required for ground truth extraction.");
+                Console.WriteLine("Set OPENAI_API_KEY environment variable or add Evaluation:ApiKey to appsettings.json.");
+                return 1;
+            }
 
-        using var extractor = new GroundTruthExtractor(_options.ApiKey, _options.Model);
-        var groundTruthResult = await extractor.ExtractQuestionsWithRawAsync(transcript, ct);
+            using var extractor = new GroundTruthExtractor(_options.ApiKey, _options.Model);
+            groundTruthResult = await extractor.ExtractQuestionsWithRawAsync(transcript, ct);
+        }
         var groundTruth = groundTruthResult.Questions;
         Console.WriteLine($"  Questions found: {groundTruth.Count}");
         Console.WriteLine();
@@ -105,7 +114,7 @@ public sealed class EvaluationRunner
         };
 
         // Output results
-        PrintResults(enhancedResult, groundTruth.Count, deduplicated.Count);
+        PrintResults(enhancedResult, groundTruth.Count, deduplicated.Count, groundTruthResult.Source);
         PrintSubtypeResults(subtypeResult, misclassifications);
         PrintErrorAnalysis(errorAnalysis, confidenceBuckets);
         PrintMissedAnalysis(missedAnalysis);
@@ -115,7 +124,8 @@ public sealed class EvaluationRunner
         if (!string.IsNullOrWhiteSpace(outputFile))
         {
             await SaveResultsAsync(outputFile, sessionFile, transcript, groundTruth, deduplicated,
-                enhancedResult, errorAnalysis, missedAnalysis, confidenceBuckets, subtypeResult, ct);
+                enhancedResult, errorAnalysis, missedAnalysis, confidenceBuckets, subtypeResult,
+                groundTruthResult.Source, ct);
             Console.WriteLine();
             Console.WriteLine($"Results saved to: {outputFile}");
         }
@@ -540,6 +550,23 @@ public sealed class EvaluationRunner
         await File.WriteAllTextAsync(outputFile, json, ct);
     }
 
+    private static async Task<GroundTruthResult> LoadGroundTruthFileAsync(string filePath, CancellationToken ct)
+    {
+        var json = await File.ReadAllTextAsync(filePath, ct);
+        var questions = JsonSerializer.Deserialize<List<ExtractedQuestion>>(json, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+
+        var loaded = questions?.Where(q => !string.IsNullOrWhiteSpace(q.Text)).ToList()
+            ?? new List<ExtractedQuestion>();
+
+        return new GroundTruthResult(
+            loaded,
+            string.Empty,
+            new GroundTruthSource("HumanLabeled", null, Path.GetFileName(filePath)));
+    }
+
     private static async Task<IReadOnlyList<RecordedEvent>> LoadEventsAsync(string filePath, CancellationToken ct)
     {
         var events = new List<RecordedEvent>();
@@ -565,10 +592,13 @@ public sealed class EvaluationRunner
         return events;
     }
 
-    private static void PrintResults(EvaluationResult result, int groundTruthCount, int detectedCount)
+    private static void PrintResults(EvaluationResult result, int groundTruthCount, int detectedCount, GroundTruthSource source)
     {
         Console.WriteLine();
         Console.WriteLine("=== Metrics ===");
+        var sourceDetail = source.Model ?? source.File;
+        var sourceDisplay = sourceDetail != null ? $"{source.Method} ({sourceDetail})" : source.Method;
+        Console.WriteLine($"Ground Truth Source: {sourceDisplay}");
         Console.WriteLine($"Ground Truth:    {groundTruthCount} questions");
         Console.WriteLine($"Detected:        {detectedCount} unique questions");
         Console.WriteLine();
@@ -625,6 +655,7 @@ public sealed class EvaluationRunner
         MissedQuestionAnalysis missedAnalysis,
         IReadOnlyList<ConfidenceBucket> confidenceBuckets,
         SubtypeEvaluationResult subtypeResult,
+        GroundTruthSource groundTruthSource,
         CancellationToken ct)
     {
         var report = new
@@ -632,6 +663,7 @@ public sealed class EvaluationRunner
             GeneratedAt = DateTime.UtcNow,
             SessionFile = Path.GetFileName(sessionFile),
             TranscriptLength = transcript.Length,
+            GroundTruthSource = new { groundTruthSource.Method, groundTruthSource.Model, groundTruthSource.File },
             Metrics = new
             {
                 result.TruePositives,

@@ -31,6 +31,7 @@ public partial class Program
         string? datasetFile = null;
         string? generateTestsFile = null;
         string? analyzeSessionFile = null;
+        string? groundTruthFile = null;
         bool headless = false;
 
         for (int i = 0; i < args.Length; i++)
@@ -115,6 +116,11 @@ public partial class Program
                 analyzeSessionFile = args[i + 1];
                 i++;
             }
+            else if (args[i] == "--ground-truth" && i + 1 < args.Length)
+            {
+                groundTruthFile = args[i + 1];
+                i++;
+            }
             else if (args[i] == "--headless")
             {
                 headless = true;
@@ -151,6 +157,7 @@ public partial class Program
                 Console.WriteLine("  --dataset <file>        Evaluate detection against curated dataset");
                 Console.WriteLine("  --generate-tests <seed> Generate synthetic tests from seed file");
                 Console.WriteLine("  --model <model>         Model for ground truth extraction (default: gpt-4o)");
+                Console.WriteLine("  --ground-truth <file>   Use human-labeled ground truth JSON instead of LLM extraction");
                 Console.WriteLine("  --output <file>         Output file for evaluation report (.json)");
                 Console.WriteLine("  --analyze-errors <file> Analyze false positive patterns from evaluation report");
                 Console.WriteLine("  --analyze <file>        Generate markdown report from existing session JSONL");
@@ -213,7 +220,7 @@ public partial class Program
         // Handle evaluate mode (non-interactive)
         if (evaluateFile != null)
         {
-            return await RunEvaluationModeAsync(evaluateFile, evaluateOutput, evaluateModel);
+            return await RunEvaluationModeAsync(evaluateFile, evaluateOutput, evaluateModel, groundTruthFile);
         }
 
         // Handle analyze-errors mode (non-interactive)
@@ -283,7 +290,7 @@ public partial class Program
 
         // Build configuration
         var configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
+            .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
             .AddEnvironmentVariables()
             .AddUserSecrets<Program>(optional: true)
@@ -380,7 +387,7 @@ public partial class Program
         var recordingOptions = new RecordingOptions
         {
             Folder = recordingConfig["Folder"] ?? "recordings",
-            FileNamePattern = recordingConfig["FileNamePattern"] ?? "session-{timestamp}.jsonl",
+            FileNamePattern = recordingConfig["FileNamePattern"] ?? "session-{timestamp}-{pid}.jsonl",
             AutoStart = recordingConfig.GetValue("AutoStart", false),
             SaveAudio = recordingConfig.GetValue("SaveAudio", false)
         };
@@ -497,7 +504,7 @@ public partial class Program
     {
         // Build configuration
         var configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
+            .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
             .AddEnvironmentVariables()
             .AddUserSecrets<Program>(optional: true)
@@ -534,7 +541,7 @@ public partial class Program
     {
         // Build configuration
         var configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
+            .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
             .AddEnvironmentVariables()
             .AddUserSecrets<Program>(optional: true)
@@ -613,11 +620,11 @@ public partial class Program
         return await runner.CompareStrategiesAsync(sessionFile, outputFile, heuristicOptions, llmOptions, deepgramOptions);
     }
 
-    private static async Task<int> RunEvaluationModeAsync(string evaluateFile, string? outputFile, string? model)
+    private static async Task<int> RunEvaluationModeAsync(string evaluateFile, string? outputFile, string? model, string? groundTruthFile = null)
     {
         // Build configuration
         var configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
+            .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
             .AddEnvironmentVariables()
             .AddUserSecrets<Program>(optional: true)
@@ -636,7 +643,8 @@ public partial class Program
             Model = model ?? evaluationConfig["Model"] ?? "gpt-4o",
             MatchThreshold = evaluationConfig.GetValue("MatchThreshold", 0.7),
             DeduplicationThreshold = evaluationConfig.GetValue("DeduplicationThreshold", 0.8),
-            OutputFolder = evaluationConfig["OutputFolder"] ?? "evaluations"
+            OutputFolder = evaluationConfig["OutputFolder"] ?? "evaluations",
+            GroundTruthFile = groundTruthFile
         };
 
         // Default output file if not specified
@@ -654,7 +662,7 @@ public partial class Program
     {
         // Build configuration
         var configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
+            .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
             .AddEnvironmentVariables()
             .AddUserSecrets<Program>(optional: true)
@@ -683,7 +691,7 @@ public partial class Program
     {
         // Build configuration
         var configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
+            .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
             .AddEnvironmentVariables()
             .AddUserSecrets<Program>(optional: true)
@@ -737,7 +745,7 @@ public partial class Program
 
         // Build configuration
         var configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
+            .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
             .AddEnvironmentVariables()
             .AddUserSecrets<Program>(optional: true)
@@ -923,7 +931,7 @@ public partial class Program
 
         // Build configuration
         var configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
+            .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
             .AddEnvironmentVariables()
             .AddUserSecrets<Program>(optional: true)
@@ -937,7 +945,7 @@ public partial class Program
         var loggingConfig = configuration.GetSection("Logging");
         var logFolder = loggingConfig["Folder"] ?? "logs";
         Directory.CreateDirectory(logFolder);
-        var logFileName = Path.Combine(logFolder, $"transcription-detection-{DateTime.Now:yyyyMMdd-HHmmss}.log");
+        var logFileName = Path.Combine(logFolder, $"transcription-detection-{DateTime.Now:yyyyMMdd-HHmmss}-{Environment.ProcessId}.log");
         await using var logWriter = new StreamWriter(logFileName, append: false) { AutoFlush = true };
 
         void Log(string msg)
@@ -952,7 +960,7 @@ public partial class Program
         var recordingOptions = new RecordingOptions
         {
             Folder = recordingConfig["Folder"] ?? "recordings",
-            FileNamePattern = recordingConfig["FileNamePattern"] ?? "session-{timestamp}.jsonl"
+            FileNamePattern = recordingConfig["FileNamePattern"] ?? "session-{timestamp}-{pid}.jsonl"
         };
 
         var extension = Path.GetExtension(playbackFile).ToLowerInvariant();
@@ -1545,7 +1553,7 @@ public class TranscriptionApp
 
         // Open debug log file
         Directory.CreateDirectory(_logFolder);
-        var logFileName = Path.Combine(_logFolder, $"transcription-detection-{DateTime.Now:yyyyMMdd-HHmmss}.log");
+        var logFileName = Path.Combine(_logFolder, $"transcription-detection-{DateTime.Now:yyyyMMdd-HHmmss}-{Environment.ProcessId}.log");
         _debugLogWriter = new StreamWriter(logFileName, append: false) { AutoFlush = true };
 
         // Parse background color and create color scheme
