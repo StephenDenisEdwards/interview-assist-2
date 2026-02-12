@@ -1272,8 +1272,8 @@ public partial class Program
 
             var apiTimeMs = evt.ApiTimeMs;
 
-            // Track Questions in stats
-            if (evt.Intent.Type == IntentType.Question)
+            // Track Questions and Imperatives in stats
+            if (evt.Intent.Type is IntentType.Question or IntentType.Imperative)
             {
                 var index = stats.FinalIntents.Count + 1;
                 stats.FinalIntents.Add((index, evt.UtteranceId, evt.Intent, latencyMs, apiTimeMs));
@@ -1295,8 +1295,8 @@ public partial class Program
 
             var apiTimeMs = evt.ApiTimeMs;
 
-            // Track Questions in stats
-            if (evt.CorrectedIntent.Type == IntentType.Question)
+            // Track Questions and Imperatives in stats
+            if (evt.CorrectedIntent.Type is IntentType.Question or IntentType.Imperative)
             {
                 var index = stats.FinalIntents.Count + 1;
                 stats.FinalIntents.Add((index, evt.UtteranceId, evt.CorrectedIntent, latencyMs, apiTimeMs));
@@ -2163,8 +2163,8 @@ public class TranscriptionApp
             {
                 AddDebug($"[Intent.final] {evt.Intent.Type}/{evt.Intent.Subtype} conf={evt.Intent.Confidence:F2}");
 
-                // Display detected questions in the intent list
-                if (evt.Intent.Type == IntentType.Question)
+                // Display detected questions and imperatives in the intent list
+                if (evt.Intent.Type is IntentType.Question or IntentType.Imperative)
                 {
                     var subtypeLabel = FormatSubtypeLabel(evt.Intent.Subtype);
 
@@ -2242,8 +2242,8 @@ public class TranscriptionApp
                 var correctedType = evt.CorrectedIntent.Type.ToString();
                 AddDebug($"[Intent.corrected] {evt.CorrectionType}: {originalType} → {correctedType}");
 
-                // Handle corrections that result in questions
-                if (evt.CorrectedIntent.Type == IntentType.Question)
+                // Handle corrections that result in questions or imperatives
+                if (evt.CorrectedIntent.Type is IntentType.Question or IntentType.Imperative)
                 {
                     var subtypeLabel = FormatSubtypeLabel(evt.CorrectedIntent.Subtype);
 

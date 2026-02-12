@@ -80,7 +80,7 @@ public static class TranscriptExtractor
     {
         return events
             .OfType<RecordedIntentEvent>()
-            .Where(e => e.Data.Intent.Type == "Question")
+            .Where(e => e.Data.Intent.Type is "Question" or "Imperative")
             .Where(e => !candidatesOnly || e.Data.IsCandidate)
             .OrderBy(e => e.OffsetMs)
             .ToList();

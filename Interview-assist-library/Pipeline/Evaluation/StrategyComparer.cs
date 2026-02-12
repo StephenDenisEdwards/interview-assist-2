@@ -109,7 +109,7 @@ public sealed class StrategyComparer
 
         pipeline.OnIntentFinal += evt =>
         {
-            if (evt.Intent.Type == IntentType.Question)
+            if (evt.Intent.Type is IntentType.Question or IntentType.Imperative)
             {
                 detections.Add(evt.Intent);
                 if (detectionSw.IsRunning)

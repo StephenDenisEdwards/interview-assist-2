@@ -14,30 +14,33 @@ public sealed class GroundTruthExtractor : IDisposable
     private const string ChatCompletionsUrl = "https://api.openai.com/v1/chat/completions";
 
     private const string SystemPrompt = """
-        You are a question extraction system. Your task is to identify ALL questions in a transcript.
+        You are a question and imperative extraction system. Your task is to identify ALL questions
+        and imperative commands that seek information in a transcript.
 
-        For each question found, provide:
-        - text: The exact question text as it appears (or slightly cleaned up for clarity)
-        - subtype: "Definition" | "HowTo" | "Compare" | "Troubleshoot" | "Rhetorical" | "Clarification" | null
-        - confidence: How confident you are this is a genuine question (0.0 to 1.0)
-        - position: Approximate character position in the transcript where the question appears
+        For each item found, provide:
+        - text: The exact text as it appears (or slightly cleaned up for clarity)
+        - subtype: "Definition" | "HowTo" | "Compare" | "Troubleshoot" | "Rhetorical" | "Clarification" | "Generate" | null
+        - confidence: How confident you are this is a genuine question or imperative (0.0 to 1.0)
+        - position: Approximate character position in the transcript where it appears
 
-        Question types to detect:
+        Types to detect:
         - Direct questions with question marks
         - Implied questions ("I wonder if...", "Do you know...")
         - Interview questions ("Tell me about...", "Can you explain...")
         - Rhetorical questions (still count them, mark subtype as "Rhetorical")
+        - Imperative commands that seek information ("Explain...", "Describe...", "List...", "Walk me through...")
 
         DO NOT include:
         - Incomplete sentence fragments
         - Statements that don't seek information
         - Filler phrases
+        - Imperative commands that are not information-seeking (e.g., "Close the door")
 
-        Be thorough - extract EVERY question, even if they seem similar.
-        Questions from all speakers should be included.
+        Be thorough - extract EVERY question and information-seeking imperative, even if they seem similar.
+        Items from all speakers should be included.
 
         Respond with JSON: {"questions": [...]}
-        If no questions found: {"questions": []}
+        If none found: {"questions": []}
         """;
 
     public GroundTruthExtractor(string apiKey, string model = "gpt-4o")
