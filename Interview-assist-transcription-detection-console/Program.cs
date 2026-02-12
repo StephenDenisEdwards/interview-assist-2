@@ -472,7 +472,8 @@ public partial class Program
                 EnablePreprocessing = llmConfig.GetValue("EnablePreprocessing", true),
                 EnableDeduplication = llmConfig.GetValue("EnableDeduplication", true),
                 DeduplicationWindowMs = llmConfig.GetValue("DeduplicationWindowMs", 30000),
-                ContextWindowChars = llmConfig.GetValue("ContextWindowChars", 1500)
+                ContextWindowChars = llmConfig.GetValue("ContextWindowChars", 1500),
+                SystemPromptFile = llmConfig["SystemPromptFile"] ?? "system-prompt.txt"
             },
             Deepgram = new DeepgramDetectionOptions
             {
@@ -846,7 +847,7 @@ public partial class Program
         var apiKey = options.Llm.ApiKey
             ?? throw new InvalidOperationException("OpenAI API key is required for LLM detection mode.");
 
-        var systemPrompt = LoadSystemPromptStatic(options.Llm.SystemPromptFile, log);
+        var systemPrompt = LoadSystemPromptStatic(options.Llm, log);
 
         var detector = new OpenAiIntentDetector(
             apiKey, options.Llm.Model, options.Llm.ConfidenceThreshold, systemPrompt);
@@ -862,7 +863,7 @@ public partial class Program
         var apiKey = options.Llm.ApiKey
             ?? throw new InvalidOperationException("OpenAI API key is required for Parallel detection mode.");
 
-        var systemPrompt = LoadSystemPromptStatic(options.Llm.SystemPromptFile, log);
+        var systemPrompt = LoadSystemPromptStatic(options.Llm, log);
 
         var llmDetector = new OpenAiIntentDetector(
             apiKey, options.Llm.Model, options.Llm.ConfidenceThreshold, systemPrompt);
@@ -909,22 +910,10 @@ public partial class Program
         };
     }
 
-    private static string? LoadSystemPromptStatic(string? promptFile, Action<string>? log)
+    private static string LoadSystemPromptStatic(LlmDetectionOptions options, Action<string>? log)
     {
-        if (string.IsNullOrWhiteSpace(promptFile))
-            return null;
-
-        if (!Path.IsPathRooted(promptFile))
-            promptFile = Path.Combine(AppContext.BaseDirectory, promptFile);
-
-        if (!File.Exists(promptFile))
-        {
-            log?.Invoke($"System prompt file not found: {promptFile} — using default");
-            return null;
-        }
-
-        var text = File.ReadAllText(promptFile).Trim();
-        log?.Invoke($"Loaded system prompt from {promptFile} ({text.Length} chars)");
+        var text = options.LoadSystemPrompt();
+        log?.Invoke($"Loaded system prompt from {options.SystemPromptFile} ({text.Length} chars)");
         return text;
     }
 
@@ -2539,24 +2528,10 @@ public class TranscriptionApp
         };
     }
 
-    private string? LoadSystemPrompt()
+    private string LoadSystemPrompt()
     {
-        var promptFile = _intentDetectionOptions.Llm.SystemPromptFile;
-        if (string.IsNullOrWhiteSpace(promptFile))
-            return null;
-
-        // Resolve relative paths from app base directory
-        if (!Path.IsPathRooted(promptFile))
-            promptFile = Path.Combine(AppContext.BaseDirectory, promptFile);
-
-        if (!File.Exists(promptFile))
-        {
-            AddDebug($"[Warn] System prompt file not found: {promptFile} — using default");
-            return null;
-        }
-
-        var text = File.ReadAllText(promptFile).Trim();
-        AddDebug($"[Config] Loaded system prompt from {promptFile} ({text.Length} chars)");
+        var text = _intentDetectionOptions.Llm.LoadSystemPrompt();
+        AddDebug($"[Config] Loaded system prompt from {_intentDetectionOptions.Llm.SystemPromptFile} ({text.Length} chars)");
         return text;
     }
 

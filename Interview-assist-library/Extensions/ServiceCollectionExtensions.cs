@@ -187,7 +187,8 @@ public static class ServiceCollectionExtensions
         var apiKey = options.ApiKey ?? Environment.GetEnvironmentVariable("OPENAI_API_KEY")
             ?? throw new InvalidOperationException("OpenAI API key is required for LLM detection mode. Set Llm:ApiKey or OPENAI_API_KEY environment variable.");
 
-        var detector = new OpenAiIntentDetector(apiKey, options.Model, options.ConfidenceThreshold);
+        var systemPrompt = options.LoadSystemPrompt();
+        var detector = new OpenAiIntentDetector(apiKey, options.Model, options.ConfidenceThreshold, systemPrompt);
         return new LlmIntentStrategy(detector, options);
     }
 
@@ -196,7 +197,8 @@ public static class ServiceCollectionExtensions
         var apiKey = llmOptions.ApiKey ?? Environment.GetEnvironmentVariable("OPENAI_API_KEY")
             ?? throw new InvalidOperationException("OpenAI API key is required for Parallel detection mode. Set Llm:ApiKey or OPENAI_API_KEY environment variable.");
 
-        var llmDetector = new OpenAiIntentDetector(apiKey, llmOptions.Model, llmOptions.ConfidenceThreshold);
+        var systemPrompt = llmOptions.LoadSystemPrompt();
+        var llmDetector = new OpenAiIntentDetector(apiKey, llmOptions.Model, llmOptions.ConfidenceThreshold, systemPrompt);
         return new ParallelIntentStrategy(llmDetector, heuristicOptions, llmOptions);
     }
 

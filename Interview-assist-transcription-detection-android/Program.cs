@@ -366,7 +366,8 @@ public partial class Program
                 TriggerTimeoutMs = llmConfig.GetValue("TriggerTimeoutMs", 3000),
                 EnablePreprocessing = llmConfig.GetValue("EnablePreprocessing", true),
                 EnableDeduplication = llmConfig.GetValue("EnableDeduplication", true),
-                DeduplicationWindowMs = llmConfig.GetValue("DeduplicationWindowMs", 30000)
+                DeduplicationWindowMs = llmConfig.GetValue("DeduplicationWindowMs", 30000),
+                SystemPromptFile = llmConfig["SystemPromptFile"] ?? "system-prompt.txt"
             }
         };
     }
@@ -467,7 +468,8 @@ public partial class Program
             TriggerTimeoutMs = llmConfig.GetValue("TriggerTimeoutMs", 3000),
             EnablePreprocessing = llmConfig.GetValue("EnablePreprocessing", true),
             EnableDeduplication = llmConfig.GetValue("EnableDeduplication", true),
-            DeduplicationWindowMs = llmConfig.GetValue("DeduplicationWindowMs", 30000)
+            DeduplicationWindowMs = llmConfig.GetValue("DeduplicationWindowMs", 30000),
+            SystemPromptFile = llmConfig["SystemPromptFile"] ?? "system-prompt.txt"
         };
 
         var runner = new EvaluationRunner(options);
@@ -1346,10 +1348,12 @@ public class TranscriptionApp
         var apiKey = _intentDetectionOptions.Llm.ApiKey
             ?? throw new InvalidOperationException("OpenAI API key is required for LLM detection mode. Set OPENAI_API_KEY environment variable.");
 
+        var systemPrompt = _intentDetectionOptions.Llm.LoadSystemPrompt();
         var detector = new OpenAiIntentDetector(
             apiKey,
             _intentDetectionOptions.Llm.Model,
-            _intentDetectionOptions.Llm.ConfidenceThreshold);
+            _intentDetectionOptions.Llm.ConfidenceThreshold,
+            systemPrompt);
 
         return new LlmIntentStrategy(detector, _intentDetectionOptions.Llm);
     }
@@ -1359,10 +1363,12 @@ public class TranscriptionApp
         var apiKey = _intentDetectionOptions.Llm.ApiKey
             ?? throw new InvalidOperationException("OpenAI API key is required for Parallel detection mode. Set OPENAI_API_KEY environment variable.");
 
+        var systemPrompt = _intentDetectionOptions.Llm.LoadSystemPrompt();
         var llmDetector = new OpenAiIntentDetector(
             apiKey,
             _intentDetectionOptions.Llm.Model,
-            _intentDetectionOptions.Llm.ConfidenceThreshold);
+            _intentDetectionOptions.Llm.ConfidenceThreshold,
+            systemPrompt);
 
         return new ParallelIntentStrategy(
             llmDetector,

@@ -109,8 +109,34 @@ public class LlmDetectionOptions
 
     /// <summary>
     /// Path to a text file containing the system prompt for LLM intent detection.
-    /// If null or empty, uses the built-in default prompt.
+    /// Required for LLM and Parallel detection modes.
     /// Relative paths are resolved from the application's base directory.
     /// </summary>
     public string? SystemPromptFile { get; set; }
+
+    /// <summary>
+    /// Loads the system prompt from the file specified by <see cref="SystemPromptFile"/>.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown if SystemPromptFile is not configured or the file does not exist.</exception>
+    public string LoadSystemPrompt()
+    {
+        if (string.IsNullOrWhiteSpace(SystemPromptFile))
+            throw new InvalidOperationException(
+                "SystemPromptFile is required for LLM intent detection. Set IntentDetection:Llm:SystemPromptFile in appsettings.json.");
+
+        var path = SystemPromptFile;
+        if (!Path.IsPathRooted(path))
+            path = Path.Combine(AppContext.BaseDirectory, path);
+
+        if (!File.Exists(path))
+            throw new InvalidOperationException(
+                $"System prompt file not found: {path}");
+
+        var text = File.ReadAllText(path).Trim();
+        if (string.IsNullOrWhiteSpace(text))
+            throw new InvalidOperationException(
+                $"System prompt file is empty: {path}");
+
+        return text;
+    }
 }

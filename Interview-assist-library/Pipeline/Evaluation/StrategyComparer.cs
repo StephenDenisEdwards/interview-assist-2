@@ -198,10 +198,12 @@ public sealed class StrategyComparer
 
     private static LlmIntentStrategy CreateLlmStrategy(LlmDetectionOptions options)
     {
+        var systemPrompt = options.LoadSystemPrompt();
         var detector = new OpenAiIntentDetector(
             options.ApiKey!,
             options.Model,
-            options.ConfidenceThreshold);
+            options.ConfidenceThreshold,
+            systemPrompt);
 
         return new LlmIntentStrategy(detector, options);
     }
@@ -210,10 +212,12 @@ public sealed class StrategyComparer
         HeuristicDetectionOptions heuristicOptions,
         LlmDetectionOptions llmOptions)
     {
+        var systemPrompt = llmOptions.LoadSystemPrompt();
         var detector = new OpenAiIntentDetector(
             llmOptions.ApiKey!,
             llmOptions.Model,
-            llmOptions.ConfidenceThreshold);
+            llmOptions.ConfidenceThreshold,
+            systemPrompt);
 
         return new ParallelIntentStrategy(detector, heuristicOptions, llmOptions);
     }

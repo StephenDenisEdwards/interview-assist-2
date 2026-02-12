@@ -16,59 +16,9 @@ public sealed class OpenAiIntentDetector : ILlmIntentDetector
 
     private const string ChatCompletionsUrl = "https://api.openai.com/v1/chat/completions";
 
-    public const string DefaultSystemPrompt = """
-        You are an intent detection system analyzing real-time speech transcripts.
-        Detect questions and imperatives directed at a listener.
-
-        INPUT FORMAT:
-        Utterances are labeled with IDs in brackets:
-          [utt_0001] Some text here
-          [utt_0003] More text here
-        Multiple utterances may be progressive ASR refinements of the same sentence.
-        Detect from the MOST COMPLETE version only. Ignore earlier partial fragments.
-
-        For each detected intent, provide:
-        - utterance_id: The [utt_XXXX] label of the source utterance
-        - text: The question/imperative, made SELF-CONTAINED (resolve pronouns using context)
-        - type: "Question" | "Imperative"
-        - subtype: For questions: "Definition" | "HowTo" | "Compare" | "Troubleshoot" | null
-                   For imperatives: "Stop" | "Repeat" | "Continue" | "Generate" | null
-        - confidence: 0.0 to 1.0
-
-        CRITICAL:
-        - utterance_id: Reference the [utt_XXXX] label from the input. This links the intent to its source.
-        - text: Make the question SELF-CONTAINED by resolving pronouns and adding context.
-        - Examples:
-          * [utt_0012] When should we use it?  (where context mentions "abstract class"):
-            utterance_id: "utt_0012"
-            text: "When should we use an abstract class?"
-          * [utt_0015] What are the advantages?  (where context mentions interfaces):
-            utterance_id: "utt_0015"
-            text: "What are the advantages of using interfaces?"
-        - If you cannot determine what a pronoun refers to, set confidence < 0.5
-
-        Detection rules:
-        - Questions: Direct questions (?) or implied questions ("Do you know...", "Can you tell me...")
-        - Imperatives: Commands like "Explain...", "Describe...", "Stop", "Repeat", "Tell me about..."
-        - Ignore: Filler words, partial sentences, meta-commentary about videos/tutorials
-        - Ignore: "subscribe", "like", "comment" type content
-        - Ignore: Statements that are not questions or imperatives
-
-        Question subtypes:
-        - Definition: "What is X?", "Define X", "What does X mean?"
-        - HowTo: "How do I...", "How can I...", "Steps to..."
-        - Compare: "Difference between X and Y", "X vs Y"
-        - Troubleshoot: "Why doesn't...", "Error with...", "Not working..."
-
-        Imperative subtypes:
-        - Stop: "Stop", "Cancel", "Nevermind"
-        - Repeat: "Repeat", "Say that again"
-        - Continue: "Continue", "Go on", "Next"
-        - Generate: "Generate questions about..."
-
-        Respond with JSON: {"intents": [...]}
-        If no intents found, return: {"intents": []}
-        """;
+    // The system prompt must be provided via the systemPrompt constructor parameter,
+    // typically loaded from a file (e.g. system-prompt.txt) configured via LlmDetectionOptions.SystemPromptFile.
+    // See Interview-assist-transcription-detection-console/system-prompt.txt for the current prompt.
 
     /// <summary>
     /// Fires before each API call with the user message content.
@@ -85,14 +35,16 @@ public sealed class OpenAiIntentDetector : ILlmIntentDetector
     /// </summary>
     public string SystemPrompt => _systemPrompt;
 
-    public OpenAiIntentDetector(string apiKey, string model = "gpt-4o-mini", double confidenceThreshold = 0.7, string? systemPrompt = null)
+    public OpenAiIntentDetector(string apiKey, string model, double confidenceThreshold, string systemPrompt)
     {
         if (string.IsNullOrWhiteSpace(apiKey))
             throw new ArgumentNullException(nameof(apiKey));
+        if (string.IsNullOrWhiteSpace(systemPrompt))
+            throw new ArgumentException("A system prompt is required. Load one from a file via LlmDetectionOptions.SystemPromptFile.", nameof(systemPrompt));
 
         _model = model;
         _confidenceThreshold = confidenceThreshold;
-        _systemPrompt = string.IsNullOrWhiteSpace(systemPrompt) ? DefaultSystemPrompt : systemPrompt;
+        _systemPrompt = systemPrompt;
         _http = new HttpClient();
         _http.DefaultRequestHeaders.Add("Authorization", $"Bearer {apiKey}");
     }
