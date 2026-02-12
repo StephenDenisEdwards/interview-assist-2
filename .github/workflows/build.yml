@@ -53,8 +53,6 @@ jobs:
       - name: Build Android audio library
         run: dotnet build interview-assist-audio-android/interview-assist-audio-android.csproj --configuration Release
 
-      - name: Build Android console app
-        run: dotnet build Interview-assist-transcription-detection-android/Interview-assist-transcription-detection-android.csproj --configuration Release
 
       - name: Upload Android artifacts
         uses: actions/upload-artifact@v4
