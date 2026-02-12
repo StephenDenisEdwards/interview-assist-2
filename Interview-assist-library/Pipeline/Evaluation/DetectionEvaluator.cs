@@ -47,7 +47,7 @@ public sealed class DetectionEvaluator
                     continue;
 
                 var det = detected[detIdx];
-                var similarity = TranscriptExtractor.CalculateSimilarity(gt.Text, det.Text);
+                var similarity = CalculateMatchSimilarity(gt.Text, det.Text);
 
                 if (similarity >= _matchThreshold && similarity > bestSimilarity)
                 {
@@ -86,5 +86,58 @@ public sealed class DetectionEvaluator
             Missed = missed,
             FalseAlarms = falseAlarms
         };
+    }
+
+    /// <summary>
+    /// Calculates match similarity using the best of Levenshtein similarity and
+    /// word containment. Word containment handles pronoun resolution where the
+    /// detector expands "it" → "the appsettings.json file" making the detected
+    /// text longer but semantically equivalent.
+    /// </summary>
+    internal static double CalculateMatchSimilarity(string text1, string text2)
+    {
+        var levenshtein = TranscriptExtractor.CalculateSimilarity(text1, text2);
+        var containment = WordContainmentSimilarity(text1, text2);
+        return Math.Max(levenshtein, containment);
+    }
+
+    private static readonly char[] WordSeparators = [' ', '\t', ',', '.', '?', '!', '\'', '"', '(', ')'];
+    private static readonly HashSet<string> Pronouns = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "it", "its", "they", "them", "their", "theirs",
+        "this", "that", "these", "those",
+        "he", "she", "him", "her", "his", "hers"
+    };
+
+    /// <summary>
+    /// Measures what fraction of the shorter text's non-pronoun words appear in the
+    /// longer text. High containment means the detected text is a pronoun-resolved
+    /// expansion of the ground truth (or vice versa).
+    /// </summary>
+    private static double WordContainmentSimilarity(string text1, string text2)
+    {
+        if (string.IsNullOrEmpty(text1) || string.IsNullOrEmpty(text2))
+            return 0.0;
+
+        var words1 = GetContentWords(text1);
+        var words2 = GetContentWords(text2);
+
+        if (words1.Count == 0 || words2.Count == 0)
+            return 0.0;
+
+        // Check containment of the shorter set's words in the longer set
+        var shorter = words1.Count <= words2.Count ? words1 : words2;
+        var longer = words1.Count <= words2.Count ? words2 : words1;
+
+        var matched = shorter.Count(w => longer.Contains(w));
+        return (double)matched / shorter.Count;
+    }
+
+    private static HashSet<string> GetContentWords(string text)
+    {
+        return text.ToLowerInvariant()
+            .Split(WordSeparators, StringSplitOptions.RemoveEmptyEntries)
+            .Where(w => !Pronouns.Contains(w))
+            .ToHashSet();
     }
 }

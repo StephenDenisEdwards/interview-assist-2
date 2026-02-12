@@ -454,6 +454,20 @@ Bucket     | FP  | TP  | Precision
 | `DatasetsFolder` | Curated datasets location | `evaluations/datasets` |
 | `BaselinesFolder` | Baselines location | `evaluations/baselines` |
 
+### Matching Algorithm
+
+The evaluator uses a dual-strategy matching algorithm to compare detected questions against ground truth (`DetectionEvaluator.CalculateMatchSimilarity`):
+
+1. **Levenshtein similarity** — Normalized edit distance, effective for minor text differences (casing, punctuation, minor wording).
+
+2. **Word containment similarity** — Measures what fraction of the shorter text's content words appear in the longer text, after stripping pronouns. This handles **pronoun resolution**, where the detector makes questions self-contained by expanding pronouns.
+
+The evaluator takes the **maximum** of both scores and compares against `MatchThreshold`.
+
+**Example:** The ground truth extractor produces the raw transcript form `"How do you read values from it?"` while the detector resolves the pronoun to produce `"How do you read values from the appsettings.json file?"`. Levenshtein similarity is ~0.57 (below threshold), but word containment is ~0.86 (above threshold) because all non-pronoun words from the shorter text appear in the longer text.
+
+Pronouns stripped during word containment: `it`, `its`, `they`, `them`, `their`, `theirs`, `this`, `that`, `these`, `those`, `he`, `she`, `him`, `her`, `his`, `hers`.
+
 ---
 
 ## Workflow Examples
