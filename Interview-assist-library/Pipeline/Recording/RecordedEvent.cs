@@ -40,6 +40,8 @@ public sealed record SessionConfig
     public string? IntentDetectionMode { get; init; }
     public string? AudioSource { get; init; }
     public int SampleRate { get; init; }
+    /// <summary>Source file being played back (null for live sessions).</summary>
+    public string? SourceFile { get; init; }
 }
 
 /// <summary>

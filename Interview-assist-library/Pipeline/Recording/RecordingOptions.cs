@@ -32,6 +32,47 @@ public sealed record RecordingOptions
         var fileName = FileNamePattern
             .Replace("{timestamp}", timestamp)
             .Replace("{pid}", Environment.ProcessId.ToString());
-        return Path.Combine(Folder, fileName);
+        return VersionedPath(Path.Combine(Folder, fileName));
+    }
+
+    /// <summary>
+    /// Generate a recording file path derived from a playback source file.
+    /// For .recording.jsonl sources, reuses the session ID and appends a version.
+    /// For .wav sources, derives the session ID and produces a .recording.jsonl.
+    /// </summary>
+    public string GeneratePlaybackFilePath(string sourceFile)
+    {
+        var sessionId = SessionReportGenerator.ExtractSessionId(sourceFile);
+        if (sessionId != null)
+        {
+            return VersionedPath(Path.Combine(Folder, $"{sessionId}.recording.jsonl"));
+        }
+
+        // Fallback: use source filename with .recording.jsonl extension
+        var baseName = Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(sourceFile))
+            ?? Path.GetFileNameWithoutExtension(sourceFile);
+        return VersionedPath(Path.Combine(Folder, $"{baseName}.recording.jsonl"));
+    }
+
+    private static string VersionedPath(string filePath)
+    {
+        if (!File.Exists(filePath))
+            return filePath;
+
+        var dir = Path.GetDirectoryName(filePath)!;
+        var fileName = Path.GetFileName(filePath);
+        var ext = Path.GetExtension(fileName); // .jsonl
+        var nameWithoutExt = fileName[..^ext.Length];
+        // Handle double extensions like .recording.jsonl
+        var secondExt = Path.GetExtension(nameWithoutExt);
+        if (!string.IsNullOrEmpty(secondExt))
+        {
+            nameWithoutExt = nameWithoutExt[..^secondExt.Length];
+            ext = secondExt + ext; // .recording.jsonl
+        }
+        var version = 2;
+        while (File.Exists(Path.Combine(dir, $"{nameWithoutExt}-v{version}{ext}")))
+            version++;
+        return Path.Combine(dir, $"{nameWithoutExt}-v{version}{ext}");
     }
 }

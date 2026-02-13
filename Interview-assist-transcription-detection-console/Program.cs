@@ -1031,12 +1031,13 @@ public partial class Program
         // Wire recorder
         var recorder = new SessionRecorder(pipeline);
         recorder.OnInfo += msg => Log($"[Recording] {msg}");
-        var outputPath = recordingOptions.GenerateFilePath();
+        var outputPath = recordingOptions.GeneratePlaybackFilePath(playbackFile);
         var sessionConfig = new SessionConfig
         {
             IntentDetectionEnabled = true,
             IntentDetectionMode = modeName,
-            AudioSource = "Playback"
+            AudioSource = "Transcript JSONL",
+            SourceFile = Path.GetFileName(playbackFile)
         };
         recorder.Start(outputPath, sessionConfig);
 
@@ -1156,14 +1157,15 @@ public partial class Program
         // Wire recorder
         var recorder = new SessionRecorder(pipeline);
         recorder.OnInfo += msg => log($"[Recording] {msg}");
-        var outputPath = recordingOptions.GenerateFilePath();
+        var outputPath = recordingOptions.GeneratePlaybackFilePath(playbackFile);
         var sessionConfig = new SessionConfig
         {
             DeepgramModel = deepgramOptions.Model,
             IntentDetectionEnabled = true,
             IntentDetectionMode = modeName,
-            AudioSource = "WAV Playback",
-            SampleRate = sampleRate
+            AudioSource = "Audio WAV",
+            SampleRate = sampleRate,
+            SourceFile = Path.GetFileName(playbackFile)
         };
         recorder.Start(outputPath, sessionConfig);
 
