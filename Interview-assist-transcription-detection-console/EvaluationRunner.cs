@@ -616,8 +616,10 @@ public sealed class EvaluationRunner
             Console.WriteLine($"=== Matched Questions ({result.Matches.Count}) ===");
             foreach (var match in result.Matches)
             {
-                Console.WriteLine($"  [GT] \"{match.GroundTruth.Text}\"");
-                Console.WriteLine($"  [DT] \"{match.Detected.Text}\" (match: {match.SimilarityScore:P0})");
+                var gtSubtype = match.GroundTruth.Subtype != null ? $" [{match.GroundTruth.Subtype}]" : "";
+                var dtSubtype = match.Detected.Subtype != null ? $" [{match.Detected.Subtype}]" : "";
+                Console.WriteLine($"  [GT] \"{match.GroundTruth.Text}\"{gtSubtype}");
+                Console.WriteLine($"  [DT] \"{match.Detected.Text}\"{dtSubtype} (match: {match.SimilarityScore:P0})");
                 Console.WriteLine();
             }
         }
@@ -677,6 +679,7 @@ public sealed class EvaluationRunner
             DetectedQuestions = detected.Select(q => new
             {
                 q.Data.Intent.SourceText,
+                q.Data.Intent.Type,
                 q.Data.Intent.Subtype,
                 q.Data.Intent.Confidence,
                 q.Data.UtteranceId

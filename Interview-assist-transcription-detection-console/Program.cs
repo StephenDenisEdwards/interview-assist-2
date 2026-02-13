@@ -655,6 +655,20 @@ public partial class Program
             outputFile = Path.Combine(options.OutputFolder, $"{sessionId}.evaluation.json");
         }
 
+        // Avoid overwriting: append version number if file exists
+        if (File.Exists(outputFile))
+        {
+            var dir = Path.GetDirectoryName(outputFile)!;
+            var name = Path.GetFileName(outputFile);
+            // Strip .json extension, then check for existing version suffix
+            var baseName = name.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
+                ? name[..^5] : name;
+            var version = 2;
+            while (File.Exists(Path.Combine(dir, $"{baseName}-v{version}.json")))
+                version++;
+            outputFile = Path.Combine(dir, $"{baseName}-v{version}.json");
+        }
+
         var runner = new EvaluationRunner(options);
         return await runner.RunAsync(evaluateFile, outputFile);
     }
