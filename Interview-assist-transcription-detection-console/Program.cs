@@ -1,3 +1,4 @@
+using System.Text.Json;
 using InterviewAssist.Audio.Windows;
 using InterviewAssist.Library.Audio;
 using InterviewAssist.Library.Pipeline.Detection;
@@ -620,57 +621,375 @@ public partial class Program
         return await runner.CompareStrategiesAsync(sessionFile, outputFile, heuristicOptions, llmOptions, deepgramOptions);
     }
 
-    private static async Task<int> RunEvaluationModeAsync(string evaluateFile, string? outputFile, string? model, string? groundTruthFile = null)
+    private static EvaluationOptions BuildEvaluationOptions(
+        IConfiguration? configuration = null,
+        string? groundTruthFile = null)
     {
-        // Build configuration
-        var configuration = new ConfigurationBuilder()
+        configuration ??= new ConfigurationBuilder()
             .SetBasePath(AppContext.BaseDirectory)
             .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
             .AddEnvironmentVariables()
             .AddUserSecrets<Program>(optional: true)
             .Build();
 
-        // Get OpenAI API key
         var evaluationConfig = configuration.GetSection("Evaluation");
         var apiKey = GetFirstNonEmpty(
             evaluationConfig["ApiKey"],
             configuration["OpenAI:ApiKey"],
             Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
 
-        var options = new EvaluationOptions
+        return new EvaluationOptions
         {
             ApiKey = apiKey,
-            Model = model ?? evaluationConfig["Model"] ?? "gpt-4o",
+            Model = evaluationConfig["Model"] ?? "gpt-4o",
             MatchThreshold = evaluationConfig.GetValue("MatchThreshold", 0.7),
             DeduplicationThreshold = evaluationConfig.GetValue("DeduplicationThreshold", 0.8),
             OutputFolder = evaluationConfig["OutputFolder"] ?? "evaluations",
             GroundTruthFile = groundTruthFile
         };
+    }
+
+    private static string VersionedEvalPath(string folder, string fileName)
+    {
+        var path = Path.Combine(folder, fileName);
+        if (!File.Exists(path)) return path;
+        var baseName = fileName.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
+            ? fileName[..^5] : fileName;
+        var version = 2;
+        while (File.Exists(Path.Combine(folder, $"{baseName}-v{version}.json")))
+            version++;
+        return Path.Combine(folder, $"{baseName}-v{version}.json");
+    }
+
+    private static async Task<int> RunEvaluationModeAsync(string evaluateFile, string? outputFile, string? model, string? groundTruthFile = null)
+    {
+        var options = BuildEvaluationOptions(groundTruthFile: groundTruthFile);
+
+        // Apply model override if specified
+        if (!string.IsNullOrWhiteSpace(model))
+            options = options with { Model = model };
 
         // Default output file if not specified
         if (string.IsNullOrWhiteSpace(outputFile))
         {
             var sessionId = SessionReportGenerator.ExtractSessionId(evaluateFile)
                 ?? Path.GetFileNameWithoutExtension(evaluateFile);
-            outputFile = Path.Combine(options.OutputFolder, $"{sessionId}.evaluation.json");
+            outputFile = Path.Combine(options.OutputFolder, $"{sessionId}.evaluation-llm.json");
         }
 
         // Avoid overwriting: append version number if file exists
-        if (File.Exists(outputFile))
-        {
-            var dir = Path.GetDirectoryName(outputFile)!;
-            var name = Path.GetFileName(outputFile);
-            // Strip .json extension, then check for existing version suffix
-            var baseName = name.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
-                ? name[..^5] : name;
-            var version = 2;
-            while (File.Exists(Path.Combine(dir, $"{baseName}-v{version}.json")))
-                version++;
-            outputFile = Path.Combine(dir, $"{baseName}-v{version}.json");
-        }
+        outputFile = VersionedEvalPath(
+            Path.GetDirectoryName(outputFile) ?? options.OutputFolder,
+            Path.GetFileName(outputFile));
 
         var runner = new EvaluationRunner(options);
         return await runner.RunAsync(evaluateFile, outputFile);
+    }
+
+    private static async Task RunAutoEvaluationAsync(
+        string sessionFile, IConfiguration? configuration = null, string? reportPath = null)
+    {
+        var options = BuildEvaluationOptions(configuration);
+        if (string.IsNullOrWhiteSpace(options.ApiKey))
+        {
+            Console.WriteLine("Skipping auto-evaluation: no OpenAI API key configured.");
+            return;
+        }
+
+        var sessionId = SessionReportGenerator.ExtractSessionId(sessionFile)
+            ?? Path.GetFileNameWithoutExtension(sessionFile);
+        Directory.CreateDirectory(options.OutputFolder);
+
+        // --- LLM ground truth evaluation ---
+        var llmOutputFile = VersionedEvalPath(options.OutputFolder, $"{sessionId}.evaluation-llm.json");
+        Console.WriteLine($"\n=== Auto-Evaluation (LLM ground truth) ===");
+        var llmRunner = new EvaluationRunner(options);
+        await llmRunner.RunAsync(sessionFile, llmOutputFile);
+
+        // --- Human ground truth ---
+        var humanGtPath = Path.Combine(options.OutputFolder, $"{sessionId}.human-ground-truth.json");
+        var humanGtSeeded = false;
+        if (!File.Exists(humanGtPath))
+        {
+            // Seed from the LLM evaluation's ground truth (avoids a redundant LLM call)
+            Console.WriteLine($"\nSeeding human ground truth from LLM evaluation: {humanGtPath}");
+            var groundTruth = ReadGroundTruthFromEvaluation(llmOutputFile);
+            if (groundTruth != null)
+            {
+                var json = JsonSerializer.Serialize(groundTruth, new JsonSerializerOptions { WriteIndented = true });
+                await File.WriteAllTextAsync(humanGtPath, json);
+                Console.WriteLine($"  Saved {groundTruth.Count} questions to {humanGtPath}");
+            }
+            humanGtSeeded = true;
+        }
+
+        // --- Human ground truth evaluation (skip if just seeded — needs curation first) ---
+        string? humanOutputFile = null;
+        if (humanGtSeeded)
+        {
+            Console.WriteLine($"\nSkipping human ground truth evaluation — seed file needs manual review.");
+            Console.WriteLine($"  Review: {humanGtPath}");
+        }
+        else
+        {
+            var humanOptions = BuildEvaluationOptions(configuration, groundTruthFile: humanGtPath);
+            humanOutputFile = VersionedEvalPath(options.OutputFolder, $"{sessionId}.evaluation-human.json");
+            Console.WriteLine($"\n=== Auto-Evaluation (Human ground truth) ===");
+            var humanRunner = new EvaluationRunner(humanOptions);
+            await humanRunner.RunAsync(sessionFile, humanOutputFile);
+        }
+
+        // --- Append evaluation results to report markdown ---
+        if (!string.IsNullOrWhiteSpace(reportPath) && File.Exists(reportPath))
+        {
+            var llmSection = FormatEvaluationMarkdown(llmOutputFile, "LLM Ground Truth");
+            var humanSection = humanOutputFile != null
+                ? FormatEvaluationMarkdown(humanOutputFile, "Human Ground Truth")
+                : null;
+            var humanSkippedNote = humanGtSeeded
+                ? "### Human Ground Truth\n\n"
+                    + $"*Skipped — human ground truth was just seeded and needs manual review before evaluation.*\n"
+                    + $"Review and curate: `{humanGtPath}`\n\n"
+                : null;
+
+            if (llmSection != null || humanSection != null || humanSkippedNote != null)
+            {
+                var reportContent = await File.ReadAllTextAsync(reportPath);
+                var evalMarkdown = "\n## Evaluation Results\n\n"
+                    + (llmSection ?? "")
+                    + (humanSection ?? humanSkippedNote ?? "");
+
+                // Insert before the footer line (---\n*Generated ...)
+                // Handle both \r\n (Windows) and \n (Unix) line endings
+                var footerIndex = reportContent.LastIndexOf("\r\n---\r\n*Generated ", StringComparison.Ordinal);
+                if (footerIndex < 0)
+                    footerIndex = reportContent.LastIndexOf("\n---\n*Generated ", StringComparison.Ordinal);
+                if (footerIndex >= 0)
+                {
+                    reportContent = reportContent[..footerIndex]
+                        + Environment.NewLine + evalMarkdown
+                        + reportContent[footerIndex..];
+                }
+                else
+                {
+                    reportContent += evalMarkdown;
+                }
+
+                await File.WriteAllTextAsync(reportPath, reportContent);
+                Console.WriteLine($"\nEvaluation results appended to report: {reportPath}");
+            }
+        }
+    }
+
+    private static string? FormatEvaluationMarkdown(string evalJsonPath, string heading)
+    {
+        if (!File.Exists(evalJsonPath)) return null;
+
+        try
+        {
+            var json = File.ReadAllText(evalJsonPath);
+            using var doc = JsonDocument.Parse(json);
+            var root = doc.RootElement;
+
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine($"### {heading}");
+            sb.AppendLine();
+
+            // Ground truth source
+            if (root.TryGetProperty("GroundTruthSource", out var gts))
+            {
+                var method = gts.TryGetProperty("Method", out var m) ? m.GetString() : null;
+                var model = gts.TryGetProperty("Model", out var mo) ? mo.GetString() : null;
+                var file = gts.TryGetProperty("File", out var f) ? f.GetString() : null;
+                var sourceDetail = model ?? file;
+                var sourceDisplay = sourceDetail != null ? $"{method} ({sourceDetail})" : method;
+                sb.AppendLine($"- **Source:** {sourceDisplay}");
+            }
+
+            // Ground truth and detected counts
+            if (root.TryGetProperty("GroundTruth", out var gtArray))
+            {
+                var count = 0;
+                foreach (var _ in gtArray.EnumerateArray()) count++;
+                sb.AppendLine($"- **Ground truth questions:** {count}");
+            }
+            if (root.TryGetProperty("DetectedQuestions", out var dtArray))
+            {
+                var count = 0;
+                foreach (var _ in dtArray.EnumerateArray()) count++;
+                sb.AppendLine($"- **Detected (unique):** {count}");
+            }
+            sb.AppendLine();
+
+            // Core metrics table
+            if (root.TryGetProperty("Metrics", out var metrics))
+            {
+                var tp = metrics.TryGetProperty("TruePositives", out var tpVal) ? tpVal.GetInt32() : 0;
+                var fp = metrics.TryGetProperty("FalsePositives", out var fpVal) ? fpVal.GetInt32() : 0;
+                var fn = metrics.TryGetProperty("FalseNegatives", out var fnVal) ? fnVal.GetInt32() : 0;
+                var precision = metrics.TryGetProperty("Precision", out var pVal) ? pVal.GetDouble() : 0;
+                var recall = metrics.TryGetProperty("Recall", out var rVal) ? rVal.GetDouble() : 0;
+                var f1 = metrics.TryGetProperty("F1Score", out var f1Val) ? f1Val.GetDouble() : 0;
+
+                sb.AppendLine("| Metric | Value |");
+                sb.AppendLine("|--------|------:|");
+                sb.AppendLine($"| True Positives | {tp} |");
+                sb.AppendLine($"| False Positives | {fp} |");
+                sb.AppendLine($"| False Negatives | {fn} |");
+                sb.AppendLine($"| **Precision** | **{precision:P1}** |");
+                sb.AppendLine($"| **Recall** | **{recall:P1}** |");
+                sb.AppendLine($"| **F1 Score** | **{f1:P1}** |");
+                sb.AppendLine();
+            }
+
+            // Subtype accuracy
+            if (root.TryGetProperty("SubtypeAccuracy", out var subtype))
+            {
+                var overall = subtype.TryGetProperty("OverallAccuracy", out var oa) ? oa.GetDouble() : 0;
+                var totalCorrect = subtype.TryGetProperty("TotalCorrect", out var tc) ? tc.GetInt32() : 0;
+                var totalWith = subtype.TryGetProperty("TotalWithSubtype", out var tw) ? tw.GetInt32() : 0;
+
+                if (totalWith > 0)
+                {
+                    sb.AppendLine($"#### Subtype Accuracy: {overall:P1} ({totalCorrect}/{totalWith})");
+                    sb.AppendLine();
+
+                    if (subtype.TryGetProperty("BySubtype", out var bySubtype))
+                    {
+                        sb.AppendLine("| Subtype | Correct | Total | Accuracy |");
+                        sb.AppendLine("|---------|--------:|------:|---------:|");
+                        foreach (var entry in bySubtype.EnumerateArray())
+                        {
+                            var key = entry.TryGetProperty("Key", out var k) ? k.GetString() : "?";
+                            var correct = entry.TryGetProperty("CorrectCount", out var c) ? c.GetInt32() : 0;
+                            var total = entry.TryGetProperty("TotalCount", out var t) ? t.GetInt32() : 0;
+                            var acc = entry.TryGetProperty("Accuracy", out var a) ? a.GetDouble() : 0;
+                            sb.AppendLine($"| {key} | {correct} | {total} | {acc:P0} |");
+                        }
+                        sb.AppendLine();
+                    }
+                }
+            }
+
+            // Missed questions
+            if (root.TryGetProperty("Missed", out var missed))
+            {
+                var missedList = new List<string>();
+                foreach (var item in missed.EnumerateArray())
+                {
+                    var text = item.GetString();
+                    if (!string.IsNullOrWhiteSpace(text))
+                        missedList.Add(text);
+                }
+
+                if (missedList.Count > 0)
+                {
+                    sb.AppendLine($"#### Missed Questions ({missedList.Count})");
+                    sb.AppendLine();
+                    foreach (var q in missedList.Take(10))
+                    {
+                        sb.AppendLine($"1. \"{q}\"");
+                    }
+                    if (missedList.Count > 10)
+                        sb.AppendLine($"1. *... and {missedList.Count - 10} more*");
+                    sb.AppendLine();
+                }
+            }
+
+            // False alarms
+            if (root.TryGetProperty("FalseAlarms", out var falseAlarms))
+            {
+                var faList = new List<(string Text, double Confidence)>();
+                foreach (var item in falseAlarms.EnumerateArray())
+                {
+                    var text = item.TryGetProperty("Text", out var t) ? t.GetString() ?? "" : "";
+                    var conf = item.TryGetProperty("Confidence", out var c) ? c.GetDouble() : 0;
+                    if (!string.IsNullOrWhiteSpace(text))
+                        faList.Add((text, conf));
+                }
+
+                if (faList.Count > 0)
+                {
+                    sb.AppendLine($"#### False Alarms ({faList.Count})");
+                    sb.AppendLine();
+                    foreach (var (text, conf) in faList.Take(5))
+                    {
+                        var truncated = text.Length > 80 ? text[..80] + "..." : text;
+                        sb.AppendLine($"1. \"{truncated}\" (conf: {conf:F2})");
+                    }
+                    if (faList.Count > 5)
+                        sb.AppendLine($"1. *... and {faList.Count - 5} more*");
+                    sb.AppendLine();
+                }
+            }
+
+            // Error analysis summary
+            if (root.TryGetProperty("ErrorAnalysis", out var errorAnalysis))
+            {
+                var totalFp = errorAnalysis.TryGetProperty("TotalFalsePositives", out var tfp) ? tfp.GetInt32() : 0;
+                if (totalFp > 0 && errorAnalysis.TryGetProperty("Patterns", out var patterns))
+                {
+                    var patternList = new List<(string Name, int Count)>();
+                    foreach (var p in patterns.EnumerateArray())
+                    {
+                        var name = p.TryGetProperty("Name", out var n) ? n.GetString() ?? "" : "";
+                        var count = p.TryGetProperty("Count", out var c) ? c.GetInt32() : 0;
+                        if (count > 0) patternList.Add((name, count));
+                    }
+
+                    if (patternList.Count > 0)
+                    {
+                        sb.AppendLine("#### Error Patterns");
+                        sb.AppendLine();
+                        foreach (var (name, count) in patternList.Take(5))
+                        {
+                            sb.AppendLine($"- **{name}**: {count}");
+                        }
+                        sb.AppendLine();
+                    }
+                }
+            }
+
+            // Link to full JSON
+            sb.AppendLine($"> Full details: `{evalJsonPath}`");
+            sb.AppendLine();
+
+            return sb.ToString();
+        }
+        catch (JsonException ex)
+        {
+            Console.WriteLine($"Warning: Could not parse evaluation JSON {evalJsonPath}: {ex.Message}");
+            return null;
+        }
+    }
+
+    private static List<ExtractedQuestion>? ReadGroundTruthFromEvaluation(string evalJsonPath)
+    {
+        if (!File.Exists(evalJsonPath)) return null;
+
+        try
+        {
+            var json = File.ReadAllText(evalJsonPath);
+            using var doc = JsonDocument.Parse(json);
+            if (!doc.RootElement.TryGetProperty("GroundTruth", out var gtArray))
+                return null;
+
+            var questions = new List<ExtractedQuestion>();
+            foreach (var item in gtArray.EnumerateArray())
+            {
+                var text = item.TryGetProperty("Text", out var t) ? t.GetString() ?? "" : "";
+                var subtype = item.TryGetProperty("Subtype", out var s) ? s.GetString() : null;
+                var confidence = item.TryGetProperty("Confidence", out var c) ? c.GetDouble() : 0;
+                if (!string.IsNullOrWhiteSpace(text))
+                    questions.Add(new ExtractedQuestion(text, subtype, confidence, 0));
+            }
+
+            return questions.Count > 0 ? questions : null;
+        }
+        catch (JsonException)
+        {
+            return null;
+        }
     }
 
     private static async Task<int> RunRegressionTestModeAsync(string baselineFile, string sessionFile)
@@ -1088,6 +1407,8 @@ public partial class Program
         await File.WriteAllTextAsync(reportPath, report);
         Log($"Report: {reportPath}");
 
+        await RunAutoEvaluationAsync(outputPath, configuration, reportPath);
+
         PrintHeadlessSummary(playbackFile, outputPath, logFileName, modeName, sw.Elapsed, stats, reportPath);
 
         return 0;
@@ -1266,6 +1587,8 @@ public partial class Program
         await File.WriteAllTextAsync(reportPath, report);
         log($"Report: {reportPath}");
 
+        await RunAutoEvaluationAsync(outputPath, configuration, reportPath);
+
         PrintHeadlessSummary(playbackFile, outputPath, logFileName, modeName, sw.Elapsed, stats, reportPath);
 
         return 0;
@@ -1358,8 +1681,10 @@ public partial class Program
         string[]? logLines = logPath != null ? await File.ReadAllLinesAsync(logPath) : null;
         var report = SessionReportGenerator.GenerateMarkdown(events, sourceFile: sessionFile,
             logFile: logPath, logLines: logLines);
-        var reportPath = SessionReportGenerator.GetReportPath(sessionFile);
-        Directory.CreateDirectory("reports");
+        var sessionDir = Path.GetDirectoryName(Path.GetFullPath(sessionFile));
+        var reportsFolder = Path.Combine(Path.GetDirectoryName(sessionDir) ?? ".", "reports");
+        var reportPath = SessionReportGenerator.GetReportPath(sessionFile, reportsFolder);
+        Directory.CreateDirectory(reportsFolder);
         await File.WriteAllTextAsync(reportPath, report);
 
         Console.WriteLine($"Report:    {reportPath}");
@@ -1369,6 +1694,8 @@ public partial class Program
         var intents = events.OfType<RecordedIntentEvent>().Where(e => !e.Data.IsCandidate).ToList();
         var corrections = events.OfType<RecordedIntentCorrectionEvent>().ToList();
         Console.WriteLine($"Intents:   {intents.Count} final, {corrections.Count} corrections");
+
+        await RunAutoEvaluationAsync(sessionFile, reportPath: reportPath);
 
         return 0;
     }

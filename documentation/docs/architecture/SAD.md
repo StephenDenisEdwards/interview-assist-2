@@ -320,10 +320,12 @@ The application supports recording, playback, and analysis of sessions:
 **Playback modes:**
 - `--playback <file.jsonl>` — Replays recorded events in Terminal.Gui UI
 - `--playback <file.wav>` — Re-transcribes audio via Deepgram with UI
-- `--playback <file> --headless` — Non-interactive, outputs console summary + report
-- `--analyze <file.jsonl>` — Generates markdown report without playback
+- `--playback <file> --headless` — Non-interactive, outputs console summary + report + auto-evaluation
+- `--analyze <file.jsonl>` — Generates markdown report without playback + auto-evaluation
 
 Reports are saved to the `reports/` folder as `{session-name}.report.md` and include event distribution, utterance analysis, intent detection results, latency statistics, and log insights.
+
+**Auto-evaluation:** When a report is generated (via `--headless` or `--analyze`), evaluation automatically runs against both LLM-extracted and human ground truth. If no human ground truth file exists for the session, one is auto-generated from LLM extraction as a seed for later human editing. Evaluation outputs are saved to the `evaluations/` folder. Requires an OpenAI API key; skipped silently if unavailable.
 
 ### 7.6 Question Detection (Legacy Mode, Optional)
 

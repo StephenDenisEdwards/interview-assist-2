@@ -17,6 +17,38 @@ This document describes all evaluation and testing capabilities available in the
 
 ---
 
+## Auto-Evaluation on Report Generation
+
+When a report is generated via `--playback --headless` or `--analyze`, evaluation runs automatically against both LLM-extracted and human ground truth. This requires an OpenAI API key; if unavailable, auto-evaluation is skipped silently.
+
+### What Happens
+
+1. **LLM ground truth evaluation** — The session is evaluated against LLM-extracted ground truth (same as `--evaluate`). Results are saved to `evaluations/{session-id}.evaluation-llm.json`.
+
+2. **Human ground truth seed** — If no human ground truth file exists at `evaluations/{session-id}.human-ground-truth.json`, one is seeded from the LLM evaluation's ground truth (no extra API call). This file is a JSON array of `ExtractedQuestion` objects and should be manually reviewed/curated. On first run, the human evaluation is skipped until the seed file has been reviewed.
+
+3. **Human ground truth evaluation** — On subsequent runs (when the seed file already exists), the session is evaluated against the human ground truth file. Results are saved to `evaluations/{session-id}.evaluation-human.json`.
+
+### Output Files
+
+```
+evaluations/
+├── session-2026-02-13-125207-58704.evaluation-llm.json      # LLM ground truth eval (versioned)
+├── session-2026-02-13-125207-58704.human-ground-truth.json   # Human ground truth (seeded once, then curated)
+└── session-2026-02-13-125207-58704.evaluation-human.json     # Human ground truth eval (versioned)
+```
+
+Evaluation files are versioned: if a file already exists, a `-v2`, `-v3`, etc. suffix is appended. The `human-ground-truth.json` file is created once and never overwritten — it is the curated input for human evaluation.
+
+### Human Ground Truth Workflow
+
+1. Run `--analyze` or `--playback --headless` — auto-seeds `human-ground-truth.json` and skips human evaluation
+2. Open `evaluations/{session-id}.human-ground-truth.json` and review/edit the questions
+3. Re-run `--analyze` or `--playback --headless` — the human evaluation will now run against your curated file
+4. Compare `evaluation-llm.json` vs `evaluation-human.json` to assess ground truth quality
+
+---
+
 ## Prerequisites
 
 ### API Keys

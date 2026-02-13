@@ -797,10 +797,10 @@ Can be set via:
 # Re-transcribe a WAV recording via Deepgram
 --playback <file.wav>
 
-# Headless mode: no Terminal.Gui UI, outputs console summary + session report
+# Headless mode: no Terminal.Gui UI, outputs console summary + session report + auto-evaluation
 --playback <file> --headless
 
-# Generate a markdown report from an existing JSONL file (no playback)
+# Generate a markdown report from an existing JSONL file (no playback) + auto-evaluation
 --analyze <file.jsonl>
 ```
 
@@ -848,5 +848,5 @@ dotnet run --project Interview-assist-transcription-detection-console/Interview-
 |------|--------|
 | Live transcription | Terminal.Gui UI, JSONL recording in `recordings/`, optional WAV file |
 | `--playback` (interactive) | Terminal.Gui UI with replay |
-| `--playback --headless` | Console summary + markdown report in `reports/` |
-| `--analyze` | Markdown report in `reports/` |
+| `--playback --headless` | Console summary + markdown report in `reports/` + auto-evaluation in `evaluations/` |
+| `--analyze` | Markdown report in `reports/` + auto-evaluation in `evaluations/` |
