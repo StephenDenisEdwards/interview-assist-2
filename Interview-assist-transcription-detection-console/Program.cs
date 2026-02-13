@@ -649,6 +649,18 @@ public partial class Program
         };
     }
 
+    private static string GetReportsFolder(IConfiguration? configuration = null)
+    {
+        configuration ??= new ConfigurationBuilder()
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+            .AddEnvironmentVariables()
+            .AddUserSecrets<Program>(optional: true)
+            .Build();
+
+        return configuration["Reporting:Folder"] ?? "reports";
+    }
+
     private static string VersionedEvalPath(string folder, string fileName)
     {
         var path = Path.Combine(folder, fileName);
@@ -723,17 +735,28 @@ public partial class Program
             humanGtSeeded = true;
         }
 
-        // --- Human ground truth evaluation (skip if just seeded — needs curation first) ---
-        string? humanOutputFile = null;
+        // --- Human ground truth evaluation ---
+        var humanOutputFile = VersionedEvalPath(options.OutputFolder, $"{sessionId}.evaluation-human.json");
         if (humanGtSeeded)
         {
+            // Create placeholder so version numbers stay in sync with evaluation-llm
+            var placeholder = new
+            {
+                GeneratedAt = DateTime.UtcNow,
+                SessionFile = Path.GetFileName(sessionFile),
+                Status = "pending",
+                Note = "Human ground truth was just seeded from LLM extraction and needs manual review before evaluation. Review and curate the ground truth file, then re-run to generate a real evaluation.",
+                GroundTruthFile = Path.GetFileName(humanGtPath)
+            };
+            var placeholderJson = JsonSerializer.Serialize(placeholder, new JsonSerializerOptions { WriteIndented = true });
+            await File.WriteAllTextAsync(humanOutputFile, placeholderJson);
             Console.WriteLine($"\nSkipping human ground truth evaluation — seed file needs manual review.");
             Console.WriteLine($"  Review: {humanGtPath}");
+            Console.WriteLine($"  Placeholder: {humanOutputFile}");
         }
         else
         {
             var humanOptions = BuildEvaluationOptions(configuration, groundTruthFile: humanGtPath);
-            humanOutputFile = VersionedEvalPath(options.OutputFolder, $"{sessionId}.evaluation-human.json");
             Console.WriteLine($"\n=== Auto-Evaluation (Human ground truth) ===");
             var humanRunner = new EvaluationRunner(humanOptions);
             await humanRunner.RunAsync(sessionFile, humanOutputFile);
@@ -743,21 +766,24 @@ public partial class Program
         if (!string.IsNullOrWhiteSpace(reportPath) && File.Exists(reportPath))
         {
             var llmSection = FormatEvaluationMarkdown(llmOutputFile, "LLM Ground Truth");
-            var humanSection = humanOutputFile != null
-                ? FormatEvaluationMarkdown(humanOutputFile, "Human Ground Truth")
-                : null;
-            var humanSkippedNote = humanGtSeeded
-                ? "### Human Ground Truth\n\n"
-                    + $"*Skipped — human ground truth was just seeded and needs manual review before evaluation.*\n"
-                    + $"Review and curate: `{humanGtPath}`\n\n"
-                : null;
+            string? humanSection;
+            if (humanGtSeeded)
+            {
+                humanSection = "### Human Ground Truth\n\n"
+                    + "*Skipped — human ground truth was just seeded and needs manual review before evaluation.*\n"
+                    + $"Review and curate: `{humanGtPath}`\n\n";
+            }
+            else
+            {
+                humanSection = FormatEvaluationMarkdown(humanOutputFile, "Human Ground Truth");
+            }
 
-            if (llmSection != null || humanSection != null || humanSkippedNote != null)
+            if (llmSection != null || humanSection != null)
             {
                 var reportContent = await File.ReadAllTextAsync(reportPath);
                 var evalMarkdown = "\n## Evaluation Results\n\n"
                     + (llmSection ?? "")
-                    + (humanSection ?? humanSkippedNote ?? "");
+                    + (humanSection ?? "");
 
                 // Insert before the footer line (---\n*Generated ...)
                 // Handle both \r\n (Windows) and \n (Unix) line endings
@@ -1402,8 +1428,9 @@ public partial class Program
             sourceFile: playbackFile, outputFile: outputPath,
             logFile: logFileName, wallClockDuration: sw.Elapsed,
             logLines: logLines);
-        var reportPath = SessionReportGenerator.GetReportPath(outputPath);
-        Directory.CreateDirectory("reports");
+        var reportsFolder = GetReportsFolder(configuration);
+        var reportPath = SessionReportGenerator.GetReportPath(outputPath, reportsFolder);
+        Directory.CreateDirectory(reportsFolder);
         await File.WriteAllTextAsync(reportPath, report);
         Log($"Report: {reportPath}");
 
@@ -1582,8 +1609,9 @@ public partial class Program
             sourceFile: playbackFile, outputFile: outputPath,
             logFile: logFileName, wallClockDuration: sw.Elapsed,
             logLines: logLines);
-        var reportPath = SessionReportGenerator.GetReportPath(outputPath);
-        Directory.CreateDirectory("reports");
+        var reportsFolder = GetReportsFolder(configuration);
+        var reportPath = SessionReportGenerator.GetReportPath(outputPath, reportsFolder);
+        Directory.CreateDirectory(reportsFolder);
         await File.WriteAllTextAsync(reportPath, report);
         log($"Report: {reportPath}");
 
@@ -1681,8 +1709,7 @@ public partial class Program
         string[]? logLines = logPath != null ? await File.ReadAllLinesAsync(logPath) : null;
         var report = SessionReportGenerator.GenerateMarkdown(events, sourceFile: sessionFile,
             logFile: logPath, logLines: logLines);
-        var sessionDir = Path.GetDirectoryName(Path.GetFullPath(sessionFile));
-        var reportsFolder = Path.Combine(Path.GetDirectoryName(sessionDir) ?? ".", "reports");
+        var reportsFolder = GetReportsFolder();
         var reportPath = SessionReportGenerator.GetReportPath(sessionFile, reportsFolder);
         Directory.CreateDirectory(reportsFolder);
         await File.WriteAllTextAsync(reportPath, report);
