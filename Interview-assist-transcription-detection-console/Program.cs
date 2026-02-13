@@ -387,7 +387,7 @@ public partial class Program
         var recordingOptions = new RecordingOptions
         {
             Folder = recordingConfig["Folder"] ?? "recordings",
-            FileNamePattern = recordingConfig["FileNamePattern"] ?? "session-{timestamp}-{pid}.jsonl",
+            FileNamePattern = recordingConfig["FileNamePattern"] ?? "session-{timestamp}-{pid}.recording.jsonl",
             AutoStart = recordingConfig.GetValue("AutoStart", false),
             SaveAudio = recordingConfig.GetValue("SaveAudio", false)
         };
@@ -650,8 +650,9 @@ public partial class Program
         // Default output file if not specified
         if (string.IsNullOrWhiteSpace(outputFile))
         {
-            var baseName = Path.GetFileNameWithoutExtension(evaluateFile);
-            outputFile = Path.Combine(options.OutputFolder, $"{baseName}-evaluation.json");
+            var sessionId = SessionReportGenerator.ExtractSessionId(evaluateFile)
+                ?? Path.GetFileNameWithoutExtension(evaluateFile);
+            outputFile = Path.Combine(options.OutputFolder, $"{sessionId}.evaluation.json");
         }
 
         var runner = new EvaluationRunner(options);
@@ -945,7 +946,9 @@ public partial class Program
         var loggingConfig = configuration.GetSection("Logging");
         var logFolder = loggingConfig["Folder"] ?? "logs";
         Directory.CreateDirectory(logFolder);
-        var logFileName = Path.Combine(logFolder, $"transcription-detection-{DateTime.Now:yyyyMMdd-HHmmss}-{Environment.ProcessId}.log");
+        var sessionTimestamp = DateTime.Now.ToString("yyyy-MM-dd-HHmmss");
+        var sessionId = $"session-{sessionTimestamp}-{Environment.ProcessId}";
+        var logFileName = Path.Combine(logFolder, $"{sessionId}.log");
         await using var logWriter = new StreamWriter(logFileName, append: false) { AutoFlush = true };
 
         void Log(string msg)
@@ -960,7 +963,7 @@ public partial class Program
         var recordingOptions = new RecordingOptions
         {
             Folder = recordingConfig["Folder"] ?? "recordings",
-            FileNamePattern = recordingConfig["FileNamePattern"] ?? "session-{timestamp}-{pid}.jsonl"
+            FileNamePattern = recordingConfig["FileNamePattern"] ?? "session-{timestamp}-{pid}.recording.jsonl"
         };
 
         var extension = Path.GetExtension(playbackFile).ToLowerInvariant();
@@ -1553,7 +1556,9 @@ public class TranscriptionApp
 
         // Open debug log file
         Directory.CreateDirectory(_logFolder);
-        var logFileName = Path.Combine(_logFolder, $"transcription-detection-{DateTime.Now:yyyyMMdd-HHmmss}-{Environment.ProcessId}.log");
+        var sessionTimestamp = DateTime.Now.ToString("yyyy-MM-dd-HHmmss");
+        var sessionId = $"session-{sessionTimestamp}-{Environment.ProcessId}";
+        var logFileName = Path.Combine(_logFolder, $"{sessionId}.log");
         _debugLogWriter = new StreamWriter(logFileName, append: false) { AutoFlush = true };
 
         // Parse background color and create color scheme
@@ -1800,7 +1805,10 @@ public class TranscriptionApp
         // Start audio file recording alongside the JSONL recording
         if (_audioRecorder != null)
         {
-            var wavPath = Path.ChangeExtension(filePath, ".wav");
+            var wavSessionId = SessionReportGenerator.ExtractSessionId(filePath);
+            var wavPath = wavSessionId != null
+                ? Path.Combine(Path.GetDirectoryName(filePath)!, $"{wavSessionId}.audio.wav")
+                : Path.ChangeExtension(filePath, ".wav");
             _audioRecorder.Start(wavPath);
             AddDebug($"Audio recording to: {wavPath}");
         }

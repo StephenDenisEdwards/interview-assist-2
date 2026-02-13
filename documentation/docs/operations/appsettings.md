@@ -65,7 +65,7 @@ Hex color code for highlighting detected intents in the transcript view.
 **Type:** `string`
 **Default:** `"logs"`
 
-Directory for application log files. Log files are named `transcription-detection-YYYYMMDD-HHmmss.log`.
+Directory for application log files. Log files are named `session-YYYY-MM-DD-HHmmss-{pid}.log`.
 
 ---
 
@@ -74,7 +74,7 @@ Directory for application log files. Log files are named `transcription-detectio
 ```json
 "Recording": {
   "Folder": "recordings",
-  "FileNamePattern": "session-{timestamp}.jsonl",
+  "FileNamePattern": "session-{timestamp}-{pid}.recording.jsonl",
   "AutoStart": true,
   "SaveAudio": true
 }
@@ -90,9 +90,9 @@ Directory where session JSONL recordings are saved.
 ### Recording.FileNamePattern
 
 **Type:** `string`
-**Default:** `"session-{timestamp}.jsonl"`
+**Default:** `"session-{timestamp}.recording.jsonl"`
 
-Filename pattern for recordings. `{timestamp}` is replaced with `yyyy-MM-dd-HHmmss`.
+Filename pattern for recordings. `{timestamp}` is replaced with `yyyy-MM-dd-HHmmss`. `{pid}` is replaced with the process ID.
 
 ### Recording.AutoStart
 
@@ -106,7 +106,7 @@ When enabled, recording begins automatically when the application starts.
 **Type:** `boolean`
 **Default:** `false`
 
-When enabled, saves a WAV audio file alongside the JSONL recording. The WAV file uses the same base name as the JSONL file.
+When enabled, saves a WAV audio file alongside the JSONL recording. The WAV file uses the session ID with an `.audio.wav` suffix (e.g., `session-2026-02-10-171013-1234.audio.wav`).
 
 ---
 

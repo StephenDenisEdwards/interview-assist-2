@@ -99,34 +99,43 @@ public static class SessionReportGenerator
     }
 
     /// <summary>
+    /// Extract the session ID from any session-derived filename.
+    /// Returns the session-YYYY-MM-DD-HHmmss[-PID] prefix, or null if the filename doesn't match.
+    /// </summary>
+    public static string? ExtractSessionId(string filePath)
+    {
+        var name = Path.GetFileName(filePath);
+        var match = Regex.Match(name, @"^(session-\d{4}-\d{2}-\d{2}-\d{6}(?:-\d+)?)");
+        return match.Success ? match.Groups[1].Value : null;
+    }
+
+    /// <summary>
     /// Find the associated log file for a JSONL session file.
-    /// Maps session-YYYY-MM-DD-HHmmss[-PID].jsonl → logs/transcription-detection-YYYYMMDD-HHmmss[-PID].log
-    /// When PID is present in both filenames, matches on PID; otherwise falls back to timestamp-only match.
+    /// Tries new convention first (session-YYYY-MM-DD-HHmmss[-PID].log),
+    /// then falls back to legacy format (transcription-detection-YYYYMMDD-HHmmss[-PID].log).
     /// </summary>
     public static string? ResolveLogFile(string jsonlPath, string logFolder = "logs")
     {
-        var fileName = Path.GetFileNameWithoutExtension(jsonlPath);
-        // session-2026-02-10-171013 or session-2026-02-10-171013-12345
-        var match = Regex.Match(fileName, @"session-(\d{4})-(\d{2})-(\d{2})-(\d{6})(?:-(\d+))?");
-        if (!match.Success)
-            return null;
+        var sessionId = ExtractSessionId(jsonlPath);
+        if (sessionId == null) return null;
 
+        // New convention: session-YYYY-MM-DD-HHmmss[-pid].log
+        var newPath = Path.Combine(logFolder, $"{sessionId}.log");
+        if (File.Exists(newPath)) return newPath;
+
+        // Legacy: transcription-detection-YYYYMMDD-HHmmss[-pid].log
+        var match = Regex.Match(sessionId, @"session-(\d{4})-(\d{2})-(\d{2})-(\d{6})(?:-(\d+))?");
+        if (!match.Success) return null;
         var dateStr = $"{match.Groups[1].Value}{match.Groups[2].Value}{match.Groups[3].Value}";
         var timeStr = match.Groups[4].Value;
         var pid = match.Groups[5].Success ? match.Groups[5].Value : null;
-
-        // Try exact match with PID first
         if (pid != null)
         {
-            var logWithPid = Path.Combine(logFolder, $"transcription-detection-{dateStr}-{timeStr}-{pid}.log");
-            if (File.Exists(logWithPid))
-                return logWithPid;
+            var legacyWithPid = Path.Combine(logFolder, $"transcription-detection-{dateStr}-{timeStr}-{pid}.log");
+            if (File.Exists(legacyWithPid)) return legacyWithPid;
         }
-
-        // Fall back to timestamp-only match (legacy format)
-        var logName = $"transcription-detection-{dateStr}-{timeStr}.log";
-        var logPath = Path.Combine(logFolder, logName);
-        return File.Exists(logPath) ? logPath : null;
+        var legacyPath = Path.Combine(logFolder, $"transcription-detection-{dateStr}-{timeStr}.log");
+        return File.Exists(legacyPath) ? legacyPath : null;
     }
 
     /// <summary>
@@ -134,7 +143,8 @@ public static class SessionReportGenerator
     /// </summary>
     public static string GetReportPath(string jsonlPath, string reportFolder = "reports")
     {
-        var baseName = Path.GetFileNameWithoutExtension(jsonlPath);
+        var sessionId = ExtractSessionId(jsonlPath);
+        var baseName = sessionId ?? Path.GetFileNameWithoutExtension(jsonlPath);
         return Path.Combine(reportFolder, baseName + ".report.md");
     }
 

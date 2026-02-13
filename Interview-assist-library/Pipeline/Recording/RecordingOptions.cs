@@ -11,7 +11,7 @@ public sealed record RecordingOptions
     /// <summary>
     /// File name pattern. {timestamp} will be replaced with the recording start time.
     /// </summary>
-    public string FileNamePattern { get; init; } = "session-{timestamp}.jsonl";
+    public string FileNamePattern { get; init; } = "session-{timestamp}.recording.jsonl";
 
     /// <summary>
     /// Whether to automatically start recording when the session begins.
