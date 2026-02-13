@@ -732,6 +732,13 @@ Jaccard similarity threshold for deduplicating evaluation results.
 
 Directory for evaluation output files.
 
+### Evaluation.GroundTruthFile
+
+**Type:** `string?`
+**Default:** `null`
+
+Path to a human-labeled ground truth JSON file. When set, skips LLM extraction and loads ground truth from this file. Can also be specified via `--ground-truth <file>` on the command line. The file format is a JSON array of objects with `Text`, `Subtype`, `Confidence`, and `ApproximatePosition` fields.
+
 ### Evaluation.DatasetsFolder
 
 **Type:** `string`
@@ -802,6 +809,13 @@ Can be set via:
 
 # Generate a markdown report from an existing JSONL file (no playback) + auto-evaluation
 --analyze <file.jsonl>
+```
+
+### Evaluation Options
+
+```bash
+# Use human-labeled ground truth instead of LLM extraction
+--ground-truth <file.json>
 ```
 
 ### Audio & Transcription Overrides

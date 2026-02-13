@@ -31,5 +31,6 @@
 - [In-Progress Plans](plans/in-progress/)
   - [IMPROVEMENT-PLAN-0014: LLM Detection Accuracy](plans/in-progress/IMPROVEMENT-PLAN-0014-llm-detection-accuracy.md)
 - [Completed Plans](plans/completed/)
+  - [IMPROVEMENT-PLAN-0016: File Naming Convention](plans/completed/IMPROVEMENT-PLAN-0016-file-naming-convention.md)
   - [IMPROVEMENT-PLAN-0015: Ground Truth Source Tracking](plans/completed/IMPROVEMENT-PLAN-0015-ground-truth-source-tracking.md)
   - [IMPROVEMENT-PLAN-0013: Deepgram Intent Recognition](plans/completed/IMPROVEMENT-PLAN-0013-deepgram-intent-recognition.md)
