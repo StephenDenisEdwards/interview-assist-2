@@ -145,7 +145,15 @@ public static class SessionReportGenerator
     {
         var sessionId = ExtractSessionId(jsonlPath);
         var baseName = sessionId ?? Path.GetFileNameWithoutExtension(jsonlPath);
-        return Path.Combine(reportFolder, baseName + ".report.md");
+        var path = Path.Combine(reportFolder, baseName + ".report.md");
+
+        if (!File.Exists(path))
+            return path;
+
+        var version = 2;
+        while (File.Exists(Path.Combine(reportFolder, $"{baseName}.report-v{version}.md")))
+            version++;
+        return Path.Combine(reportFolder, $"{baseName}.report-v{version}.md");
     }
 
     /// <summary>
