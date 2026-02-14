@@ -25,7 +25,7 @@ When a report is generated via `--playback --headless` or `--analyze`, evaluatio
 
 1. **LLM ground truth evaluation** — The session is evaluated against LLM-extracted ground truth (same as `--evaluate`). Results are saved to `evaluations/{session-id}.evaluation-llm.json`.
 
-2. **Human ground truth seed** — If no human ground truth file exists at `evaluations/{session-id}.human-ground-truth.json`, one is seeded from the LLM evaluation's ground truth (no extra API call). This file is a JSON array of `ExtractedQuestion` objects and should be manually reviewed/curated. On first run, the human evaluation is skipped until the seed file has been reviewed.
+2. **Human ground truth seed** — If no human ground truth file exists at `evaluations/{session-id}.human-ground-truth.json`, one is seeded from the LLM evaluation's ground truth (no extra API call). This file is a JSON array of `ExtractedQuestion` objects and should be manually reviewed/curated. A placeholder `evaluation-human.json` is also created (to keep version numbers in sync) with `"status": "pending"`.
 
 3. **Human ground truth evaluation** — On subsequent runs (when the seed file already exists), the session is evaluated against the human ground truth file. Results are saved to `evaluations/{session-id}.evaluation-human.json`.
 
@@ -42,7 +42,7 @@ Evaluation files are versioned: if a file already exists, a `-v2`, `-v3`, etc. s
 
 ### Human Ground Truth Workflow
 
-1. Run `--analyze` or `--playback --headless` — auto-seeds `human-ground-truth.json` and skips human evaluation
+1. Run `--analyze` or `--playback --headless` — auto-seeds `human-ground-truth.json` and creates a placeholder `evaluation-human.json`
 2. Open `evaluations/{session-id}.human-ground-truth.json` and review/edit the questions
 3. Re-run `--analyze` or `--playback --headless` — the human evaluation will now run against your curated file
 4. Compare `evaluation-llm.json` vs `evaluation-human.json` to assess ground truth quality
