@@ -15,7 +15,7 @@ An Architecture Decision Record captures an important architectural decision alo
 | [ADR-003](ADR-003-question-detection-llm.md) | Use LLM for Question Detection | Superseded by ADR-007 | 2026-01-23 |
 | [ADR-004](ADR-004-pipeline-vs-realtime.md) | Pipeline vs Realtime Implementation | Accepted | 2026-01-24 |
 | [ADR-005](ADR-005-streaming-transcription-modes.md) | Streaming Transcription Modes | Superseded | 2026-01-29 |
-| [ADR-006](ADR-006-deepgram-intent-recognition.md) | Deepgram Intent Recognition via REST API | Evaluated — unsuitable for question detection | 2026-02-06 |
+| [ADR-006](ADR-006-deepgram-intent-recognition.md) | Deepgram Intent Recognition via REST API | Superseded — code removed | 2026-02-06 |
 | [ADR-007](ADR-007-multi-strategy-intent-detection.md) | Multi-Strategy Intent Detection | Accepted | 2026-02-06 |
 | [ADR-008](ADR-008-utterance-segmentation.md) | Utterance Segmentation from Streaming ASR | Accepted | 2026-02-06 |
 

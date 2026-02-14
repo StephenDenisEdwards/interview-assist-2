@@ -13,7 +13,7 @@
   - [ADR-003: Question Detection LLM](architecture/decisions/ADR-003-question-detection-llm.md) *(superseded by ADR-007)*
   - [ADR-004: Pipeline vs Realtime](architecture/decisions/ADR-004-pipeline-vs-realtime.md)
   - [ADR-005: Streaming Transcription Modes](architecture/decisions/ADR-005-streaming-transcription-modes.md) *(superseded)*
-  - [ADR-006: Deepgram Intent Recognition](architecture/decisions/ADR-006-deepgram-intent-recognition.md) *(evaluated — unsuitable)*
+  - [ADR-006: Deepgram Intent Recognition](architecture/decisions/ADR-006-deepgram-intent-recognition.md) *(superseded — code removed)*
   - [ADR-007: Multi-Strategy Intent Detection](architecture/decisions/ADR-007-multi-strategy-intent-detection.md)
   - [ADR-008: Utterance Segmentation](architecture/decisions/ADR-008-utterance-segmentation.md)
   - [ADR-009: Logging Action Callback](architecture/decisions/ADR-009-logging-action-callback.md)

@@ -93,7 +93,7 @@ C4Context
 | Audio Capture | NAudio library for Windows | [ADR-002](decisions/ADR-002-audio-capture-naudio.md) |
 | Question Detection | LLM-based detection using GPT models | [ADR-003](decisions/ADR-003-question-detection-llm.md) |
 | Streaming Transcription | Multi-mode stability tracking | [ADR-005](decisions/ADR-005-streaming-transcription-modes.md) |
-| Intent Detection | Multi-strategy (Heuristic + LLM + Deepgram) | [ADR-007](decisions/ADR-007-multi-strategy-intent-detection.md) |
+| Intent Detection | Multi-strategy (Heuristic + LLM) | [ADR-007](decisions/ADR-007-multi-strategy-intent-detection.md) |
 | Utterance Segmentation | Streaming ASR to coherent utterances | [ADR-008](decisions/ADR-008-utterance-segmentation.md) |
 
 ### 4.2 Technology Stack

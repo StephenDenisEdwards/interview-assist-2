@@ -434,7 +434,6 @@ public sealed class EvaluationRunner
         string? outputFile,
         HeuristicDetectionOptions? heuristicOptions,
         LlmDetectionOptions? llmOptions,
-        DeepgramDetectionOptions? deepgramOptions = null,
         CancellationToken ct = default)
     {
         Console.WriteLine("=== Strategy Comparison ===");
@@ -472,7 +471,7 @@ public sealed class EvaluationRunner
         // Run strategy comparison
         Console.WriteLine("Comparing strategies...");
         var comparer = new StrategyComparer(_options);
-        var result = await comparer.CompareAsync(events, groundTruth, heuristicOptions, llmOptions, deepgramOptions, ct);
+        var result = await comparer.CompareAsync(events, groundTruth, heuristicOptions, llmOptions, ct);
 
         // Print results
         PrintComparisonResults(result);

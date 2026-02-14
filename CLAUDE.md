@@ -99,7 +99,7 @@ Audio is buffered to minimum 100ms chunks before sending. Silence padding applie
 - User secrets supported (see csproj UserSecretsId)
 - `RealtimeApiOptions` record type configures: model, voice, VAD settings, reconnection behavior
 - `PipelineApiOptions` record type configures: transcription, response generation settings
-- `IntentDetectionOptions` record type configures: detection mode (Heuristic/Llm/Parallel/Deepgram), LLM model, thresholds
+- `IntentDetectionOptions` record type configures: detection mode (Heuristic/Llm/Parallel), LLM model, thresholds
 - `RecordingOptions` record type configures: recording folder, auto-start, WAV audio saving
 - `QuestionDetectionOptions` record type configures: detection model, confidence threshold (Legacy mode)
 

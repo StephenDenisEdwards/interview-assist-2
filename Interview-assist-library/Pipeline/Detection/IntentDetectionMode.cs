@@ -21,11 +21,5 @@ public enum IntentDetectionMode
     /// Parallel: Heuristic for immediate response, LLM for verification.
     /// Best UX with corrections, highest cost.
     /// </summary>
-    Parallel,
-
-    /// <summary>
-    /// Deepgram intent recognition via /v1/read REST endpoint.
-    /// Reuses LLM strategy buffering with Deepgram as the detector backend.
-    /// </summary>
-    Deepgram
+    Parallel
 }

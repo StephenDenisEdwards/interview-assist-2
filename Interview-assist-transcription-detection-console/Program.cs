@@ -341,17 +341,6 @@ public partial class Program
             return 1;
         }
 
-        // Validate API key for Deepgram detection mode
-        if (playbackFile == null && intentDetectionEnabled &&
-            intentDetectionOptions.Mode == IntentDetectionMode.Deepgram &&
-            string.IsNullOrWhiteSpace(intentDetectionOptions.Deepgram.ApiKey))
-        {
-            Console.WriteLine("Error: Deepgram API key required for Deepgram detection mode.");
-            Console.WriteLine("Set DEEPGRAM_API_KEY environment variable or add IntentDetection:Deepgram:ApiKey to appsettings.json.");
-            Console.WriteLine("Alternatively, set Mode to \"Heuristic\" to use free regex-based detection.");
-            return 1;
-        }
-
         var deepgramOptions = new DeepgramOptions
         {
             ApiKey = deepgramApiKey!,
@@ -436,26 +425,14 @@ public partial class Program
             "heuristic" => IntentDetectionMode.Heuristic,
             "llm" => IntentDetectionMode.Llm,
             "parallel" => IntentDetectionMode.Parallel,
-            "deepgram" => IntentDetectionMode.Deepgram,
             _ => IntentDetectionMode.Heuristic
         };
 
         var heuristicConfig = intentConfig.GetSection("Heuristic");
         var llmConfig = intentConfig.GetSection("Llm");
-        var deepgramDetectionConfig = intentConfig.GetSection("Deepgram");
 
         // Always load OpenAI API key (needed for LLM modes and playback of recordings made with LLM/Parallel)
         var openAiApiKey = ResolveOpenAiApiKey(rootConfig, llmConfig);
-
-        // Load Deepgram API key for detection (separate from transcription Deepgram key)
-        var deepgramDetectionApiKey = ResolveDeepgramApiKey(rootConfig, deepgramDetectionConfig);
-
-        var customIntents = new List<string>();
-        var customIntentsStr = deepgramDetectionConfig["CustomIntents"];
-        if (!string.IsNullOrWhiteSpace(customIntentsStr))
-        {
-            customIntents.AddRange(customIntentsStr.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
-        }
 
         return new IntentDetectionOptions
         {
@@ -480,14 +457,6 @@ public partial class Program
                 DeduplicationWindowMs = llmConfig.GetValue("DeduplicationWindowMs", 30000),
                 ContextWindowChars = llmConfig.GetValue("ContextWindowChars", 1500),
                 SystemPromptFile = llmConfig["SystemPromptFile"] ?? "system-prompt.txt"
-            },
-            Deepgram = new DeepgramDetectionOptions
-            {
-                ApiKey = deepgramDetectionApiKey,
-                ConfidenceThreshold = deepgramDetectionConfig.GetValue("ConfidenceThreshold", 0.7),
-                CustomIntents = customIntents,
-                CustomIntentMode = deepgramDetectionConfig["CustomIntentMode"] ?? "extended",
-                TimeoutMs = deepgramDetectionConfig.GetValue("TimeoutMs", 5000)
             }
         };
     }
@@ -573,28 +542,8 @@ public partial class Program
             ContextWindowChars = llmConfig.GetValue("ContextWindowChars", 1500)
         };
 
-        // Load Deepgram detection options
-        var deepgramDetectionConfig = intentConfig.GetSection("Deepgram");
-        var deepgramDetectionApiKey = ResolveDeepgramApiKey(configuration, deepgramDetectionConfig);
-
-        var customIntents = new List<string>();
-        var customIntentsStr = deepgramDetectionConfig["CustomIntents"];
-        if (!string.IsNullOrWhiteSpace(customIntentsStr))
-        {
-            customIntents.AddRange(customIntentsStr.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
-        }
-
-        var deepgramOptions = new DeepgramDetectionOptions
-        {
-            ApiKey = deepgramDetectionApiKey,
-            ConfidenceThreshold = deepgramDetectionConfig.GetValue("ConfidenceThreshold", 0.7),
-            CustomIntents = customIntents,
-            CustomIntentMode = deepgramDetectionConfig["CustomIntentMode"] ?? "extended",
-            TimeoutMs = deepgramDetectionConfig.GetValue("TimeoutMs", 5000)
-        };
-
         var runner = new EvaluationRunner(options);
-        return await runner.CompareStrategiesAsync(sessionFile, outputFile, heuristicOptions, llmOptions, deepgramOptions);
+        return await runner.CompareStrategiesAsync(sessionFile, outputFile, heuristicOptions, llmOptions);
     }
 
     private static EvaluationOptions BuildEvaluationOptions(
@@ -1164,7 +1113,6 @@ public partial class Program
             "heuristic" => IntentDetectionMode.Heuristic,
             "llm" => IntentDetectionMode.Llm,
             "parallel" => IntentDetectionMode.Parallel,
-            "deepgram" => IntentDetectionMode.Deepgram,
             _ => options.Mode
         };
 
@@ -1173,7 +1121,6 @@ public partial class Program
             IntentDetectionMode.Heuristic => new HeuristicIntentStrategy(options.Heuristic),
             IntentDetectionMode.Llm => CreateLlmStrategyStatic(options, log),
             IntentDetectionMode.Parallel => CreateParallelStrategyStatic(options, log),
-            IntentDetectionMode.Deepgram => CreateDeepgramStrategyStatic(options),
             _ => new HeuristicIntentStrategy(options.Heuristic)
         };
     }
@@ -1208,15 +1155,6 @@ public partial class Program
             WireDetectorRequestLogging(llmDetector, log);
 
         return new ParallelIntentStrategy(llmDetector, options.Heuristic, options.Llm);
-    }
-
-    private static LlmIntentStrategy CreateDeepgramStrategyStatic(IntentDetectionOptions options)
-    {
-        var apiKey = options.Deepgram.ApiKey
-            ?? throw new InvalidOperationException("Deepgram API key is required for Deepgram detection mode.");
-
-        var detector = new DeepgramIntentDetector(apiKey, options.Deepgram);
-        return new LlmIntentStrategy(detector, options.Llm);
     }
 
     private static void WireDetectorRequestLogging(OpenAiIntentDetector detector, Action<string> log)
@@ -1330,16 +1268,10 @@ public partial class Program
 
         // Check API key availability
         var requiresOpenAiKey = effectiveMode?.ToLowerInvariant() is "llm" or "parallel";
-        var requiresDeepgramKey = effectiveMode?.ToLowerInvariant() is "deepgram";
 
         if (requiresOpenAiKey && string.IsNullOrWhiteSpace(intentDetectionOptions.Llm.ApiKey))
         {
             Log($"WARNING: {effectiveMode} mode requires OpenAI API key. Falling back to Heuristic mode.");
-            effectiveMode = "Heuristic";
-        }
-        else if (requiresDeepgramKey && string.IsNullOrWhiteSpace(intentDetectionOptions.Deepgram.ApiKey))
-        {
-            Log($"WARNING: {effectiveMode} mode requires Deepgram API key. Falling back to Heuristic mode.");
             effectiveMode = "Heuristic";
         }
 
@@ -2188,20 +2120,12 @@ public class TranscriptionApp
 
             // Check if API key is available for modes that require one
             var requiresOpenAiKey = effectiveMode?.ToLowerInvariant() is "llm" or "parallel";
-            var requiresDeepgramKey = effectiveMode?.ToLowerInvariant() is "deepgram";
             var hasOpenAiKey = !string.IsNullOrWhiteSpace(_intentDetectionOptions.Llm.ApiKey);
-            var hasDeepgramKey = !string.IsNullOrWhiteSpace(_intentDetectionOptions.Deepgram.ApiKey);
 
             if (requiresOpenAiKey && !hasOpenAiKey)
             {
                 AddDebug($"WARNING: {effectiveMode} mode requires OpenAI API key. Falling back to Heuristic mode.");
                 AddDebug("Set OPENAI_API_KEY environment variable to use LLM/Parallel detection during playback.");
-                effectiveMode = "Heuristic";
-            }
-            else if (requiresDeepgramKey && !hasDeepgramKey)
-            {
-                AddDebug($"WARNING: {effectiveMode} mode requires Deepgram API key. Falling back to Heuristic mode.");
-                AddDebug("Set DEEPGRAM_API_KEY environment variable to use Deepgram detection during playback.");
                 effectiveMode = "Heuristic";
             }
 
@@ -2893,7 +2817,6 @@ public class TranscriptionApp
             IntentDetectionMode.Heuristic => new HeuristicIntentStrategy(_intentDetectionOptions.Heuristic),
             IntentDetectionMode.Llm => CreateLlmStrategy(),
             IntentDetectionMode.Parallel => CreateParallelStrategy(),
-            IntentDetectionMode.Deepgram => CreateDeepgramStrategy(),
             _ => new HeuristicIntentStrategy(_intentDetectionOptions.Heuristic)
         };
     }
@@ -2906,7 +2829,6 @@ public class TranscriptionApp
             "heuristic" => IntentDetectionMode.Heuristic,
             "llm" => IntentDetectionMode.Llm,
             "parallel" => IntentDetectionMode.Parallel,
-            "deepgram" => IntentDetectionMode.Deepgram,
             _ => _intentDetectionOptions.Mode // Fall back to current settings
         };
 
@@ -2915,7 +2837,6 @@ public class TranscriptionApp
             IntentDetectionMode.Heuristic => new HeuristicIntentStrategy(_intentDetectionOptions.Heuristic),
             IntentDetectionMode.Llm => CreateLlmStrategy(),
             IntentDetectionMode.Parallel => CreateParallelStrategy(),
-            IntentDetectionMode.Deepgram => CreateDeepgramStrategy(),
             _ => new HeuristicIntentStrategy(_intentDetectionOptions.Heuristic)
         };
     }
@@ -2964,18 +2885,6 @@ public class TranscriptionApp
             llmDetector,
             _intentDetectionOptions.Heuristic,
             _intentDetectionOptions.Llm);
-    }
-
-    private LlmIntentStrategy CreateDeepgramStrategy()
-    {
-        var apiKey = _intentDetectionOptions.Deepgram.ApiKey
-            ?? throw new InvalidOperationException("Deepgram API key is required for Deepgram detection mode. Set DEEPGRAM_API_KEY environment variable.");
-
-        var detector = new DeepgramIntentDetector(apiKey, _intentDetectionOptions.Deepgram);
-
-        // Reuse LlmIntentStrategy with Deepgram as the detector backend.
-        // LLM options control buffering, rate limiting, triggers, and deduplication.
-        return new LlmIntentStrategy(detector, _intentDetectionOptions.Llm);
     }
 
     private void WireLlmRequestLogging(OpenAiIntentDetector detector)

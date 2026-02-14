@@ -24,11 +24,6 @@ public class IntentDetectionOptions
     /// Options for LLM detection.
     /// </summary>
     public LlmDetectionOptions Llm { get; set; } = new();
-
-    /// <summary>
-    /// Options for Deepgram intent detection.
-    /// </summary>
-    public DeepgramDetectionOptions Deepgram { get; set; } = new();
 }
 
 /// <summary>

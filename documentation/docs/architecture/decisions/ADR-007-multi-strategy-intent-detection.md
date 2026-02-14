@@ -21,12 +21,11 @@ The codebase now has four detection implementations with different latency/cost/
 |----------|---------|------|--------|---------------|
 | Heuristic | <1ms | Free | ~67% | Fast but misses implicit questions and imperatives |
 | LLM | 500–2000ms | High | ~95% | Accurate but slow and expensive |
-| Deepgram | 50–100ms | Low | TBD | Mid-tier, dynamic labels need mapping |
 | Parallel | <1ms + 500–2000ms | High | ~95% | Best UX: fast heuristic + async LLM correction |
 
 ## Decision
 
-Introduce `IIntentDetectionStrategy` as a pluggable strategy interface, with four implementations selectable via `IntentDetectionMode` enum.
+Introduce `IIntentDetectionStrategy` as a pluggable strategy interface, with three implementations selectable via `IntentDetectionMode` enum.
 
 ### Interface Design
 
@@ -62,7 +61,7 @@ Key design choices:
 - After each LLM call, unprocessed utterances move to the context window; context is trimmed to `ContextWindowChars`
 - Deduplicates via semantic fingerprinting (stop word removal + Jaccard similarity) with time-based suppression windows (`DeduplicationWindowMs`, default 30000ms)
 - Maps utterance IDs to LLM results via word overlap scoring
-- Accepts any `ILlmIntentDetector` (OpenAI `OpenAiIntentDetector` or `DeepgramIntentDetector`)
+- Accepts any `ILlmIntentDetector` (currently `OpenAiIntentDetector`)
 - See [DESIGN-utterance-intent-pipeline.md § 4a](../design/DESIGN-utterance-intent-pipeline.md) for full details
 
 **3. ParallelIntentStrategy**
@@ -75,11 +74,6 @@ Key design choices:
   - **Removed**: Heuristic false positive (moderate confidence, LLM disagrees) → emits correction
 - Tracks emitted intents per utterance ID for comparison
 
-**4. DeepgramIntentDetector** (via LlmIntentStrategy)
-- Implements `ILlmIntentDetector`, plugs into `LlmIntentStrategy`
-- Uses Deepgram `/v1/read` REST endpoint (see ADR-006)
-- Same buffering, rate-limiting, and deduplication as LLM mode
-
 ### Selection
 
 ```csharp
@@ -87,8 +81,7 @@ public enum IntentDetectionMode
 {
     Heuristic,  // Fast, free, ~67% recall
     Llm,        // Accurate, expensive, ~95% recall
-    Parallel,   // Best UX: fast + verified
-    Deepgram    // Mid-tier: moderate speed and cost
+    Parallel    // Best UX: fast + verified
 }
 ```
 
@@ -104,16 +97,16 @@ public enum IntentDetectionMode
 
 ### Negative
 
-- **Four implementations to maintain**: Each has distinct buffering and triggering logic
+- **Three implementations to maintain**: Each has distinct buffering and triggering logic
 - **Shared infrastructure duplication**: `LlmIntentStrategy` and `ParallelIntentStrategy` share similar buffer/deduplication code
 - **Correction complexity**: Consumers must handle both `OnIntentDetected` and `OnIntentCorrected` events
-- **Configuration surface**: Each strategy has its own options class (`HeuristicDetectionOptions`, `LlmDetectionOptions`, `DeepgramDetectionOptions`)
+- **Configuration surface**: Each strategy has its own options class (`HeuristicDetectionOptions`, `LlmDetectionOptions`)
 
 ### Relationship to ADR-003
 
 ADR-003 described a single `LlmQuestionDetector` with Jaccard deduplication and rate limiting. That functionality is now split across:
 
-- `ILlmIntentDetector` — the raw detection call (OpenAI or Deepgram)
+- `ILlmIntentDetector` — the raw detection call (OpenAI)
 - `LlmIntentStrategy` — buffering, triggering, rate-limiting, deduplication
 - `IIntentDetectionStrategy` — the unified pipeline interface
 

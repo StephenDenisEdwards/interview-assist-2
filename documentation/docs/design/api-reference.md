@@ -137,7 +137,7 @@ public interface ILlmIntentDetector : IDisposable
 }
 ```
 
-**Implementations:** `OpenAiIntentDetector`, `DeepgramIntentDetector`
+**Implementations:** `OpenAiIntentDetector`
 
 ### IQuestionDetectionService
 
@@ -287,7 +287,7 @@ public class EvaluationRunner
     // Compare multiple detection strategies side-by-side
     Task<int> CompareStrategiesAsync(string sessionFile, string? outputFile,
         HeuristicDetectionOptions? heuristicOptions, LlmDetectionOptions? llmOptions,
-        DeepgramDetectionOptions? deepgramOptions = null, CancellationToken ct = default);
+        CancellationToken ct = default);
 
     // Run regression test against a baseline
     Task<int> RunRegressionTestAsync(string baselineFile, string sessionFile,

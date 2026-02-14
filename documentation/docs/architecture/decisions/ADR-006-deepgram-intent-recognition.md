@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted — evaluated and found unsuitable for question detection (see [Evaluation Results](#evaluation-results))
+Superseded — code removed; evaluated and found unsuitable (0% F1 across all recordings)
 
 ## Context
 
@@ -79,13 +79,13 @@ Specific findings from API testing:
 
 4. **The keyword-based label classifier cannot compensate.** Even when Deepgram returns a label that passes the confidence threshold, the label often doesn't contain question-indicating keywords. Labels like "Show flex" (conf: 0.709) pass the threshold but are correctly classified as statements.
 
-### Why the Strategy is Retained
+### Why the Strategy Was Removed
 
-The implementation is kept in the codebase because:
-- It is cleanly isolated behind `ILlmIntentDetector` with no impact on other strategies
-- It may have value for future imperative command detection or topic classification
-- It serves as a documented evaluation — preventing re-investigation of the same approach
-- The evaluation infrastructure (StrategyComparer) benefits from having multiple strategies to test
+The implementation was originally retained because it was isolated, might be useful for future use cases, and served as a documented evaluation. It was removed because:
+- Dead code with 0% effectiveness carried 6 permanently-failing unit tests
+- Maintenance overhead on every refactoring (updating enum, options, DI wiring, factory methods)
+- Misleading developers into thinking Deepgram detection is a viable mode
+- This ADR itself serves as the documented evaluation — the code is not needed for that purpose
 
 ## Consequences
 

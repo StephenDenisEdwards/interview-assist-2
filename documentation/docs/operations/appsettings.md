@@ -429,11 +429,6 @@ Settings for the utterance-intent detection pipeline. Nested under `Transcriptio
     "ConfidenceThreshold": 0.7,
     "SystemPromptFile": "system-prompt.txt",
     ...
-  },
-  "Deepgram": {
-    "ConfidenceThreshold": 0.3,
-    "CustomIntents": "ask a question,request clarification,...",
-    ...
   }
 }
 ```
@@ -449,7 +444,7 @@ Enables or disables the intent detection pipeline.
 
 **Type:** `string`
 **Default:** `"Heuristic"`
-**Values:** `Heuristic`, `Llm`, `Parallel`, `Deepgram`
+**Values:** `Heuristic`, `Llm`, `Parallel`
 
 Detection strategy to use.
 
@@ -458,7 +453,6 @@ Detection strategy to use.
 | `Heuristic` | Pattern matching and linguistic rules. Fast and free. |
 | `Llm` | LLM-based classification. More accurate but has API costs. |
 | `Parallel` | Runs both Heuristic and LLM in parallel, merges results. |
-| `Deepgram` | Uses Deepgram's `/v1/read` endpoint for intent recognition. |
 
 ### IntentDetection.Heuristic.MinConfidence
 
@@ -562,36 +556,6 @@ Time window for suppressing duplicate intent detections.
 **Default:** `null`
 
 Path to a custom system prompt file for LLM intent detection. Relative paths are resolved from the application base directory. When `null`, uses the built-in default prompt. The file `system-prompt.txt` ships with the application and can be customized.
-
-### IntentDetection.Deepgram.ConfidenceThreshold
-
-**Type:** `double`
-**Default:** `0.3`
-**Range:** `0.0` - `1.0`
-
-Minimum confidence threshold for Deepgram intent recognition results.
-
-### IntentDetection.Deepgram.CustomIntents
-
-**Type:** `string`
-
-Comma-separated list of custom intents for Deepgram's `/v1/read` endpoint.
-
-### IntentDetection.Deepgram.CustomIntentMode
-
-**Type:** `string`
-**Default:** `"extended"`
-**Values:** `strict`, `extended`
-
-Controls whether Deepgram uses only custom intents (`strict`) or also its built-in intents (`extended`).
-
-### IntentDetection.Deepgram.TimeoutMs
-
-**Type:** `integer`
-**Default:** `5000`
-**Unit:** milliseconds
-
-Timeout for Deepgram intent recognition REST API calls.
 
 ---
 
