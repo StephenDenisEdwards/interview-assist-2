@@ -64,6 +64,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "in-progress", "in-progress", "{4C5D6E7F-A8B9-0123-DEF0-345678901BCD}"
 	ProjectSection(SolutionItems) = preProject
 		documentation\docs\plans\in-progress\IMPROVEMENT-PLAN-0013-deepgram-intent-recognition.md = documentation\docs\plans\in-progress\IMPROVEMENT-PLAN-0013-deepgram-intent-recognition.md
+		documentation\docs\plans\in-progress\REFACTORING-REPORT.md = documentation\docs\plans\in-progress\REFACTORING-REPORT.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "completed", "completed", "{5D6E7F8A-B9C0-1234-EF01-456789012CDE}"
