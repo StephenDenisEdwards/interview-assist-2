@@ -1,116 +1,56 @@
 # Interview Assist
 
-Real-time interview assistance application that captures audio, transcribes speech, and provides AI-powered responses during technical interviews.
+Real-time interview assistance application that captures audio, transcribes speech via Deepgram, and detects questions using LLM-based intent classification.
 
 ## Prerequisites
 
 - .NET 8.0 SDK or later
 - Windows 10/11 (required for audio capture)
-- OpenAI API key with access to Realtime API
+- Deepgram API key (transcription)
+- OpenAI API key (intent detection, optional)
 
 ## Quick Start
 
-1. **Clone the repository**
+```bash
+# Build
+dotnet build interview-assist-2.sln
 
-2. **Set your OpenAI API key**
+# Configure API keys
+set DEEPGRAM_API_KEY=your-deepgram-key
+set OPENAI_API_KEY=your-openai-key
 
-   ```bash
-   # Option 1: Environment variable
-   set OPENAI_API_KEY=sk-your-key-here
+# Run live transcription with Terminal.Gui UI
+dotnet run --project Interview-assist-transcription-detection-console
 
-   # Option 2: User secrets (recommended for development)
-   cd Interview-assist-transcription-console
-   dotnet user-secrets set "OpenAI:ApiKey" "sk-your-key-here"
-   ```
+# Replay a recorded session (no audio/API required)
+dotnet run --project Interview-assist-transcription-detection-console -- --playback recordings/session.jsonl
 
-3. **Build the solution**
+# Run tests
+dotnet test interview-assist-2.sln
+```
 
-   ```bash
-   dotnet build interview-assist-2.sln
-   ```
-
-4. **Run the transcription console**
-
-   ```bash
-   dotnet run --project Interview-assist-transcription-console
-   ```
+For detailed setup instructions, see the [Getting Started Guide](documentation/docs/operations/getting-started.md).
 
 ## Project Structure
 
 | Project | Description |
 |---------|-------------|
-| `Interview-assist-library` | Core abstractions, OpenAI Realtime API, and Pipeline implementations |
+| `Interview-assist-library` | Core abstractions, intent detection pipeline, recording/playback, evaluation framework |
 | `interview-assist-audio-windows` | Windows-specific audio capture using NAudio |
-| `Interview-assist-pipeline` | Pipeline-based STT + semantic question detection |
-| `Interview-assist-transcription-console` | Console app for real-time transcription |
-| `Interview-assist-pipeline-console` | Console app for pipeline mode |
+| `Interview-assist-transcription-detection-console` | Main console app with Terminal.Gui UI, playback, headless mode, and reporting |
+| `Interview-assist-annotation-concept-e-console` | Ground truth annotation tool with interactive text selection |
 | `Interview-assist-library-unit-tests` | xUnit unit tests |
 | `Interview-assist-library-integration-tests` | Integration tests (requires API access) |
 
-## Two Modes of Operation
+## Documentation
 
-### Realtime Mode (OpenAiRealtimeApi)
+See the [Documentation Index](documentation/docs/index.md) for the full documentation hub, including:
 
-Uses OpenAI's native Realtime API via WebSocket for lowest latency:
-
-- Sub-500ms response times
-- Server-side voice activity detection (VAD)
-- Turn-based conversation model
-- Integrated audio responses
-
-### Pipeline Mode (PipelineRealtimeApi)
-
-Uses separate Whisper STT + GPT-4 Chat API for more control:
-
-- Semantic question detection
-- Queue-based processing for overlapping speech
-- Configurable detection thresholds
-- Text-only responses
-
-See [ADR-004](documentation/docs/architecture/decisions/ADR-004-pipeline-vs-realtime.md) for detailed comparison.
-
-## Configuration
-
-Configuration is loaded from multiple sources (in order of precedence):
-
-1. Environment variables
-2. User secrets
-3. `appsettings.json`
-
-Key settings:
-
-```json
-{
-  "OpenAI": {
-    "ApiKey": "sk-...",
-    "RealtimeModel": "gpt-4o-realtime-preview-2024-12-17",
-    "TranscriptionModel": "whisper-1"
-  }
-}
-```
-
-## Testing
-
-```bash
-# Run all tests
-dotnet test interview-assist-2.sln
-
-# Run unit tests only
-dotnet test Interview-assist-library-unit-tests
-
-# Run integration tests (requires API key)
-dotnet test Interview-assist-library-integration-tests
-```
-
-## Architecture
-
-See the [Software Architecture Document](documentation/docs/architecture/SAD.md) for detailed architecture information.
-
-### Key Interfaces
-
-- **IRealtimeApi** - Main abstraction for real-time API interaction
-- **IRealtimeSink** - Observer pattern for consuming API events
-- **IAudioCaptureService** - Platform-specific audio capture abstraction
+- [Architecture Overview (SAD)](documentation/docs/architecture/SAD.md)
+- [Configuration Reference](documentation/docs/operations/appsettings.md)
+- [API Reference](documentation/docs/design/api-reference.md)
+- [Evaluation & Testing Guide](documentation/docs/instructions/EvaluationInstructions.md)
+- [Troubleshooting](documentation/docs/operations/troubleshooting.md)
 
 ## License
 

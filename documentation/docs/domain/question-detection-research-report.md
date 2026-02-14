@@ -342,7 +342,7 @@ Prosodic analysis, while valuable in research contexts, offers diminishing retur
 
 1. "Detecting Questions and Imperative Sentences in English" - Survey paper (2024)
 2. ADR-003: Use LLM for Question Detection
-3. HEURISTIC_QUESTION_DETECTOR.md
+3. heuristic-question-detector.md
 4. IMPROVEMENT-PLAN-0009: Heuristic Detection Improvements
 5. Switchboard Dialogue Act Corpus (SwDA)
 6. ICSI Meeting Recorder Dialog Act (MRDA) Corpus

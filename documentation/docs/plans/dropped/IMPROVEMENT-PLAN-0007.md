@@ -1,9 +1,13 @@
 # IMPROVEMENT-PLAN-0007: Intent Detection Quality Improvements
 
 **Created:** 2026-01-31
-**Status:** Planning
+**Status:** Dropped
 **Priority:** High
 **Affected Components:** Interview-assist-library (Pipeline/Utterance), Interview-assist-transcription-detection-console
+
+## Reason Dropped
+
+Superseded by the multi-strategy intent detection system (IMPROVEMENT-PLAN-0010, ADR-007). The duplicate detection, fragment filtering, and deduplication tasks were incorporated into the `LlmIntentStrategy` and `UtteranceIntentPipeline` implementations. The remaining heuristic improvements were folded into IMPROVEMENT-PLAN-0014 (LLM Detection Accuracy). The shift from heuristic-only to LLM-based detection made most of the proposed heuristic refinements (Tasks 3, 5, 7) unnecessary.
 
 ## Problem Statement
 

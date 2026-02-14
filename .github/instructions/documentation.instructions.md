@@ -13,10 +13,12 @@ documentation/docs/
 │       └── README.md    # ADR template and index
 ├── design/              # Design documents for features/subsystems
 ├── domain/              # Domain knowledge and external integrations
+├── ideas/               # Exploratory concepts and proposals
 ├── operations/          # Operational and configuration guides
 └── plans/
     ├── in-progress/     # Active improvement plans
-    └── completed/       # Finished improvement plans
+    ├── completed/       # Finished improvement plans
+    └── dropped/         # Abandoned plans (with rationale)
 ```
 
 ## Document Types
@@ -89,8 +91,8 @@ What becomes easier or more difficult to do because of this change?
 - Capturing domain-specific concepts
 
 **Examples:**
-- `Deepgram-overview.md` - Deepgram API integration details
-- `HEURISTIC_QUESTION_DETECTOR.md` - Question detection algorithm
+- `deepgram-overview.md` - Deepgram API integration details
+- `heuristic-question-detector.md` - Question detection algorithm
 
 ### Operations Guides
 
@@ -104,7 +106,7 @@ What becomes easier or more difficult to do because of this change?
 
 **Examples:**
 - `appsettings.md` - Configuration reference
-- `RATE_LIMITING.md` - API rate limit handling
+- `rate-limiting.md` - API rate limit handling
 
 ### Improvement Plans
 
@@ -165,6 +167,27 @@ Brief description of what this plan accomplishes.
    - Update status to "Completed"
    - Move to `plans/completed/`
    - Update solution file references
+4. If dropped:
+   - Add a "Reason Dropped" section explaining why (even one sentence is sufficient)
+   - Update status to "Dropped"
+   - Move to `plans/dropped/`
+   - Update solution file references
+
+### Ideas
+
+**Location:** `documentation/docs/ideas/YYYY-MM-DD-short-title.md`
+
+**When to create:**
+- Exploratory design concepts not yet ready for implementation
+- Feature proposals that need further research or discussion
+- Spike results or proof-of-concept findings
+
+**Naming:** Use date prefix (`YYYY-MM-DD`) followed by kebab-case title.
+
+**Lifecycle:**
+1. Create in `ideas/` with the current date prefix
+2. If the idea is approved for implementation, create an improvement plan in `plans/in-progress/` and reference the original idea document
+3. If the idea is no longer relevant after 90 days of inactivity, add a note at the top: `**Status:** Archived — [reason]`
 
 ## Solution File Integration
 
@@ -182,6 +205,9 @@ All documentation must be added to `interview-assist-2.sln` to appear in Visual 
 | plans | `{3B4C5D6E-F7A8-9012-CDEF-234567890ABC}` |
 | in-progress | `{4C5D6E7F-A8B9-0123-DEF0-345678901BCD}` |
 | completed | `{5D6E7F8A-B9C0-1234-EF01-456789012CDE}` |
+| dropped | `{75C3B321-7AA5-4F14-8F3E-D41B866363C7}` |
+| ideas | `{7F3A1B2C-D4E5-6789-ABCD-0123456789EF}` |
+| instructions | `{1A6FC9A8-C914-449B-BE9A-B3DA4BB7D8CC}` |
 
 **Adding a file to the solution:**
 
@@ -194,6 +220,16 @@ documentation\docs\{folder}\{filename}.md = documentation\docs\{folder}\{filenam
 ## Navigation Index
 
 After adding new documentation, update `documentation/docs/index.md` to include a link in the appropriate section.
+
+## File Naming Convention
+
+All documentation files use **lowercase kebab-case**:
+- Domain docs: `deepgram-overview.md`, `heuristic-question-detector.md`
+- Operations docs: `getting-started.md`, `rate-limiting.md`, `appsettings.md`
+- Design docs: `DESIGN-` prefix with kebab-case title (e.g., `DESIGN-utterance-intent-pipeline.md`)
+- ADRs: `ADR-XXX-` prefix with kebab-case title (e.g., `ADR-007-multi-strategy-intent-detection.md`)
+- Improvement plans: `IMPROVEMENT-PLAN-XXXX-` prefix with kebab-case title
+- Ideas: `YYYY-MM-DD-` prefix with kebab-case title
 
 ## Writing Guidelines
 

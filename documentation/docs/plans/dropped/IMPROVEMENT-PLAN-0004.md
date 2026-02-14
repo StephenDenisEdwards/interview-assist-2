@@ -1,8 +1,12 @@
 # IMPROVEMENT-PLAN-0004: Transcription Quality & Question Detection Timing
 
 **Created:** 2026-01-24
-**Status:** Planned
+**Status:** Dropped
 **Priority:** High
+
+## Reason Dropped
+
+Superseded by the utterance-based intent detection pipeline (IMPROVEMENT-PLAN-0008, IMPROVEMENT-PLAN-0009, IMPROVEMENT-PLAN-0010). The transcription quality issues (Part A) were resolved by switching from Whisper batched transcription to Deepgram streaming with the `UtteranceBuilder` segmentation approach (ADR-008). The question detection timing issues (Part B) were addressed by the multi-strategy intent detection system (ADR-007), which replaced the two-phase heuristic with LLM-based detection on finalized utterances.
 
 ## Problem Statement
 
