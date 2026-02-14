@@ -1,5 +1,3 @@
-using System.Text;
-using System.Text.Json;
 using InterviewAssist.Library.Pipeline.Recording;
 using Terminal.Gui;
 
@@ -50,10 +48,10 @@ public class Program
 
         // Load events from JSONL
         Console.WriteLine($"Loading recording: {Path.GetFileName(recordingFile)}");
-        List<RecordedEvent> events;
+        IReadOnlyList<RecordedEvent> events;
         try
         {
-            events = await LoadEventsAsync(recordingFile);
+            events = await SessionReportGenerator.LoadEventsAsync(recordingFile);
         }
         catch (Exception ex)
         {
@@ -92,7 +90,7 @@ public class Program
         return 0;
     }
 
-    private static string ExtractTranscriptFromFinalAsrEvents(List<RecordedEvent> events)
+    private static string ExtractTranscriptFromFinalAsrEvents(IReadOnlyList<RecordedEvent> events)
     {
         var finalTexts = events
             .OfType<RecordedAsrEvent>()
@@ -102,35 +100,4 @@ public class Program
         return string.Join(" ", finalTexts);
     }
 
-    private static async Task<List<RecordedEvent>> LoadEventsAsync(string filePath)
-    {
-        var events = new List<RecordedEvent>();
-        var jsonOptions = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
-
-        using var reader = new StreamReader(filePath, Encoding.UTF8);
-        string? line;
-        int lineNumber = 0;
-
-        while ((line = await reader.ReadLineAsync()) != null)
-        {
-            lineNumber++;
-            if (string.IsNullOrWhiteSpace(line)) continue;
-
-            try
-            {
-                var evt = JsonSerializer.Deserialize<RecordedEvent>(line, jsonOptions);
-                if (evt != null)
-                    events.Add(evt);
-            }
-            catch (JsonException)
-            {
-                // Skip unparseable lines
-            }
-        }
-
-        return events;
-    }
 }

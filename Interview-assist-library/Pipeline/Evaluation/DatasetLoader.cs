@@ -1,4 +1,5 @@
 using System.Text.Json;
+using InterviewAssist.Library.Utilities;
 
 namespace InterviewAssist.Library.Pipeline.Evaluation;
 
@@ -23,10 +24,7 @@ public sealed class DatasetLoader
 
             try
             {
-                var item = JsonSerializer.Deserialize<DatasetItem>(line, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
+                var item = JsonSerializer.Deserialize<DatasetItem>(line, PipelineJsonOptions.CaseInsensitive);
 
                 if (item != null && !string.IsNullOrWhiteSpace(item.Text))
                 {

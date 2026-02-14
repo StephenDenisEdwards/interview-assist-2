@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using InterviewAssist.Library.Pipeline.Utterance;
+using InterviewAssist.Library.Utilities;
 
 namespace InterviewAssist.Library.Pipeline.Recording;
 
@@ -31,10 +32,7 @@ public sealed class SessionPlayer
 
     public SessionPlayer()
     {
-        _jsonOptions = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
+        _jsonOptions = PipelineJsonOptions.CamelCase;
     }
 
     /// <summary>

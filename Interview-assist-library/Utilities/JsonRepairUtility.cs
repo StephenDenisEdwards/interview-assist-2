@@ -10,7 +10,7 @@ public static class JsonRepairUtility
     public static string Repair(string content)
     {
         object repairedObj = RepairToSchema(content);
-        string output = JsonSerializer.Serialize(repairedObj, new JsonSerializerOptions { WriteIndented = true });
+        string output = JsonSerializer.Serialize(repairedObj, PipelineJsonOptions.Pretty);
         return output;
     }
 

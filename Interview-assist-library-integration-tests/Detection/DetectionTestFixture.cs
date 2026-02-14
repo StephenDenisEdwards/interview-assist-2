@@ -1,4 +1,5 @@
 using System.Text.Json;
+using InterviewAssist.Library.Utilities;
 using Microsoft.Extensions.Configuration;
 using InterviewAssist.Library.Pipeline;
 
@@ -26,7 +27,7 @@ public class DetectionTestFixture : IDisposable
             .Build();
 
         // Try multiple sources for API key (check for null AND empty strings)
-        ApiKey = GetFirstNonEmpty(
+        ApiKey = StringUtilities.GetFirstNonEmpty(
             config["OpenAI:ApiKey"],
             config["OPENAI_API_KEY"],
             Environment.GetEnvironmentVariable("OPENAI_API_KEY"),
@@ -61,15 +62,6 @@ public class DetectionTestFixture : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private static string? GetFirstNonEmpty(params string?[] values)
-    {
-        foreach (var value in values)
-        {
-            if (!string.IsNullOrWhiteSpace(value))
-                return value;
-        }
-        return null;
-    }
 }
 
 /// <summary>
@@ -97,10 +89,7 @@ public class ExpectedDetection
 /// </summary>
 public static class TestDataLoader
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNameCaseInsensitive = true
-    };
+    private static readonly JsonSerializerOptions JsonOptions = PipelineJsonOptions.CaseInsensitive;
 
     public static List<ContinuousTranscriptTestCase> LoadContinuousTranscriptTestCases()
     {

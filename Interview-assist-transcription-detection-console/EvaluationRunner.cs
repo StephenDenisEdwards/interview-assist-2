@@ -2,6 +2,7 @@ using System.Text.Json;
 using InterviewAssist.Library.Pipeline.Detection;
 using InterviewAssist.Library.Pipeline.Evaluation;
 using InterviewAssist.Library.Pipeline.Recording;
+using InterviewAssist.Library.Utilities;
 
 namespace InterviewAssist.TranscriptionDetectionConsole;
 
@@ -27,7 +28,7 @@ public sealed class EvaluationRunner
 
         // Load session events
         Console.WriteLine("Loading session...");
-        var events = await LoadEventsAsync(sessionFile, ct);
+        var events = await SessionReportGenerator.LoadEventsAsync(sessionFile, ct);
         if (events.Count == 0)
         {
             Console.WriteLine("Error: No events found in session file.");
@@ -320,7 +321,7 @@ public sealed class EvaluationRunner
         try
         {
             using var doc = System.Text.Json.JsonDocument.Parse(rawLlmResponse);
-            var formatted = System.Text.Json.JsonSerializer.Serialize(doc, new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+            var formatted = System.Text.Json.JsonSerializer.Serialize(doc, PipelineJsonOptions.Pretty);
             Console.WriteLine(formatted);
         }
         catch (System.Text.Json.JsonException)
@@ -344,7 +345,7 @@ public sealed class EvaluationRunner
 
         // Load session events
         Console.WriteLine("Loading session...");
-        var events = await LoadEventsAsync(sessionFile, ct);
+        var events = await SessionReportGenerator.LoadEventsAsync(sessionFile, ct);
         if (events.Count == 0)
         {
             Console.WriteLine("Error: No events found in session file.");
@@ -442,7 +443,7 @@ public sealed class EvaluationRunner
 
         // Load session events
         Console.WriteLine("Loading session...");
-        var events = await LoadEventsAsync(sessionFile, ct);
+        var events = await SessionReportGenerator.LoadEventsAsync(sessionFile, ct);
         if (events.Count == 0)
         {
             Console.WriteLine("Error: No events found in session file.");
@@ -541,7 +542,7 @@ public sealed class EvaluationRunner
             BestForRecall = result.BestForRecall
         };
 
-        var json = JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true });
+        var json = JsonSerializer.Serialize(report, PipelineJsonOptions.Pretty);
 
         var directory = Path.GetDirectoryName(outputFile);
         if (!string.IsNullOrEmpty(directory))
@@ -553,10 +554,7 @@ public sealed class EvaluationRunner
     private static async Task<GroundTruthResult> LoadGroundTruthFileAsync(string filePath, CancellationToken ct)
     {
         var json = await File.ReadAllTextAsync(filePath, ct);
-        var questions = JsonSerializer.Deserialize<List<ExtractedQuestion>>(json, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+        var questions = JsonSerializer.Deserialize<List<ExtractedQuestion>>(json, PipelineJsonOptions.CaseInsensitive);
 
         var loaded = questions?.Where(q => !string.IsNullOrWhiteSpace(q.Text)).ToList()
             ?? new List<ExtractedQuestion>();
@@ -565,31 +563,6 @@ public sealed class EvaluationRunner
             loaded,
             string.Empty,
             new GroundTruthSource("HumanLabeled", null, Path.GetFileName(filePath)));
-    }
-
-    private static async Task<IReadOnlyList<RecordedEvent>> LoadEventsAsync(string filePath, CancellationToken ct)
-    {
-        var events = new List<RecordedEvent>();
-        var jsonOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
-
-        await foreach (var line in File.ReadLinesAsync(filePath, ct))
-        {
-            if (string.IsNullOrWhiteSpace(line))
-                continue;
-
-            try
-            {
-                var evt = JsonSerializer.Deserialize<RecordedEvent>(line, jsonOptions);
-                if (evt != null)
-                    events.Add(evt);
-            }
-            catch (JsonException)
-            {
-                // Skip malformed lines
-            }
-        }
-
-        return events;
     }
 
     private static void PrintResults(EvaluationResult result, int groundTruthCount, int detectedCount, GroundTruthSource source)
@@ -739,7 +712,7 @@ public sealed class EvaluationRunner
             FullTranscript = transcript
         };
 
-        var json = JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true });
+        var json = JsonSerializer.Serialize(report, PipelineJsonOptions.Pretty);
 
         var directory = Path.GetDirectoryName(outputFile);
         if (!string.IsNullOrEmpty(directory))
@@ -777,7 +750,7 @@ public sealed class EvaluationRunner
 
         // Run evaluation on current data
         Console.WriteLine("Running evaluation...");
-        var events = await LoadEventsAsync(sessionFile, ct);
+        var events = await SessionReportGenerator.LoadEventsAsync(sessionFile, ct);
         var transcript = TranscriptExtractor.ExtractFullTranscript(events);
         var allDetected = TranscriptExtractor.ExtractDetectedQuestions(events, candidatesOnly: false);
         var deduplicated = TranscriptExtractor.DeduplicateQuestions(allDetected, _options.DeduplicationThreshold);
@@ -823,7 +796,7 @@ public sealed class EvaluationRunner
 
         // Run evaluation
         Console.WriteLine("Running evaluation...");
-        var events = await LoadEventsAsync(sessionFile, ct);
+        var events = await SessionReportGenerator.LoadEventsAsync(sessionFile, ct);
         var transcript = TranscriptExtractor.ExtractFullTranscript(events);
         var allDetected = TranscriptExtractor.ExtractDetectedQuestions(events, candidatesOnly: false);
         var deduplicated = TranscriptExtractor.DeduplicateQuestions(allDetected, _options.DeduplicationThreshold);

@@ -31,6 +31,12 @@ public sealed class OpenAiIntentDetector : ILlmIntentDetector
     public event Action<long>? OnRequestCompleted;
 
     /// <summary>
+    /// Fires when an API call fails with (statusCode, errorMessage).
+    /// Covers both HTTP errors and exceptions.
+    /// </summary>
+    public event Action<int, string>? OnRequestFailed;
+
+    /// <summary>
     /// The system prompt in use.
     /// </summary>
     public string SystemPrompt => _systemPrompt;
@@ -87,7 +93,7 @@ public sealed class OpenAiIntentDetector : ILlmIntentDetector
             if (!response.IsSuccessStatusCode)
             {
                 var error = await response.Content.ReadAsStringAsync(ct);
-                Console.Error.WriteLine($"[OpenAI Error] {response.StatusCode}: {error}");
+                OnRequestFailed?.Invoke((int)response.StatusCode, $"{response.StatusCode}: {error}");
                 return Array.Empty<DetectedIntent>();
             }
 
@@ -100,7 +106,7 @@ public sealed class OpenAiIntentDetector : ILlmIntentDetector
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine($"[OpenAI Error] {ex.Message}");
+            OnRequestFailed?.Invoke(0, ex.Message);
             return Array.Empty<DetectedIntent>();
         }
     }
@@ -213,7 +219,7 @@ public sealed class OpenAiIntentDetector : ILlmIntentDetector
         }
         catch (JsonException ex)
         {
-            Console.Error.WriteLine($"[OpenAI Parse Error] {ex.Message}");
+            OnRequestFailed?.Invoke(0, $"Parse error: {ex.Message}");
             return Array.Empty<DetectedIntent>();
         }
     }

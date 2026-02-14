@@ -1,3 +1,4 @@
+using InterviewAssist.Library.Utilities;
 using Microsoft.Extensions.Configuration;
 using InterviewAssist.Pipeline;
 
@@ -20,7 +21,7 @@ public class TranscriptionTestFixture : IDisposable
             .AddUserSecrets<TranscriptionTestFixture>(optional: true)
             .Build();
 
-        ApiKey = GetFirstNonEmpty(
+        ApiKey = StringUtilities.GetFirstNonEmpty(
 	                 config["OpenAI:ApiKey"],
 	                 config["OPENAI_API_KEY"],
 	                 Environment.GetEnvironmentVariable("OPENAI_API_KEY"))
@@ -28,16 +29,6 @@ public class TranscriptionTestFixture : IDisposable
 
 		// ApiKey = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
 		IsConfigured = !string.IsNullOrWhiteSpace(ApiKey);
-    }
-
-    private static string? GetFirstNonEmpty(params string?[] values)
-    {
-	    foreach (var value in values)
-	    {
-		    if (!string.IsNullOrWhiteSpace(value))
-			    return value;
-	    }
-	    return null;
     }
 
 	/// <summary>

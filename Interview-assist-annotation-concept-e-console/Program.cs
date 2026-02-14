@@ -1,5 +1,4 @@
 using System.Text;
-using System.Text.Json;
 using InterviewAssist.Library.Pipeline.Recording;
 using Terminal.Gui;
 
@@ -57,10 +56,10 @@ public class Program
 
         // Load events from JSONL
         Console.WriteLine($"Loading recording: {Path.GetFileName(recordingFile)}");
-        List<RecordedEvent> events;
+        IReadOnlyList<RecordedEvent> events;
         try
         {
-            events = await LoadEventsAsync(recordingFile);
+            events = await SessionReportGenerator.LoadEventsAsync(recordingFile);
         }
         catch (Exception ex)
         {
@@ -150,7 +149,7 @@ public class Program
     /// offsets and delivery time. ASR finals are non-overlapping committed segments.
     /// </summary>
     internal static (string Transcript, List<AsrSegmentInfo> Segments) BuildTranscriptWithTiming(
-        List<RecordedEvent> events)
+        IReadOnlyList<RecordedEvent> events)
     {
         var sb = new StringBuilder();
         var segments = new List<AsrSegmentInfo>();
@@ -178,7 +177,7 @@ public class Program
     /// Includes AsrFinalOffsetMs when available (new recordings).
     /// </summary>
     internal static Dictionary<string, UtteranceInfo> BuildUtteranceInfo(
-        List<RecordedEvent> events)
+        IReadOnlyList<RecordedEvent> events)
     {
         var info = new Dictionary<string, UtteranceInfo>();
 
@@ -202,7 +201,7 @@ public class Program
     /// </summary>
     internal static IReadOnlyList<RecordedIntentEvent> ApplyIntentCorrections(
         IReadOnlyList<RecordedIntentEvent> baseQuestions,
-        List<RecordedEvent> allEvents)
+        IReadOnlyList<RecordedEvent> allEvents)
     {
         var corrections = allEvents
             .OfType<RecordedIntentCorrectionEvent>()
@@ -400,33 +399,4 @@ public class Program
         return result;
     }
 
-    private static async Task<List<RecordedEvent>> LoadEventsAsync(string filePath)
-    {
-        var events = new List<RecordedEvent>();
-        var jsonOptions = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
-
-        using var reader = new StreamReader(filePath, Encoding.UTF8);
-        string? line;
-
-        while ((line = await reader.ReadLineAsync()) != null)
-        {
-            if (string.IsNullOrWhiteSpace(line)) continue;
-
-            try
-            {
-                var evt = JsonSerializer.Deserialize<RecordedEvent>(line, jsonOptions);
-                if (evt != null)
-                    events.Add(evt);
-            }
-            catch (JsonException)
-            {
-                // Skip unparseable lines
-            }
-        }
-
-        return events;
-    }
 }

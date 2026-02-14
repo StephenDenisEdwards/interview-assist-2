@@ -6,6 +6,7 @@ using InterviewAssist.Library.Pipeline.Evaluation;
 using InterviewAssist.Library.Pipeline.Recording;
 using InterviewAssist.Library.Pipeline.Utterance;
 using InterviewAssist.Library.Transcription;
+using InterviewAssist.Library.Utilities;
 using Microsoft.Extensions.Configuration;
 using Terminal.Gui;
 
@@ -290,12 +291,7 @@ public partial class Program
         }
 
         // Build configuration
-        var configuration = new ConfigurationBuilder()
-            .SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
-            .AddEnvironmentVariables()
-            .AddUserSecrets<Program>(optional: true)
-            .Build();
+        var configuration = BuildConfiguration();
 
         // In JSONL playback mode, Deepgram API key is not required.
         // WAV playback still needs it (audio goes through Deepgram for transcription).
@@ -305,9 +301,7 @@ public partial class Program
         if (playbackFile == null || isWavPlayback)
         {
             // Get Deepgram API key
-            deepgramApiKey = GetFirstNonEmpty(
-                configuration["Deepgram:ApiKey"],
-                Environment.GetEnvironmentVariable("DEEPGRAM_API_KEY"));
+            deepgramApiKey = ResolveDeepgramApiKey(configuration);
 
             if (string.IsNullOrWhiteSpace(deepgramApiKey))
             {
@@ -412,15 +406,25 @@ public partial class Program
         return 0;
     }
 
-    private static string? GetFirstNonEmpty(params string?[] values)
-    {
-        foreach (var value in values)
-        {
-            if (!string.IsNullOrWhiteSpace(value))
-                return value;
-        }
-        return null;
-    }
+    private static IConfiguration BuildConfiguration() =>
+        new ConfigurationBuilder()
+            .SetBasePath(AppContext.BaseDirectory)
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+            .AddEnvironmentVariables()
+            .AddUserSecrets<Program>(optional: true)
+            .Build();
+
+    private static string? ResolveOpenAiApiKey(IConfiguration configuration, IConfigurationSection? section = null) =>
+        StringUtilities.GetFirstNonEmpty(
+            section?["ApiKey"],
+            configuration["OpenAI:ApiKey"],
+            Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
+
+    private static string? ResolveDeepgramApiKey(IConfiguration configuration, IConfigurationSection? section = null) =>
+        StringUtilities.GetFirstNonEmpty(
+            section?["ApiKey"],
+            configuration["Deepgram:ApiKey"],
+            Environment.GetEnvironmentVariable("DEEPGRAM_API_KEY"));
 
     private static IntentDetectionOptions LoadIntentDetectionOptions(
         IConfigurationSection intentConfig,
@@ -441,16 +445,10 @@ public partial class Program
         var deepgramDetectionConfig = intentConfig.GetSection("Deepgram");
 
         // Always load OpenAI API key (needed for LLM modes and playback of recordings made with LLM/Parallel)
-        var openAiApiKey = GetFirstNonEmpty(
-            llmConfig["ApiKey"],
-            rootConfig["OpenAI:ApiKey"],
-            Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
+        var openAiApiKey = ResolveOpenAiApiKey(rootConfig, llmConfig);
 
         // Load Deepgram API key for detection (separate from transcription Deepgram key)
-        var deepgramDetectionApiKey = GetFirstNonEmpty(
-            deepgramDetectionConfig["ApiKey"],
-            rootConfig["Deepgram:ApiKey"],
-            Environment.GetEnvironmentVariable("DEEPGRAM_API_KEY"));
+        var deepgramDetectionApiKey = ResolveDeepgramApiKey(rootConfig, deepgramDetectionConfig);
 
         var customIntents = new List<string>();
         var customIntentsStr = deepgramDetectionConfig["CustomIntents"];
@@ -504,19 +502,11 @@ public partial class Program
     private static async Task<int> RunTuneThresholdModeAsync(string sessionFile, string? targetStr)
     {
         // Build configuration
-        var configuration = new ConfigurationBuilder()
-            .SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
-            .AddEnvironmentVariables()
-            .AddUserSecrets<Program>(optional: true)
-            .Build();
+        var configuration = BuildConfiguration();
 
         // Get OpenAI API key
         var evaluationConfig = configuration.GetSection("Evaluation");
-        var apiKey = GetFirstNonEmpty(
-            evaluationConfig["ApiKey"],
-            configuration["OpenAI:ApiKey"],
-            Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
+        var apiKey = ResolveOpenAiApiKey(configuration, evaluationConfig);
 
         var options = new EvaluationOptions
         {
@@ -541,19 +531,11 @@ public partial class Program
     private static async Task<int> RunCompareModeAsync(string sessionFile, string? outputFile)
     {
         // Build configuration
-        var configuration = new ConfigurationBuilder()
-            .SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
-            .AddEnvironmentVariables()
-            .AddUserSecrets<Program>(optional: true)
-            .Build();
+        var configuration = BuildConfiguration();
 
         // Get OpenAI API key
         var evaluationConfig = configuration.GetSection("Evaluation");
-        var apiKey = GetFirstNonEmpty(
-            evaluationConfig["ApiKey"],
-            configuration["OpenAI:ApiKey"],
-            Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
+        var apiKey = ResolveOpenAiApiKey(configuration, evaluationConfig);
 
         var options = new EvaluationOptions
         {
@@ -573,10 +555,7 @@ public partial class Program
             MinConfidence = heuristicConfig.GetValue("MinConfidence", 0.4)
         };
 
-        var llmApiKey = GetFirstNonEmpty(
-            llmConfig["ApiKey"],
-            configuration["OpenAI:ApiKey"],
-            Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
+        var llmApiKey = ResolveOpenAiApiKey(configuration, llmConfig);
 
         var llmOptions = new LlmDetectionOptions
         {
@@ -596,10 +575,7 @@ public partial class Program
 
         // Load Deepgram detection options
         var deepgramDetectionConfig = intentConfig.GetSection("Deepgram");
-        var deepgramDetectionApiKey = GetFirstNonEmpty(
-            deepgramDetectionConfig["ApiKey"],
-            configuration["Deepgram:ApiKey"],
-            Environment.GetEnvironmentVariable("DEEPGRAM_API_KEY"));
+        var deepgramDetectionApiKey = ResolveDeepgramApiKey(configuration, deepgramDetectionConfig);
 
         var customIntents = new List<string>();
         var customIntentsStr = deepgramDetectionConfig["CustomIntents"];
@@ -625,18 +601,10 @@ public partial class Program
         IConfiguration? configuration = null,
         string? groundTruthFile = null)
     {
-        configuration ??= new ConfigurationBuilder()
-            .SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
-            .AddEnvironmentVariables()
-            .AddUserSecrets<Program>(optional: true)
-            .Build();
+        configuration ??= BuildConfiguration();
 
         var evaluationConfig = configuration.GetSection("Evaluation");
-        var apiKey = GetFirstNonEmpty(
-            evaluationConfig["ApiKey"],
-            configuration["OpenAI:ApiKey"],
-            Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
+        var apiKey = ResolveOpenAiApiKey(configuration, evaluationConfig);
 
         return new EvaluationOptions
         {
@@ -651,14 +619,35 @@ public partial class Program
 
     private static string GetReportsFolder(IConfiguration? configuration = null)
     {
-        configuration ??= new ConfigurationBuilder()
-            .SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
-            .AddEnvironmentVariables()
-            .AddUserSecrets<Program>(optional: true)
-            .Build();
+        configuration ??= BuildConfiguration();
 
         return configuration["Reporting:Folder"] ?? "reports";
+    }
+
+    /// <summary>
+    /// Shared post-recording workflow: generate session report markdown and run auto-evaluation.
+    /// Used by headless playback, UI playback, and WAV playback modes.
+    /// </summary>
+    internal static async Task<string> GenerateReportAndEvaluateAsync(
+        string outputPath, string? sourceFile, string? logFileName,
+        IConfiguration? configuration = null, TimeSpan? wallClockDuration = null)
+    {
+        var reportEvents = await SessionReportGenerator.LoadEventsAsync(outputPath);
+        string[]? logLines = logFileName != null && File.Exists(logFileName)
+            ? await ReadAllLinesSharedAsync(logFileName)
+            : null;
+        var report = SessionReportGenerator.GenerateMarkdown(reportEvents,
+            sourceFile: sourceFile, outputFile: outputPath,
+            logFile: logFileName, wallClockDuration: wallClockDuration,
+            logLines: logLines);
+        var reportsFolder = GetReportsFolder(configuration);
+        var reportPath = SessionReportGenerator.GetReportPath(outputPath, reportsFolder);
+        Directory.CreateDirectory(reportsFolder);
+        await File.WriteAllTextAsync(reportPath, report);
+
+        await RunAutoEvaluationAsync(outputPath, configuration, reportPath);
+
+        return reportPath;
     }
 
     private static string VersionedEvalPath(string folder, string fileName)
@@ -1021,19 +1010,11 @@ public partial class Program
     private static async Task<int> RunRegressionTestModeAsync(string baselineFile, string sessionFile)
     {
         // Build configuration
-        var configuration = new ConfigurationBuilder()
-            .SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
-            .AddEnvironmentVariables()
-            .AddUserSecrets<Program>(optional: true)
-            .Build();
+        var configuration = BuildConfiguration();
 
         // Get OpenAI API key
         var evaluationConfig = configuration.GetSection("Evaluation");
-        var apiKey = GetFirstNonEmpty(
-            evaluationConfig["ApiKey"],
-            configuration["OpenAI:ApiKey"],
-            Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
+        var apiKey = ResolveOpenAiApiKey(configuration, evaluationConfig);
 
         var options = new EvaluationOptions
         {
@@ -1050,19 +1031,11 @@ public partial class Program
     private static async Task<int> RunCreateBaselineModeAsync(string sessionFile, string outputFile, string version)
     {
         // Build configuration
-        var configuration = new ConfigurationBuilder()
-            .SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
-            .AddEnvironmentVariables()
-            .AddUserSecrets<Program>(optional: true)
-            .Build();
+        var configuration = BuildConfiguration();
 
         // Get OpenAI API key
         var evaluationConfig = configuration.GetSection("Evaluation");
-        var apiKey = GetFirstNonEmpty(
-            evaluationConfig["ApiKey"],
-            configuration["OpenAI:ApiKey"],
-            Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
+        var apiKey = ResolveOpenAiApiKey(configuration, evaluationConfig);
 
         var options = new EvaluationOptions
         {
@@ -1104,12 +1077,7 @@ public partial class Program
         }
 
         // Build configuration
-        var configuration = new ConfigurationBuilder()
-            .SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
-            .AddEnvironmentVariables()
-            .AddUserSecrets<Program>(optional: true)
-            .Build();
+        var configuration = BuildConfiguration();
 
         // Create strategy
         var intentConfig = configuration.GetSection("Transcription:IntentDetection");
@@ -1276,6 +1244,19 @@ public partial class Program
             LogYellow($"[LLM completed in {elapsedMs}ms]");
             LogYellow("─── End Request ───");
         };
+
+        void LogRed(string msg)
+        {
+            var prev = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Red;
+            log(msg);
+            Console.ForegroundColor = prev;
+        }
+
+        detector.OnRequestFailed += (statusCode, errorMessage) =>
+        {
+            LogRed($"[LLM ERROR] {errorMessage}");
+        };
     }
 
     private static string LoadSystemPromptStatic(LlmDetectionOptions options, Action<string>? log)
@@ -1290,12 +1271,7 @@ public partial class Program
         var sw = System.Diagnostics.Stopwatch.StartNew();
 
         // Build configuration
-        var configuration = new ConfigurationBuilder()
-            .SetBasePath(AppContext.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
-            .AddEnvironmentVariables()
-            .AddUserSecrets<Program>(optional: true)
-            .Build();
+        var configuration = BuildConfiguration();
 
         // Load intent detection options
         var intentConfig = configuration.GetSection("Transcription:IntentDetection");
@@ -1421,20 +1397,9 @@ public partial class Program
         recorder.Stop();
         sw.Stop();
 
-        // Auto-generate session report
-        var reportEvents = await SessionReportGenerator.LoadEventsAsync(outputPath);
-        string[]? logLines = File.Exists(logFileName) ? await ReadAllLinesSharedAsync(logFileName) : null;
-        var report = SessionReportGenerator.GenerateMarkdown(reportEvents,
-            sourceFile: playbackFile, outputFile: outputPath,
-            logFile: logFileName, wallClockDuration: sw.Elapsed,
-            logLines: logLines);
-        var reportsFolder = GetReportsFolder(configuration);
-        var reportPath = SessionReportGenerator.GetReportPath(outputPath, reportsFolder);
-        Directory.CreateDirectory(reportsFolder);
-        await File.WriteAllTextAsync(reportPath, report);
+        var reportPath = await GenerateReportAndEvaluateAsync(
+            outputPath, playbackFile, logFileName, configuration, sw.Elapsed);
         Log($"Report: {reportPath}");
-
-        await RunAutoEvaluationAsync(outputPath, configuration, reportPath);
 
         PrintHeadlessSummary(playbackFile, outputPath, logFileName, modeName, sw.Elapsed, stats, reportPath);
 
@@ -1454,9 +1419,7 @@ public partial class Program
         var sampleRate = transcriptionConfig.GetValue("SampleRate", 16000);
         var language = transcriptionConfig["Language"] ?? "en";
 
-        var deepgramApiKey = GetFirstNonEmpty(
-            configuration["Deepgram:ApiKey"],
-            Environment.GetEnvironmentVariable("DEEPGRAM_API_KEY"));
+        var deepgramApiKey = ResolveDeepgramApiKey(configuration);
 
         if (string.IsNullOrWhiteSpace(deepgramApiKey))
         {
@@ -1602,20 +1565,9 @@ public partial class Program
         wavAudio.Dispose();
         sw.Stop();
 
-        // Auto-generate session report
-        var reportEvents = await SessionReportGenerator.LoadEventsAsync(outputPath);
-        string[]? logLines = File.Exists(logFileName) ? await ReadAllLinesSharedAsync(logFileName) : null;
-        var report = SessionReportGenerator.GenerateMarkdown(reportEvents,
-            sourceFile: playbackFile, outputFile: outputPath,
-            logFile: logFileName, wallClockDuration: sw.Elapsed,
-            logLines: logLines);
-        var reportsFolder = GetReportsFolder(configuration);
-        var reportPath = SessionReportGenerator.GetReportPath(outputPath, reportsFolder);
-        Directory.CreateDirectory(reportsFolder);
-        await File.WriteAllTextAsync(reportPath, report);
+        var reportPath = await GenerateReportAndEvaluateAsync(
+            outputPath, playbackFile, logFileName, configuration, sw.Elapsed);
         log($"Report: {reportPath}");
-
-        await RunAutoEvaluationAsync(outputPath, configuration, reportPath);
 
         PrintHeadlessSummary(playbackFile, outputPath, logFileName, modeName, sw.Elapsed, stats, reportPath);
 
@@ -1882,6 +1834,7 @@ public class TranscriptionApp
     private StatusItem _playbackStatusItem = null!;
     private readonly object _pipelineGate = new();
     private StreamWriter? _debugLogWriter;
+    private string? _logFileName;
 
     public TranscriptionApp(
         AudioInputSource audioSource,
@@ -1928,8 +1881,8 @@ public class TranscriptionApp
         Directory.CreateDirectory(_logFolder);
         var sessionTimestamp = DateTime.Now.ToString("yyyy-MM-dd-HHmmss");
         var sessionId = $"session-{sessionTimestamp}-{Environment.ProcessId}";
-        var logFileName = Path.Combine(_logFolder, $"{sessionId}.log");
-        _debugLogWriter = new StreamWriter(logFileName, append: false) { AutoFlush = true };
+        _logFileName = Path.Combine(_logFolder, $"{sessionId}.log");
+        _debugLogWriter = new StreamWriter(_logFileName, append: false) { AutoFlush = true };
 
         // Parse background color and create color scheme
         var backgroundColor = ParseHexColor(_backgroundColorHex);
@@ -2264,6 +2217,21 @@ public class TranscriptionApp
             else
                 AddDebug($"Detection mode: {modeName} (from recording: {recordedMode ?? "not specified"})");
 
+            // Wire recorder (same as headless playback)
+            _recorder = new SessionRecorder(_intentPipeline);
+            _recorder.OnInfo += msg => Application.MainLoop?.Invoke(() => AddDebug($"[Recording] {msg}"));
+            var outputPath = _recordingOptions.GeneratePlaybackFilePath(_playbackFile!);
+            var sessionConfig = new SessionConfig
+            {
+                IntentDetectionEnabled = true,
+                IntentDetectionMode = modeName,
+                AudioSource = "Transcript JSONL",
+                SourceFile = Path.GetFileName(_playbackFile!)
+            };
+            _recorder.Start(outputPath, sessionConfig);
+            Application.MainLoop?.Invoke(() => _recordingStatusItem.Title = "REC");
+            AddDebug($"Recording to: {outputPath}");
+
             // Wire playback events for transcript display
             _player.OnEventPlayed += evt =>
             {
@@ -2284,6 +2252,23 @@ public class TranscriptionApp
             AddDebug($"Starting playback ({_player.TotalEvents} events)...");
 
             await _player.PlayAsync(_intentPipeline, ct);
+
+            // Wait for in-flight LLM calls before stopping recorder
+            if (modeName is "LLM" or "Parallel")
+            {
+                AddDebug("Waiting for in-flight LLM calls...");
+                await Task.Delay(5000);
+            }
+
+            if (_recorder?.IsRecording == true)
+            {
+                _recorder.Stop();
+                Application.MainLoop?.Invoke(() => _recordingStatusItem.Title = "");
+                AddDebug("Recording stopped (playback complete)");
+            }
+
+            // Generate session report and run auto-evaluation (same as headless)
+            await RunPostPlaybackAsync(outputPath);
         }
         catch (OperationCanceledException)
         {
@@ -2292,6 +2277,22 @@ public class TranscriptionApp
         catch (Exception ex)
         {
             AddDebug($"ERROR: {ex.Message}");
+        }
+    }
+
+    private async Task RunPostPlaybackAsync(string outputPath)
+    {
+        try
+        {
+            AddDebug("Generating session report...");
+            var reportPath = await Program.GenerateReportAndEvaluateAsync(
+                outputPath, _playbackFile!, _logFileName);
+            AddDebug($"Report: {reportPath}");
+            AddDebug("Evaluation complete. Press Ctrl+Q to quit.");
+        }
+        catch (Exception ex)
+        {
+            AddDebug($"Report/evaluation error: {ex.Message}");
         }
     }
 
@@ -2345,8 +2346,10 @@ public class TranscriptionApp
                     await Task.Delay(2000);
 
                     // Stop recording if active
+                    string? recordingPath = null;
                     if (_recorder?.IsRecording == true)
                     {
+                        recordingPath = _recorder.CurrentFilePath;
                         Application.MainLoop?.Invoke(() =>
                         {
                             _recorder.Stop();
@@ -2357,7 +2360,10 @@ public class TranscriptionApp
 
                     AddDebug("Stopping Deepgram...");
                     await _deepgramService.StopAsync();
-                    AddDebug("WAV playback session finished. Press Ctrl+Q to quit.");
+
+                    // Generate session report and run auto-evaluation
+                    if (recordingPath != null)
+                        await RunPostPlaybackAsync(recordingPath);
                 });
             };
 
@@ -2999,6 +3005,14 @@ public class TranscriptionApp
             {
                 AddDebug($"[LLM completed in {elapsedMs}ms]");
                 AddDebug("─── End Request ───");
+            });
+        };
+
+        detector.OnRequestFailed += (statusCode, errorMessage) =>
+        {
+            Application.MainLoop?.Invoke(() =>
+            {
+                AddDebug($"[LLM ERROR] {errorMessage}");
             });
         };
     }

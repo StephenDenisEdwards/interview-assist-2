@@ -1,4 +1,5 @@
 using System.Text.Json;
+using InterviewAssist.Library.Utilities;
 
 namespace InterviewAssist.Library.Pipeline.Evaluation;
 
@@ -187,7 +188,7 @@ public sealed class SyntheticTestGenerator
         if (!string.IsNullOrEmpty(directory))
             Directory.CreateDirectory(directory);
 
-        var options = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
+        var options = PipelineJsonOptions.CamelCase;
 
         await using var writer = new StreamWriter(filePath);
         foreach (var testCase in testCases)

@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using InterviewAssist.Library.Pipeline.Detection;
 using InterviewAssist.Library.Pipeline.Utterance;
+using InterviewAssist.Library.Utilities;
 
 namespace InterviewAssist.Library.Pipeline.Recording;
 
@@ -32,11 +33,7 @@ public sealed class SessionRecorder : IDisposable
     public SessionRecorder(UtteranceIntentPipeline pipeline)
     {
         _pipeline = pipeline;
-        _jsonOptions = new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = false
-        };
+        _jsonOptions = PipelineJsonOptions.CamelCase;
     }
 
     /// <summary>

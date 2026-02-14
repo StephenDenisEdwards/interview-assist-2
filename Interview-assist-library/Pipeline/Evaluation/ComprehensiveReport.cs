@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using InterviewAssist.Library.Utilities;
 
 namespace InterviewAssist.Library.Pipeline.Evaluation;
 
@@ -54,11 +55,7 @@ public sealed class ComprehensiveReport
         string filePath,
         CancellationToken ct = default)
     {
-        var options = new JsonSerializerOptions
-        {
-            WriteIndented = true,
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        };
+        var options = PipelineJsonOptions.CamelCasePretty;
 
         var json = JsonSerializer.Serialize(report, options);
 

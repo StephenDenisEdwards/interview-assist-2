@@ -1,4 +1,5 @@
 using System.Text.Json;
+using InterviewAssist.Library.Utilities;
 using Terminal.Gui;
 using Attribute = Terminal.Gui.Attribute;
 
@@ -339,11 +340,7 @@ public sealed class ConceptEApp
                 }).ToArray()
             };
 
-            var json = JsonSerializer.Serialize(output, new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            });
+            var json = JsonSerializer.Serialize(output, PipelineJsonOptions.CamelCasePretty);
 
             File.WriteAllText(outputPath, json);
 

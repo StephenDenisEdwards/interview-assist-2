@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using InterviewAssist.Library.Utilities;
 
 namespace InterviewAssist.Library.Pipeline.Recording;
 
@@ -9,10 +10,7 @@ namespace InterviewAssist.Library.Pipeline.Recording;
 /// </summary>
 public static class SessionReportGenerator
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-    };
+    private static readonly JsonSerializerOptions JsonOptions = PipelineJsonOptions.CamelCase;
 
     /// <summary>
     /// Load recorded events from a JSONL file.

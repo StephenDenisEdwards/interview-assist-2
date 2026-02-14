@@ -1,4 +1,5 @@
 using System.Text.Json;
+using InterviewAssist.Library.Utilities;
 
 namespace InterviewAssist.Library.Pipeline.Evaluation;
 
@@ -13,7 +14,7 @@ public sealed class RegressionTester
     public static async Task<Baseline> LoadBaselineAsync(string filePath, CancellationToken ct = default)
     {
         var json = await File.ReadAllTextAsync(filePath, ct);
-        return JsonSerializer.Deserialize<Baseline>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+        return JsonSerializer.Deserialize<Baseline>(json, PipelineJsonOptions.CaseInsensitive)
             ?? throw new InvalidOperationException("Failed to parse baseline file");
     }
 
@@ -22,7 +23,7 @@ public sealed class RegressionTester
     /// </summary>
     public static async Task SaveBaselineAsync(string filePath, Baseline baseline, CancellationToken ct = default)
     {
-        var json = JsonSerializer.Serialize(baseline, new JsonSerializerOptions { WriteIndented = true });
+        var json = JsonSerializer.Serialize(baseline, PipelineJsonOptions.Pretty);
 
         var directory = Path.GetDirectoryName(filePath);
         if (!string.IsNullOrEmpty(directory))

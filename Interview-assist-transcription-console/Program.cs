@@ -6,15 +6,7 @@ using InterviewAssist.Pipeline;
 using InterviewAssist.TranscriptionConsole;
 using Microsoft.Extensions.Configuration;
 
-static string? GetFirstNonEmpty(params string?[] values)
-{
-    foreach (var value in values)
-    {
-        if (!string.IsNullOrWhiteSpace(value))
-            return value;
-    }
-    return null;
-}
+using InterviewAssist.Library.Utilities;
 
 // Build configuration
 var configuration = new ConfigurationBuilder()
@@ -25,7 +17,7 @@ var configuration = new ConfigurationBuilder()
     .Build();
 
 // Get API key from configuration or environment
-var apiKey = GetFirstNonEmpty(
+var apiKey = StringUtilities.GetFirstNonEmpty(
     configuration["OpenAI:ApiKey"],
     Environment.GetEnvironmentVariable("OPENAI_API_KEY"));
 
@@ -178,7 +170,7 @@ Console.CancelKeyPress += (_, e) =>
 if (transcriptionMode == TranscriptionMode.Deepgram)
 {
     // Deepgram mode - uses Deepgram's native streaming API with interim/final results
-    var deepgramApiKey = GetFirstNonEmpty(
+    var deepgramApiKey = StringUtilities.GetFirstNonEmpty(
         configuration["Deepgram:ApiKey"],
         Environment.GetEnvironmentVariable("DEEPGRAM_API_KEY"));
 

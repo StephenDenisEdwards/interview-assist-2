@@ -79,7 +79,7 @@ public class OpenAiRealtimeApi : IRealtimeApi
     private readonly object _transcriptLock = new();
 
     // Serialization
-    private static readonly JsonSerializerOptions s_jsonOptions = new() { WriteIndented = false };
+    private static readonly JsonSerializerOptions s_jsonOptions = PipelineJsonOptions.Compact;
     private static readonly Regex s_codeBlockRegex = new(
         @"```(?:csharp|cs|c#)?\s*\n(.*?)\n```",
         RegexOptions.Singleline | RegexOptions.IgnoreCase | RegexOptions.Compiled);
