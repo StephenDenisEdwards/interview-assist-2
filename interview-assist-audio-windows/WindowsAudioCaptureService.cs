@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using InterviewAssist.Library.Audio;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
@@ -7,17 +8,25 @@ namespace InterviewAssist.Audio.Windows;
 
 public sealed class WindowsAudioCaptureService : IAudioCaptureService
 {
-    private WaveInEvent? _waveIn;
+    private WasapiCapture? _waveIn;
     private WasapiLoopbackCapture? _loopback;
     public event Action<byte[]>? OnAudioChunk;
     private readonly int _sampleRate;
+    private readonly string? _micDeviceId;
+    private readonly string? _micDeviceName;
     private AudioInputSource _source;
     private bool _isStarted;
 
-    public WindowsAudioCaptureService(int sampleRate = 16000, AudioInputSource initialSource = AudioInputSource.Microphone)
+    public WindowsAudioCaptureService(
+        int sampleRate = 16000,
+        AudioInputSource initialSource = AudioInputSource.Microphone,
+        string? micDeviceId = null,
+        string? micDeviceName = null)
     {
         _sampleRate = sampleRate;
         _source = initialSource;
+        _micDeviceId = string.IsNullOrWhiteSpace(micDeviceId) ? null : micDeviceId.Trim();
+        _micDeviceName = string.IsNullOrWhiteSpace(micDeviceName) ? null : micDeviceName.Trim();
     }
 
     public void SetSource(AudioInputSource source)
@@ -37,11 +46,8 @@ public sealed class WindowsAudioCaptureService : IAudioCaptureService
         _isStarted = true;
         if (_source == AudioInputSource.Microphone)
         {
-            _waveIn = new WaveInEvent
-            {
-                WaveFormat = new WaveFormat(_sampleRate, 16, 1),
-                BufferMilliseconds = 100
-            };
+            var captureDevice = ResolveMicrophoneDevice();
+            _waveIn = new WasapiCapture(captureDevice);
             _waveIn.DataAvailable += HandleMicData;
             _waveIn.StartRecording();
         }
@@ -55,9 +61,13 @@ public sealed class WindowsAudioCaptureService : IAudioCaptureService
 
     private void HandleMicData(object? sender, WaveInEventArgs e)
     {
-        var chunk = new byte[e.BytesRecorded];
-        Array.Copy(e.Buffer, chunk, e.BytesRecorded);
-        OnAudioChunk?.Invoke(chunk);
+        if (_waveIn == null) return;
+        var format = _waveIn.WaveFormat;
+        var converted = ConvertLoopbackBuffer(e.Buffer, e.BytesRecorded, format);
+        if (converted.Length > 0)
+        {
+            OnAudioChunk?.Invoke(converted);
+        }
     }
 
     private void HandleLoopbackData(object? sender, WaveInEventArgs e)
@@ -74,6 +84,31 @@ public sealed class WindowsAudioCaptureService : IAudioCaptureService
     private byte[] ConvertLoopbackBuffer(byte[] buffer, int bytesRecorded, WaveFormat format)
     {
         return AudioResampler.ResampleToMonoPcm16(buffer, bytesRecorded, format, _sampleRate);
+    }
+
+    private MMDevice ResolveMicrophoneDevice()
+    {
+        var enumerator = new MMDeviceEnumerator();
+        if (!string.IsNullOrWhiteSpace(_micDeviceId))
+        {
+            return enumerator.GetDevice(_micDeviceId);
+        }
+
+        if (!string.IsNullOrWhiteSpace(_micDeviceName))
+        {
+            var captureDevices = enumerator.EnumerateAudioEndPoints(DataFlow.Capture, DeviceState.Active);
+            var matched = captureDevices.FirstOrDefault(d =>
+                d.FriendlyName.Contains(_micDeviceName, StringComparison.OrdinalIgnoreCase));
+            if (matched != null)
+            {
+                return matched;
+            }
+
+            throw new InvalidOperationException(
+                $"No active capture device matched mic-device-name '{_micDeviceName}'.");
+        }
+
+        return enumerator.GetDefaultAudioEndpoint(DataFlow.Capture, Role.Multimedia);
     }
 
     public void Stop() => StopInternal();
